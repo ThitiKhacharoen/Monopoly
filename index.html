@@ -632,8 +632,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
         // ===== CONFIGURATION =====
         const SUPABASE_URL = 'https://enwyccsukcsaffeukxka.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14';
@@ -1064,6 +1064,7 @@
         
         // Initialize
         renderLocalPlayers();
+         }); // End DOMContentLoaded
     </script>
 </body>
 </html>
