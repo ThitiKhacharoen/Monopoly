@@ -685,7 +685,7 @@
                 
                 localStorage.setItem('monopoly-game-mode', 'local');
                 localStorage.setItem('monopoly-players', JSON.stringify(players));
-                window.location.href = 'game.html';
+                window.location.href = 'game-loader.html';
             },
             
             // Token Selection
@@ -908,7 +908,7 @@
                         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${this.onlineState.roomId}` },
                         (payload) => {
                             if (payload.new.status === 'playing') {
-                                window.location.href = 'game.html';
+                                window.location.href = 'game-loader.html';
                             }
                         }
                     )
@@ -949,7 +949,7 @@
                     .update({ status: 'playing', started_at: new Date().toISOString() })
                     .eq('id', this.onlineState.roomId);
                 
-                window.location.href = 'game.html';
+                window.location.href = 'game-loader.html';
             },
             
             async leaveOnlineRoom() {
