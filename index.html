@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly - Main Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .menu-container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .menu-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .menu-button:active {
+            transform: translateY(0);
+        }
+        
+        .menu-button.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .menu-button.disabled:hover {
+            transform: none;
+        }
+        
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.5em;
+            font-weight: 600;
+        }
+        
+        .badge.soon {
+            background: #ffd93d;
+            color: #333;
+        }
+        
+        .submenu {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .submenu.active {
+            display: block;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .submenu h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .submenu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .submenu-button {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .submenu-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .submenu-button.disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .submenu-button.disabled:hover {
+            background: white;
+            color: #ccc;
+            transform: none;
+        }
+        
+        .back-button {
+            margin-top: 15px;
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: color 0.3s;
+        }
+        
+        .back-button:hover {
+            color: #667eea;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <div class="logo">🎲</div>
+        <h1>MONOPOLY</h1>
+        <p class="subtitle">Tournament Rules Edition</p>
+        
+        <div class="menu-options" id="mainMenu">
+            <button class="menu-button" onclick="showSubmenu('singleplayer')">
+                Singleplayer
+                <span class="badge soon">Coming Soon</span>
+            </button>
+            
+            <button class="menu-button" onclick="showSubmenu('multiplayer')">
+                Multiplayer
+            </button>
+            
+            <button class="menu-button" onclick="window.location.href='monopoly-board.html'">
+                View Board
+            </button>
+        </div>
+        
+        <!-- Singleplayer Submenu -->
+        <div class="submenu" id="singleplayerMenu">
+            <h3>Singleplayer</h3>
+            <div class="submenu-buttons">
+                <a href="game-ai.html" class="submenu-button disabled">
+                    vs AI (Easy)
+                    <span class="badge soon">Coming Soon</span>
+                </a>
+                <a href="game-ai.html" class="submenu-button disabled">
+                    vs AI (Medium)
+                    <span class="badge soon">Coming Soon</span>
+                </a>
+                <a href="game-ai.html" class="submenu-button disabled">
+                    vs AI (Hard)
+                    <span class="badge soon">Coming Soon</span>
+                </a>
+            </div>
+            <button class="back-button" onclick="hideSubmenus()">← Back to Main Menu</button>
+        </div>
+        
+        <!-- Multiplayer Submenu -->
+        <div class="submenu" id="multiplayerMenu">
+            <h3>Multiplayer</h3>
+            <div class="submenu-buttons">
+                <a href="game.html" class="submenu-button">
+                    Local Multiplayer
+                    <div style="font-size: 0.8em; color: #999; margin-top: 5px;">2-8 players on same device</div>
+                </a>
+                <a href="game-online.html" class="submenu-button disabled">
+                    Online Multiplayer
+                    <span class="badge soon">Coming Soon</span>
+                    <div style="font-size: 0.8em; color: #999; margin-top: 5px;">Play with friends online</div>
+                </a>
+            </div>
+            <button class="back-button" onclick="hideSubmenus()">← Back to Main Menu</button>
+        </div>
+        
+        <div class="footer">
+            <p>Built with Event Sourcing • TypeScript • React</p>
+            <p style="margin-top: 10px;">
+                <a href="monopoly-docs.html">Documentation</a> | 
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function showSubmenu(menu) {
+            // Hide all submenus
+            hideSubmenus();
+            
+            // Hide main menu
+            document.getElementById('mainMenu').style.display = 'none';
+            
+            // Show selected submenu
+            const submenuId = menu + 'Menu';
+            document.getElementById(submenuId).classList.add('active');
+        }
+        
+        function hideSubmenus() {
+            // Hide all submenus
+            document.querySelectorAll('.submenu').forEach(submenu => {
+                submenu.classList.remove('active');
+            });
+            
+            // Show main menu
+            document.getElementById('mainMenu').style.display = 'flex';
+        }
+        
+        // Prevent navigation on disabled buttons
+        document.querySelectorAll('.submenu-button.disabled').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html>

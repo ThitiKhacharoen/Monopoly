@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Board - Visual Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .board-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 900px;
+        }
+        
+        .board {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #d0e8d0;
+            border: 3px solid #000;
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            grid-template-rows: repeat(11, 1fr);
+        }
+        
+        .space {
+            border: 1px solid #000;
+            padding: 4px;
+            font-size: 9px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .space:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .space-name {
+            font-weight: bold;
+            font-size: 7px;
+            line-height: 1.2;
+        }
+        
+        .space-price {
+            font-size: 8px;
+            margin-top: 2px;
+        }
+        
+        .color-bar {
+            height: 15px;
+            width: 100%;
+            margin-bottom: 2px;
+        }
+        
+        /* Property colors */
+        .brown { background-color: #8B4513; }
+        .light-blue { background-color: #87CEEB; }
+        .pink { background-color: #FF1493; }
+        .orange { background-color: #FFA500; }
+        .red { background-color: #FF0000; }
+        .yellow { background-color: #FFFF00; }
+        .green { background-color: #00FF00; }
+        .dark-blue { background-color: #0000FF; }
+        .railroad { background-color: #000; }
+        .utility { background-color: #FFF; border: 2px solid #000; }
+        
+        /* Corner spaces */
+        .corner {
+            grid-column: span 1;
+            grid-row: span 1;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+        }
+        
+        /* Board center */
+        .center {
+            grid-column: 2 / 11;
+            grid-row: 2 / 11;
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .center h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        /* Position spaces on the board */
+        /* Bottom row (0-10) */
+        .space-0 { grid-column: 11; grid-row: 11; }
+        .space-1 { grid-column: 10; grid-row: 11; }
+        .space-2 { grid-column: 9; grid-row: 11; }
+        .space-3 { grid-column: 8; grid-row: 11; }
+        .space-4 { grid-column: 7; grid-row: 11; }
+        .space-5 { grid-column: 6; grid-row: 11; }
+        .space-6 { grid-column: 5; grid-row: 11; }
+        .space-7 { grid-column: 4; grid-row: 11; }
+        .space-8 { grid-column: 3; grid-row: 11; }
+        .space-9 { grid-column: 2; grid-row: 11; }
+        .space-10 { grid-column: 1; grid-row: 11; }
+        
+        /* Left column (11-19) */
+        .space-11 { grid-column: 1; grid-row: 10; }
+        .space-12 { grid-column: 1; grid-row: 9; }
+        .space-13 { grid-column: 1; grid-row: 8; }
+        .space-14 { grid-column: 1; grid-row: 7; }
+        .space-15 { grid-column: 1; grid-row: 6; }
+        .space-16 { grid-column: 1; grid-row: 5; }
+        .space-17 { grid-column: 1; grid-row: 4; }
+        .space-18 { grid-column: 1; grid-row: 3; }
+        .space-19 { grid-column: 1; grid-row: 2; }
+        .space-20 { grid-column: 1; grid-row: 1; }
+        
+        /* Top row (21-29) */
+        .space-21 { grid-column: 2; grid-row: 1; }
+        .space-22 { grid-column: 3; grid-row: 1; }
+        .space-23 { grid-column: 4; grid-row: 1; }
+        .space-24 { grid-column: 5; grid-row: 1; }
+        .space-25 { grid-column: 6; grid-row: 1; }
+        .space-26 { grid-column: 7; grid-row: 1; }
+        .space-27 { grid-column: 8; grid-row: 1; }
+        .space-28 { grid-column: 9; grid-row: 1; }
+        .space-29 { grid-column: 10; grid-row: 1; }
+        .space-30 { grid-column: 11; grid-row: 1; }
+        
+        /* Right column (31-39) */
+        .space-31 { grid-column: 11; grid-row: 2; }
+        .space-32 { grid-column: 11; grid-row: 3; }
+        .space-33 { grid-column: 11; grid-row: 4; }
+        .space-34 { grid-column: 11; grid-row: 5; }
+        .space-35 { grid-column: 11; grid-row: 6; }
+        .space-36 { grid-column: 11; grid-row: 7; }
+        .space-37 { grid-column: 11; grid-row: 8; }
+        .space-38 { grid-column: 11; grid-row: 9; }
+        .space-39 { grid-column: 11; grid-row: 10; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f0f0f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: #e0e0e0;
+            transform: scale(1.1);
+        }
+        
+        .rent-table {
+            margin-top: 10px;
+        }
+        
+        .rent-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 15px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎲 Monopoly Board</h1>
+    
+    <div class="board-container">
+        <div class="board" id="board">
+            <!-- Corners -->
+            <div class="space corner space-0">GO<br>→</div>
+            <div class="space corner space-10">JAIL<br>👮</div>
+            <div class="space corner space-20">FREE<br>PARKING</div>
+            <div class="space corner space-30">GO TO<br>JAIL</div>
+            
+            <!-- Center -->
+            <div class="center">
+                <h2>MONOPOLY</h2>
+                <p style="text-align: center; color: #666;">
+                    Click any property to view details<br>
+                    <small>Tournament Rules • $1,500 starting cash</small>
+                </p>
+            </div>
+            
+            <!-- All other spaces will be generated by JavaScript -->
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color brown"></div>
+                <span>Brown</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color light-blue"></div>
+                <span>Light Blue</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color pink"></div>
+                <span>Pink</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color orange"></div>
+                <span>Orange</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color red"></div>
+                <span>Red</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color yellow"></div>
+                <span>Yellow</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color green"></div>
+                <span>Green</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color dark-blue"></div>
+                <span>Dark Blue</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color railroad"></div>
+                <span>Railroad</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color utility"></div>
+                <span>Utility</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for property details -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div id="property-info">
+                <p style="color: #666;">Click a property to see details</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const spaces = [
+            { id: 0, name: "GO", type: "corner" },
+            { id: 1, name: "Mediterranean Avenue", type: "property", color: "brown", price: 60, rent: [2, 10, 30, 90, 160, 250], houseCost: 50 },
+            { id: 2, name: "Community Chest", type: "chest" },
+            { id: 3, name: "Baltic Avenue", type: "property", color: "brown", price: 60, rent: [4, 20, 60, 180, 320, 450], houseCost: 50 },
+            { id: 4, name: "Income Tax", type: "tax", amount: 200 },
+            { id: 5, name: "Reading Railroad", type: "railroad", price: 200, rent: [25, 50, 100, 200] },
+            { id: 6, name: "Oriental Avenue", type: "property", color: "light-blue", price: 100, rent: [6, 30, 90, 270, 400, 550], houseCost: 50 },
+            { id: 7, name: "Chance", type: "chance" },
+            { id: 8, name: "Vermont Avenue", type: "property", color: "light-blue", price: 100, rent: [6, 30, 90, 270, 400, 550], houseCost: 50 },
+            { id: 9, name: "Connecticut Avenue", type: "property", color: "light-blue", price: 120, rent: [8, 40, 100, 300, 450, 600], houseCost: 50 },
+            { id: 10, name: "JAIL", type: "corner" },
+            { id: 11, name: "St. Charles Place", type: "property", color: "pink", price: 140, rent: [10, 50, 150, 450, 625, 750], houseCost: 100 },
+            { id: 12, name: "Electric Company", type: "utility", price: 150 },
+            { id: 13, name: "States Avenue", type: "property", color: "pink", price: 140, rent: [10, 50, 150, 450, 625, 750], houseCost: 100 },
+            { id: 14, name: "Virginia Avenue", type: "property", color: "pink", price: 160, rent: [12, 60, 180, 500, 700, 900], houseCost: 100 },
+            { id: 15, name: "Pennsylvania Railroad", type: "railroad", price: 200, rent: [25, 50, 100, 200] },
+            { id: 16, name: "St. James Place", type: "property", color: "orange", price: 180, rent: [14, 70, 200, 550, 750, 950], houseCost: 100 },
+            { id: 17, name: "Community Chest", type: "chest" },
+            { id: 18, name: "Tennessee Avenue", type: "property", color: "orange", price: 180, rent: [14, 70, 200, 550, 750, 950], houseCost: 100 },
+            { id: 19, name: "New York Avenue", type: "property", color: "orange", price: 200, rent: [16, 80, 220, 600, 800, 1000], houseCost: 100 },
+            { id: 20, name: "FREE PARKING", type: "corner" },
+            { id: 21, name: "Kentucky Avenue", type: "property", color: "red", price: 220, rent: [18, 90, 250, 700, 875, 1050], houseCost: 150 },
+            { id: 22, name: "Chance", type: "chance" },
+            { id: 23, name: "Indiana Avenue", type: "property", color: "red", price: 220, rent: [18, 90, 250, 700, 875, 1050], houseCost: 150 },
+            { id: 24, name: "Illinois Avenue", type: "property", color: "red", price: 240, rent: [20, 100, 300, 750, 925, 1100], houseCost: 150 },
+            { id: 25, name: "B&O Railroad", type: "railroad", price: 200, rent: [25, 50, 100, 200] },
+            { id: 26, name: "Atlantic Avenue", type: "property", color: "yellow", price: 260, rent: [22, 110, 330, 800, 975, 1150], houseCost: 150 },
+            { id: 27, name: "Ventnor Avenue", type: "property", color: "yellow", price: 260, rent: [22, 110, 330, 800, 975, 1150], houseCost: 150 },
+            { id: 28, name: "Water Works", type: "utility", price: 150 },
+            { id: 29, name: "Marvin Gardens", type: "property", color: "yellow", price: 280, rent: [24, 120, 360, 850, 1025, 1200], houseCost: 150 },
+            { id: 30, name: "GO TO JAIL", type: "corner" },
+            { id: 31, name: "Pacific Avenue", type: "property", color: "green", price: 300, rent: [26, 130, 390, 900, 1100, 1275], houseCost: 200 },
+            { id: 32, name: "North Carolina Avenue", type: "property", color: "green", price: 300, rent: [26, 130, 390, 900, 1100, 1275], houseCost: 200 },
+            { id: 33, name: "Community Chest", type: "chest" },
+            { id: 34, name: "Pennsylvania Avenue", type: "property", color: "green", price: 320, rent: [28, 150, 450, 1000, 1200, 1400], houseCost: 200 },
+            { id: 35, name: "Short Line", type: "railroad", price: 200, rent: [25, 50, 100, 200] },
+            { id: 36, name: "Chance", type: "chance" },
+            { id: 37, name: "Park Place", type: "property", color: "dark-blue", price: 350, rent: [35, 175, 500, 1100, 1300, 1500], houseCost: 200 },
+            { id: 38, name: "Luxury Tax", type: "tax", amount: 100 },
+            { id: 39, name: "Boardwalk", type: "property", color: "dark-blue", price: 400, rent: [50, 200, 600, 1400, 1700, 2000], houseCost: 200 }
+        ];
+
+        const board = document.getElementById('board');
+        const propertyInfo = document.getElementById('property-info');
+        const modal = document.getElementById('modal');
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Create space elements
+        spaces.forEach(space => {
+            if (space.type === 'corner') return; // Already created
+
+            const spaceEl = document.createElement('div');
+            spaceEl.className = `space space-${space.id}`;
+            spaceEl.dataset.id = space.id;
+
+            if (space.type === 'property') {
+                const colorBar = document.createElement('div');
+                colorBar.className = `color-bar ${space.color}`;
+                spaceEl.appendChild(colorBar);
+
+                const name = document.createElement('div');
+                name.className = 'space-name';
+                name.textContent = space.name;
+                spaceEl.appendChild(name);
+
+                const price = document.createElement('div');
+                price.className = 'space-price';
+                price.textContent = `$${space.price}`;
+                spaceEl.appendChild(price);
+            } else if (space.type === 'railroad') {
+                const colorBar = document.createElement('div');
+                colorBar.className = 'color-bar railroad';
+                spaceEl.appendChild(colorBar);
+
+                const name = document.createElement('div');
+                name.className = 'space-name';
+                name.textContent = space.name;
+                spaceEl.appendChild(name);
+
+                const price = document.createElement('div');
+                price.className = 'space-price';
+                price.textContent = `$${space.price}`;
+                spaceEl.appendChild(price);
+            } else if (space.type === 'utility') {
+                const colorBar = document.createElement('div');
+                colorBar.className = 'color-bar utility';
+                spaceEl.appendChild(colorBar);
+
+                const name = document.createElement('div');
+                name.className = 'space-name';
+                name.textContent = space.name;
+                spaceEl.appendChild(name);
+
+                const price = document.createElement('div');
+                price.className = 'space-price';
+                price.textContent = `$${space.price}`;
+                spaceEl.appendChild(price);
+            } else {
+                const name = document.createElement('div');
+                name.className = 'space-name';
+                name.textContent = space.name;
+                spaceEl.appendChild(name);
+
+                if (space.amount) {
+                    const amount = document.createElement('div');
+                    amount.className = 'space-price';
+                    amount.textContent = `$${space.amount}`;
+                    spaceEl.appendChild(amount);
+                }
+            }
+
+            spaceEl.addEventListener('click', () => showPropertyDetails(space));
+            board.appendChild(spaceEl);
+        });
+
+        function showPropertyDetails(space) {
+            modal.classList.add('active');
+            
+            if (space.type === 'property') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">${space.name}</h4>
+                    <p><strong>Price:</strong> $${space.price}</p>
+                    <p><strong>Colour Group:</strong> ${space.color.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>
+                    <p><strong>House Cost:</strong> $${space.houseCost}</p>
+                    <div class="rent-table">
+                        <strong>Rent:</strong>
+                        <div class="rent-row">
+                            <span>Base Rent:</span>
+                            <span>$${space.rent[0]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>With 1 House:</span>
+                            <span>$${space.rent[1]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>With 2 Houses:</span>
+                            <span>$${space.rent[2]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>With 3 Houses:</span>
+                            <span>$${space.rent[3]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>With 4 Houses:</span>
+                            <span>$${space.rent[4]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>With Hotel:</span>
+                            <span>$${space.rent[5]}</span>
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 12px;">
+                        Mortgage Value: $${space.price / 2}<br>
+                        Unmortgage Cost: $${Math.floor(space.price / 2 * 1.1)}
+                    </p>
+                `;
+            } else if (space.type === 'railroad') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">${space.name}</h4>
+                    <p><strong>Price:</strong> $${space.price}</p>
+                    <div class="rent-table">
+                        <strong>Rent:</strong>
+                        <div class="rent-row">
+                            <span>1 Railroad owned:</span>
+                            <span>$${space.rent[0]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>2 Railroads owned:</span>
+                            <span>$${space.rent[1]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>3 Railroads owned:</span>
+                            <span>$${space.rent[2]}</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>4 Railroads owned:</span>
+                            <span>$${space.rent[3]}</span>
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 12px;">
+                        Mortgage Value: $${space.price / 2}<br>
+                        Unmortgage Cost: $${Math.floor(space.price / 2 * 1.1)}
+                    </p>
+                `;
+            } else if (space.type === 'utility') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">${space.name}</h4>
+                    <p><strong>Price:</strong> $${space.price}</p>
+                    <div class="rent-table">
+                        <strong>Rent:</strong>
+                        <div class="rent-row">
+                            <span>1 Utility owned:</span>
+                            <span>4× dice roll</span>
+                        </div>
+                        <div class="rent-row">
+                            <span>2 Utilities owned:</span>
+                            <span>10× dice roll</span>
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 12px;">
+                        Mortgage Value: $${space.price / 2}<br>
+                        Unmortgage Cost: $${Math.floor(space.price / 2 * 1.1)}
+                    </p>
+                `;
+            } else if (space.type === 'tax') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">${space.name}</h4>
+                    <p><strong>Tax Amount:</strong> $${space.amount}</p>
+                    <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                        Pay $${space.amount} to the Bank when landing on this space.
+                    </p>
+                `;
+            } else if (space.type === 'chance') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">Chance</h4>
+                    <p>Draw a Chance card when landing here.</p>
+                    <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                        16 Chance cards in deck, including:<br>
+                        • Advance to various locations<br>
+                        • Collect/pay money<br>
+                        • Get Out of Jail Free<br>
+                        • Pay for property repairs
+                    </p>
+                `;
+            } else if (space.type === 'chest') {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">Community Chest</h4>
+                    <p>Draw a Community Chest card when landing here.</p>
+                    <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                        16 Community Chest cards in deck, including:<br>
+                        • Bank errors in your favor<br>
+                        • Collect/pay money<br>
+                        • Get Out of Jail Free<br>
+                        • Birthday/opera collections
+                    </p>
+                `;
+            } else {
+                propertyInfo.innerHTML = `
+                    <h4 style="color: #667eea;">${space.name}</h4>
+                    <p style="color: #666;">Special board space</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
