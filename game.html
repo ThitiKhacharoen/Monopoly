@@ -2605,14 +2605,43 @@
             if (currentPlayer.properties.length === 0) {
                 list.innerHTML = '<p style="color: #999; padding: 20px; text-align: center;">You don\'t own any properties yet.</p>';
             } else {
-                currentPlayer.properties.forEach(propId => {
+                // Group properties by color
+                const colorOrder = ['brown', 'lightblue', 'pink', 'orange', 'red', 'yellow', 'green', 'darkblue', 'railroad', 'utility'];
+                
+                // Sort properties by color group
+                const sortedProperties = [...currentPlayer.properties].sort((a, b) => {
+                    const spaceA = SPACES[a];
+                    const spaceB = SPACES[b];
+                    
+                    // Get color/type for sorting
+                    const colorA = spaceA.type === 'property' ? spaceA.color : spaceA.type;
+                    const colorB = spaceB.type === 'property' ? spaceB.color : spaceB.type;
+                    
+                    const indexA = colorOrder.indexOf(colorA);
+                    const indexB = colorOrder.indexOf(colorB);
+                    
+                    return indexA - indexB;
+                });
+                
+                sortedProperties.forEach(propId => {
                     const space = SPACES[propId];
                     const ownership = gameState.ownedProperties[propId];
                     
                     const div = document.createElement('div');
                     div.className = 'property-manage-item';
                     
-                    let html = `<h4>${space.name}</h4>`;
+                    // Add color bar (like on the board)
+                    let colorBarHTML = '';
+                    if (space.type === 'property') {
+                        colorBarHTML = `<div class="color-bar ${space.color}" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+                    } else if (space.type === 'railroad') {
+                        colorBarHTML = `<div class="color-bar railroad" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+                    } else if (space.type === 'utility') {
+                        colorBarHTML = `<div class="color-bar utility" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+                    }
+                    
+                    let html = colorBarHTML;
+                    html += `<h4>${space.name}</h4>`;
                     html += `<p>Value: $${space.price}</p>`;
                     
                     if (ownership.isMortgaged) {
