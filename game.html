@@ -3086,7 +3086,7 @@ function startAuction(propertyId) {
             onlineState.enabled = true;
             
             // Find my player ID - match by order in the players array
-            onlineState.myPlayerId = gameData.players[0].id; // Will be updated based on who created/joined
+            onlineState.myPlayerId = localStorage.getItem('my-player-id') || gameData.players[0].id; // Will be updated based on who created/joined
             
             console.log('🎮 My player ID:', onlineState.myPlayerId);
             console.log('🏠 Room:', onlineState.roomCode);

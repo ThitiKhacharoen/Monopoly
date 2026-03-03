@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,7 +21,7 @@
             justify-content: center;
             padding: 20px;
         }
-        
+
         .menu-container {
             background: white;
             border-radius: 20px;
@@ -32,39 +33,39 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        
+
         .logo {
             font-size: 4em;
             margin-bottom: 10px;
         }
-        
+
         h1 {
             color: #667eea;
             font-size: 3em;
             margin-bottom: 10px;
             font-weight: 800;
         }
-        
+
         .subtitle {
             color: #666;
             font-size: 1.2em;
             margin-bottom: 40px;
         }
-        
+
         .screen {
             display: none;
         }
-        
+
         .screen.active {
             display: block;
         }
-        
+
         .menu-options {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-        
+
         .menu-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -77,22 +78,22 @@
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-        
+
         .menu-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
-        
+
         .menu-button.disabled {
             background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
         }
-        
+
         .menu-button.disabled:hover {
             transform: none;
         }
-        
+
         .badge {
             background: #ffd93d;
             color: #333;
@@ -101,7 +102,7 @@
             font-size: 0.5em;
             margin-left: 10px;
         }
-        
+
         .submenu {
             display: none;
             margin-top: 20px;
@@ -110,28 +111,29 @@
             border-radius: 12px;
             animation: slideDown 0.3s ease-out;
         }
-        
+
         .submenu.active {
             display: block;
         }
-        
+
         @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .submenu h3 {
             color: #667eea;
             margin-bottom: 15px;
             font-size: 1.5em;
         }
-        
+
         .submenu-button {
             background: white;
             color: #667eea;
@@ -145,12 +147,12 @@
             width: 100%;
             margin-bottom: 15px;
         }
-        
+
         .submenu-button:hover {
             background: #667eea;
             color: white;
         }
-        
+
         .back-button {
             margin-top: 15px;
             background: transparent;
@@ -160,11 +162,11 @@
             cursor: pointer;
             font-size: 1em;
         }
-        
+
         .back-button:hover {
             color: #667eea;
         }
-        
+
         .footer {
             margin-top: 40px;
             padding-top: 20px;
@@ -172,8 +174,9 @@
             color: #999;
             font-size: 0.9em;
         }
-        
-        input[type="text"], select {
+
+        input[type="text"],
+        select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -181,12 +184,13 @@
             font-size: 1em;
             margin-bottom: 15px;
         }
-        
-        input[type="text"]:focus, select:focus {
+
+        input[type="text"]:focus,
+        select:focus {
             outline: none;
             border-color: #667eea;
         }
-        
+
         label {
             display: block;
             color: #333;
@@ -194,14 +198,14 @@
             margin-bottom: 8px;
             text-align: left;
         }
-        
+
         .player-count-selector {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 20px;
         }
-        
+
         .count-btn {
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -212,18 +216,18 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        
+
         .count-btn:hover {
             border-color: #667eea;
             background: #f8f9ff;
         }
-        
+
         .count-btn.active {
             border-color: #667eea;
             background: #667eea;
             color: white;
         }
-        
+
         .token-selector {
             display: flex;
             gap: 8px;
@@ -231,7 +235,7 @@
             justify-content: center;
             margin-bottom: 15px;
         }
-        
+
         .token-btn {
             width: 50px;
             height: 50px;
@@ -245,22 +249,22 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        
+
         .token-btn:hover {
             border-color: #667eea;
             transform: scale(1.1);
         }
-        
+
         .token-btn.selected {
             border-color: #667eea;
             background: #f8f9ff;
         }
-        
+
         .token-btn.disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -273,12 +277,12 @@
             width: 100%;
             margin-top: 10px;
         }
-        
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
-        
+
         .btn-secondary {
             background: white;
             color: #667eea;
@@ -291,11 +295,11 @@
             width: 100%;
             margin-top: 10px;
         }
-        
+
         .btn-secondary:hover {
             background: #f8f9ff;
         }
-        
+
         .player-list-item {
             background: white;
             padding: 10px;
@@ -305,7 +309,7 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .player-icon {
             width: 40px;
             height: 40px;
@@ -315,16 +319,39 @@
             justify-content: center;
             font-size: 1.3em;
         }
-        
-        .player-icon-1 { background: #ff6b6b; }
-        .player-icon-2 { background: #4ecdc4; }
-        .player-icon-3 { background: #45b7d1; }
-        .player-icon-4 { background: #f9ca24; }
-        .player-icon-5 { background: #6c5ce7; }
-        .player-icon-6 { background: #a29bfe; }
-        .player-icon-7 { background: #fd79a8; }
-        .player-icon-8 { background: #fdcb6e; }
-        
+
+        .player-icon-1 {
+            background: #ff6b6b;
+        }
+
+        .player-icon-2 {
+            background: #4ecdc4;
+        }
+
+        .player-icon-3 {
+            background: #45b7d1;
+        }
+
+        .player-icon-4 {
+            background: #f9ca24;
+        }
+
+        .player-icon-5 {
+            background: #6c5ce7;
+        }
+
+        .player-icon-6 {
+            background: #a29bfe;
+        }
+
+        .player-icon-7 {
+            background: #fd79a8;
+        }
+
+        .player-icon-8 {
+            background: #fdcb6e;
+        }
+
         .room-code-display {
             background: #f8f9fa;
             padding: 25px;
@@ -332,7 +359,7 @@
             text-align: center;
             margin: 20px 0;
         }
-        
+
         .room-code {
             font-size: 2.5em;
             font-weight: 800;
@@ -340,7 +367,7 @@
             letter-spacing: 0.1em;
             font-family: 'Courier New', monospace;
         }
-        
+
         .error-message {
             background: #ffebee;
             color: #c62828;
@@ -350,11 +377,11 @@
             text-align: center;
             display: none;
         }
-        
+
         .error-message.show {
             display: block;
         }
-        
+
         .status-message {
             text-align: center;
             padding: 12px;
@@ -366,6 +393,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="menu-container">
         <!-- Main Menu Screen -->
@@ -373,22 +401,22 @@
             <div class="logo">🎲</div>
             <h1>MONOPOLY</h1>
             <p class="subtitle">Tournament Rules Edition</p>
-            
+
             <div class="menu-options" id="mainMenu">
                 <button class="menu-button disabled">
                     Singleplayer
                     <span class="badge">Coming Soon</span>
                 </button>
-                
+
                 <button class="menu-button" onclick="App.showMultiplayerMenu()">
                     Multiplayer
                 </button>
-                
+
                 <button class="menu-button" onclick="window.location.href='monopoly-board.html'">
                     View Board
                 </button>
             </div>
-            
+
             <!-- Multiplayer Submenu -->
             <div class="submenu" id="multiplayerMenu">
                 <h3>Multiplayer</h3>
@@ -402,7 +430,7 @@
                 </button>
                 <button class="back-button" onclick="App.hideSubmenus()">← Back to Main Menu</button>
             </div>
-            
+
             <div class="footer">
                 <p>Built with Event Sourcing • Supabase • TypeScript</p>
             </div>
@@ -412,7 +440,7 @@
         <div class="screen" id="localSetupScreen">
             <h1 style="font-size: 2em;">🎮 Local Setup</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Set up players on this device</p>
-            
+
             <label>Number of Players</label>
             <div class="player-count-selector">
                 <button class="count-btn" onclick="App.setLocalPlayerCount(2)">2</button>
@@ -423,15 +451,15 @@
                 <button class="count-btn" onclick="App.setLocalPlayerCount(7)">7</button>
                 <button class="count-btn" onclick="App.setLocalPlayerCount(8)">8</button>
             </div>
-            
+
             <div id="localPlayersList" style="margin-top: 20px;">
                 <!-- Generated by JS -->
             </div>
-            
+
             <button class="btn-primary" onclick="App.startLocalGame()">
                 🎮 Start Local Game
             </button>
-            
+
             <button class="btn-secondary" onclick="App.showScreen('mainMenuScreen'); App.hideSubmenus();">
                 ← Back
             </button>
@@ -441,17 +469,18 @@
         <div class="screen" id="onlineMenuScreen">
             <h1 style="font-size: 2em;">🌐 Online Multiplayer</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Play with friends around the world</p>
-            
+
             <div class="error-message" id="onlineError"></div>
-            
+
             <button class="btn-primary" onclick="App.showOnlineCreate()">
                 🎮 Create New Room
             </button>
-            
-            <button class="btn-primary" style="background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);" onclick="App.showOnlineJoin()">
+
+            <button class="btn-primary" style="background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);"
+                onclick="App.showOnlineJoin()">
                 🔗 Join Existing Room
             </button>
-            
+
             <button class="btn-secondary" onclick="App.showScreen('mainMenuScreen'); App.hideSubmenus();">
                 ← Back
             </button>
@@ -461,13 +490,13 @@
         <div class="screen" id="onlineCreateScreen">
             <h1 style="font-size: 2em;">🎮 Create Room</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Host a new online game</p>
-            
+
             <label>Your Name</label>
             <input type="text" id="onlineHostName" placeholder="Enter your name" maxlength="20">
-            
+
             <label>Choose Your Token</label>
             <div class="token-selector" id="onlineHostTokens"></div>
-            
+
             <label>Maximum Players</label>
             <select id="onlineMaxPlayers">
                 <option value="2">2 Players</option>
@@ -478,11 +507,11 @@
                 <option value="7">7 Players</option>
                 <option value="8">8 Players</option>
             </select>
-            
+
             <button class="btn-primary" onclick="App.createOnlineRoom()">
                 Create Room
             </button>
-            
+
             <button class="btn-secondary" onclick="App.showOnlineMenu()">
                 ← Back
             </button>
@@ -492,20 +521,21 @@
         <div class="screen" id="onlineJoinScreen">
             <h1 style="font-size: 2em;">🔗 Join Room</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Enter room code to join</p>
-            
+
             <label>Room Code</label>
-            <input type="text" id="onlineJoinCode" placeholder="Enter 6-digit code" maxlength="6" style="text-transform: uppercase;">
-            
+            <input type="text" id="onlineJoinCode" placeholder="Enter 6-digit code" maxlength="6"
+                style="text-transform: uppercase;">
+
             <label>Your Name</label>
             <input type="text" id="onlineJoinName" placeholder="Enter your name" maxlength="20">
-            
+
             <label>Choose Your Token</label>
             <div class="token-selector" id="onlineJoinTokens"></div>
-            
+
             <button class="btn-primary" onclick="App.joinOnlineRoom()">
                 Join Room
             </button>
-            
+
             <button class="btn-secondary" onclick="App.showOnlineMenu()">
                 ← Back
             </button>
@@ -514,28 +544,29 @@
         <!-- ONLINE LOBBY SCREEN -->
         <div class="screen" id="onlineLobbyScreen">
             <h1 style="font-size: 2em;">🎮 Lobby</h1>
-            
+
             <div class="room-code-display">
                 <div style="color: #666; margin-bottom: 10px;">Room Code</div>
                 <div class="room-code" id="lobbyRoomCode">------</div>
                 <div style="margin-top: 10px; color: #666; font-size: 0.9em;">Share this code with friends!</div>
             </div>
-            
+
             <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 20px 0;">
-                <h3 style="color: #667eea; margin-bottom: 12px;">Players (<span id="lobbyPlayerCount">0</span>/<span id="lobbyMaxPlayers">4</span>)</h3>
+                <h3 style="color: #667eea; margin-bottom: 12px;">Players (<span id="lobbyPlayerCount">0</span>/<span
+                        id="lobbyMaxPlayers">4</span>)</h3>
                 <div id="lobbyPlayersList">
                     <!-- Generated by JS -->
                 </div>
             </div>
-            
+
             <div class="status-message" id="lobbyStatusMessage">
                 Waiting for players...
             </div>
-            
+
             <button class="btn-primary" id="lobbyStartBtn" onclick="App.startOnlineGame()" style="display: none;">
                 🚀 Start Game
             </button>
-            
+
             <button class="btn-secondary" onclick="App.leaveOnlineRoom()">
                 Leave Room
             </button>
@@ -549,20 +580,20 @@
             // Configuration
             SUPABASE_URL: 'https://enwyccsukcsaffeukxka.supabase.co',
             SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14',
-            
+
             supabase: null,
-            
+
             // Constants
             TOKENS: ['🚗', '🚢', '🎩', '🐕', '🐱', '👟', '🎸', '⚓'],
-            ICON_CLASSES: ['player-icon-1', 'player-icon-2', 'player-icon-3', 'player-icon-4', 
-                          'player-icon-5', 'player-icon-6', 'player-icon-7', 'player-icon-8'],
-            
+            ICON_CLASSES: ['player-icon-1', 'player-icon-2', 'player-icon-3', 'player-icon-4',
+                'player-icon-5', 'player-icon-6', 'player-icon-7', 'player-icon-8'],
+
             // Local State
             localState: {
                 playerCount: 3,
                 selectedTokens: ['🚗', '🚢', '🎩']
             },
-            
+
             // Online State
             onlineState: {
                 roomId: null,
@@ -572,49 +603,49 @@
                 selectedToken: null,
                 subscription: null
             },
-            
+
             // Initialize
             init() {
                 this.supabase = window.supabase.createClient(this.SUPABASE_URL, this.SUPABASE_ANON_KEY);
                 this.renderLocalPlayers();
             },
-            
+
             // Screen Navigation
             showScreen(screenId) {
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
             },
-            
+
             showMultiplayerMenu() {
                 this.hideSubmenus();
                 document.getElementById('mainMenu').style.display = 'none';
                 document.getElementById('multiplayerMenu').classList.add('active');
             },
-            
+
             hideSubmenus() {
                 document.querySelectorAll('.submenu').forEach(s => s.classList.remove('active'));
                 document.getElementById('mainMenu').style.display = 'flex';
             },
-            
+
             showLocalSetup() {
                 this.showScreen('localSetupScreen');
                 this.renderLocalPlayers();
             },
-            
+
             showOnlineMenu() {
                 this.showScreen('onlineMenuScreen');
             },
-            
+
             showOnlineCreate() {
                 this.showScreen('onlineCreateScreen');
                 this.renderTokenSelector('onlineHostTokens', []);
             },
-            
+
             showOnlineJoin() {
                 this.showScreen('onlineJoinScreen');
                 this.renderTokenSelector('onlineJoinTokens', []);
             },
-            
+
             // Local Multiplayer
             setLocalPlayerCount(count) {
                 this.localState.playerCount = count;
@@ -622,15 +653,15 @@
                 event.target.classList.add('active');
                 this.renderLocalPlayers();
             },
-            
+
             renderLocalPlayers() {
                 const container = document.getElementById('localPlayersList');
                 container.innerHTML = '';
-                
+
                 for (let i = 0; i < this.localState.playerCount; i++) {
                     const group = document.createElement('div');
                     group.style.marginBottom = '15px';
-                    
+
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.id = `localPlayer${i}`;
@@ -638,16 +669,16 @@
                     input.value = `Player ${i + 1}`;
                     input.maxLength = 20;
                     input.style.marginBottom = '8px';
-                    
+
                     const tokenSelector = document.createElement('div');
                     tokenSelector.className = 'token-selector';
-                    
+
                     this.TOKENS.forEach(token => {
                         const btn = document.createElement('button');
                         btn.className = 'token-btn';
                         btn.textContent = token;
                         btn.type = 'button';
-                        
+
                         if (this.localState.selectedTokens[i] === token) {
                             btn.classList.add('selected');
                         }
@@ -655,22 +686,22 @@
                             btn.classList.add('disabled');
                             btn.disabled = true;
                         }
-                        
+
                         btn.onclick = () => this.selectLocalToken(i, token);
                         tokenSelector.appendChild(btn);
                     });
-                    
+
                     group.appendChild(input);
                     group.appendChild(tokenSelector);
                     container.appendChild(group);
                 }
             },
-            
+
             selectLocalToken(playerIndex, token) {
                 this.localState.selectedTokens[playerIndex] = token;
                 this.renderLocalPlayers();
             },
-            
+
             startLocalGame() {
                 const players = [];
                 for (let i = 0; i < this.localState.playerCount; i++) {
@@ -682,37 +713,37 @@
                         iconClass: this.ICON_CLASSES[i]
                     });
                 }
-                
+
                 localStorage.setItem('monopoly-game-mode', 'local');
                 localStorage.setItem('monopoly-players', JSON.stringify(players));
                 window.location.href = 'game-loader.html';
             },
-            
+
             // Token Selection
             renderTokenSelector(containerId, usedTokens) {
                 const container = document.getElementById(containerId);
                 container.innerHTML = '';
-                
+
                 this.TOKENS.forEach(token => {
                     const btn = document.createElement('button');
                     btn.className = 'token-btn';
                     btn.textContent = token;
                     btn.type = 'button';
-                    
+
                     if (usedTokens.includes(token)) {
                         btn.classList.add('disabled');
                         btn.disabled = true;
                     }
-                    
+
                     if (this.onlineState.selectedToken === token) {
                         btn.classList.add('selected');
                     }
-                    
+
                     btn.onclick = () => this.selectOnlineToken(token);
                     container.appendChild(btn);
                 });
             },
-            
+
             selectOnlineToken(token) {
                 this.onlineState.selectedToken = token;
                 document.querySelectorAll('.token-btn').forEach(btn => {
@@ -722,26 +753,26 @@
                     }
                 });
             },
-            
+
             // Online Multiplayer
             async createOnlineRoom() {
                 const name = document.getElementById('onlineHostName').value.trim();
                 const maxPlayers = parseInt(document.getElementById('onlineMaxPlayers').value);
-                
+
                 if (!name) {
                     this.showError('onlineError', 'Please enter your name');
                     return;
                 }
-                
+
                 if (!this.onlineState.selectedToken) {
                     this.showError('onlineError', 'Please select a token');
                     return;
                 }
-                
+
                 try {
                     const { data: codeData } = await this.supabase.rpc('generate_room_code');
                     const roomCode = codeData;
-                    
+
                     const { data: room } = await this.supabase
                         .from('rooms')
                         .insert({
@@ -751,7 +782,7 @@
                         })
                         .select()
                         .single();
-                    
+
                     const { data: player } = await this.supabase
                         .from('room_players')
                         .insert({
@@ -764,40 +795,42 @@
                         })
                         .select()
                         .single();
-                    
+
+                    localStorage.setItem(my - player - id, player.id);
+
                     this.onlineState.roomId = room.id;
                     this.onlineState.roomCode = roomCode;
                     this.onlineState.playerId = player.id;
                     this.onlineState.isHost = true;
-                    
+
                     this.subscribeToRoom();
                     this.showOnlineLobby();
-                    
+
                 } catch (error) {
                     console.error('Error:', error);
                     this.showError('onlineError', 'Failed to create room');
                 }
             },
-            
+
             async joinOnlineRoom() {
                 const roomCode = document.getElementById('onlineJoinCode').value.trim().toUpperCase();
                 const name = document.getElementById('onlineJoinName').value.trim();
-                
+
                 if (!roomCode || roomCode.length !== 6) {
                     this.showError('onlineError', 'Please enter a valid room code');
                     return;
                 }
-                
+
                 if (!name) {
                     this.showError('onlineError', 'Please enter your name');
                     return;
                 }
-                
+
                 if (!this.onlineState.selectedToken) {
                     this.showError('onlineError', 'Please select a token');
                     return;
                 }
-                
+
                 try {
                     const { data: room } = await this.supabase
                         .from('rooms')
@@ -805,23 +838,23 @@
                         .eq('room_code', roomCode)
                         .eq('status', 'waiting')
                         .single();
-                    
+
                     if (!room) throw new Error('Room not found');
                     if (room.current_player_count >= room.max_players) throw new Error('Room is full');
-                    
+
                     const { data: existingPlayers } = await this.supabase
                         .from('room_players')
                         .select('token, player_order')
                         .eq('room_id', room.id)
                         .order('player_order');
-                    
+
                     const usedTokens = existingPlayers.map(p => p.token);
                     if (usedTokens.includes(this.onlineState.selectedToken)) {
                         throw new Error('Token already taken');
                     }
-                    
+
                     const playerOrder = existingPlayers.length;
-                    
+
                     const { data: player } = await this.supabase
                         .from('room_players')
                         .insert({
@@ -834,43 +867,45 @@
                         })
                         .select()
                         .single();
-                    
+
+                    localStorage.setItem('my-player-id', player.id);
+
                     this.onlineState.roomId = room.id;
                     this.onlineState.roomCode = roomCode;
                     this.onlineState.playerId = player.id;
                     this.onlineState.isHost = false;
-                    
+
                     this.subscribeToRoom();
                     this.showOnlineLobby();
-                    
+
                 } catch (error) {
                     console.error('Error:', error);
                     this.showError('onlineError', error.message || 'Failed to join room');
                 }
             },
-            
+
             showOnlineLobby() {
                 document.getElementById('lobbyRoomCode').textContent = this.onlineState.roomCode;
                 this.showScreen('onlineLobbyScreen');
                 this.loadLobbyPlayers();
             },
-            
+
             async loadLobbyPlayers() {
                 const { data: players } = await this.supabase
                     .from('room_players')
                     .select('*')
                     .eq('room_id', this.onlineState.roomId)
                     .order('player_order');
-                
+
                 const { data: room } = await this.supabase
                     .from('rooms')
                     .select('max_players')
                     .eq('id', this.onlineState.roomId)
                     .single();
-                
+
                 const container = document.getElementById('lobbyPlayersList');
                 container.innerHTML = '';
-                
+
                 players.forEach(player => {
                     const div = document.createElement('div');
                     div.className = 'player-list-item';
@@ -881,10 +916,10 @@
                     `;
                     container.appendChild(div);
                 });
-                
+
                 document.getElementById('lobbyPlayerCount').textContent = players.length;
                 document.getElementById('lobbyMaxPlayers').textContent = room.max_players;
-                
+
                 if (players.length >= 2 && this.onlineState.isHost) {
                     document.getElementById('lobbyStartBtn').style.display = 'block';
                     document.getElementById('lobbyStatusMessage').textContent = 'Ready to start!';
@@ -896,11 +931,11 @@
                     document.getElementById('lobbyStatusMessage').textContent = 'Waiting for host to start...';
                 }
             },
-            
+
             subscribeToRoom() {
                 this.onlineState.subscription = this.supabase
                     .channel(`room:${this.onlineState.roomId}`)
-                    .on('postgres_changes', 
+                    .on('postgres_changes',
                         { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${this.onlineState.roomId}` },
                         () => this.loadLobbyPlayers()
                     )
@@ -914,21 +949,21 @@
                     )
                     .subscribe();
             },
-            
+
             async startOnlineGame() {
                 if (!this.onlineState.isHost) return;
-                
+
                 const { data: players } = await this.supabase
                     .from('room_players')
                     .select('*')
                     .eq('room_id', this.onlineState.roomId)
                     .order('player_order');
-                
+
                 if (players.length < 2) {
                     alert('Need at least 2 players!');
                     return;
                 }
-                
+
                 const gameData = {
                     roomId: this.onlineState.roomId,
                     roomCode: this.onlineState.roomCode,
@@ -940,38 +975,38 @@
                         order: p.player_order
                     }))
                 };
-                
+
                 localStorage.setItem('monopoly-game-mode', 'online');
                 localStorage.setItem('monopoly-online-game', JSON.stringify(gameData));
-                
+
                 await this.supabase
                     .from('rooms')
                     .update({ status: 'playing', started_at: new Date().toISOString() })
                     .eq('id', this.onlineState.roomId);
-                
+
                 window.location.href = 'game-loader.html';
             },
-            
+
             async leaveOnlineRoom() {
                 if (this.onlineState.subscription) {
                     this.onlineState.subscription.unsubscribe();
                 }
-                
+
                 await this.supabase
                     .from('room_players')
                     .delete()
                     .eq('id', this.onlineState.playerId);
-                
+
                 if (this.onlineState.isHost) {
                     await this.supabase
                         .from('rooms')
                         .delete()
                         .eq('id', this.onlineState.roomId);
                 }
-                
+
                 this.showOnlineMenu();
             },
-            
+
             // Utilities
             showError(elementId, message) {
                 const el = document.getElementById(elementId);
@@ -982,12 +1017,12 @@
                 }, 5000);
             }
         };
-        
+
         // Initialize when page loads
         window.addEventListener('DOMContentLoaded', () => {
             App.init();
         });
-        
+
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (App.onlineState.subscription) {
@@ -996,4 +1031,5 @@
         });
     </script>
 </body>
+
 </html>
