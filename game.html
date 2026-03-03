@@ -1394,6 +1394,18 @@
             }
         };
         
+        // ===== ONLINE MULTIPLAYER STATE =====
+        let onlineState = {
+            enabled: false,
+            roomId: null,
+            roomCode: null,
+            myPlayerId: null,
+            supabase: null,
+            subscription: null,
+            eventSequence: 0,
+            isProcessingRemoteEvent: false
+        };
+        
         // Shuffle array helper
         function shuffleArray(array) {
             const arr = [...array];
@@ -1714,6 +1726,15 @@
             const payJailBtn = document.getElementById('payJailBtn');
             const useJailCardBtn = document.getElementById('useJailCardBtn');
             
+            // Disable all buttons if online and not my turn
+            if (onlineState.enabled && !isMyTurn()) {
+                rollBtn.disabled = true;
+                endBtn.disabled = true;
+                payJailBtn.style.display = 'none';
+                useJailCardBtn.style.display = 'none';
+                return;
+            }
+            
             // Show/hide jail buttons
             if (currentPlayer.inJail && gameState.phase === 'ROLL_DICE') {
                 payJailBtn.style.display = 'block';
@@ -1811,6 +1832,18 @@
             const passedGo = newPosition < oldPosition;
             
             currentPlayer.position = newPosition;
+            
+            // Broadcast dice roll if online
+            if (onlineState.enabled && isMyTurn()) {
+                broadcastEvent('DICE_ROLLED', {
+                    playerId: currentPlayer.id,
+                    die1: die1,
+                    die2: die2,
+                    newPosition: newPosition,
+                    passedGo: passedGo,
+                    doublesCount: gameState.doublesCount
+                });
+            }
             
             // Move piece visually
             movePiece(currentPlayer.id, newPosition);
@@ -2252,7 +2285,17 @@
             showMessage(`${currentPlayer.name} bought ${space.name} for $${space.price}!`, 'success');
             
             gameState.phase = 'END_TURN';
+            const propId = gameState.pendingProperty;
             gameState.pendingProperty = null;
+            
+            // Broadcast if online
+            if (onlineState.enabled && isMyTurn()) {
+                broadcastEvent('PROPERTY_BOUGHT', {
+                    playerId: currentPlayer.id,
+                    propertyId: propId,
+                    price: space.price
+                });
+            }
             
             checkBankruptcy();
             updateUI();
@@ -2631,6 +2674,8 @@ function startAuction(propertyId) {
         }
         
         function endTurn() {
+            const oldIndex = gameState.currentPlayerIndex;
+            
             // Move to next player
             do {
                 gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
@@ -2638,7 +2683,15 @@ function startAuction(propertyId) {
             
             gameState.phase = 'ROLL_DICE';
             gameState.diceRoll = null;
-            gameState.doublesCount = 0; // Reset doubles count
+            gameState.doublesCount = 0;
+            
+            // Broadcast turn end if online
+            if (onlineState.enabled && !onlineState.isProcessingRemoteEvent) {
+                broadcastEvent('TURN_ENDED', {
+                    playerId: gameState.players[oldIndex].id,
+                    nextPlayerIndex: gameState.currentPlayerIndex
+                });
+            }
             
             // Reset dice
             document.getElementById('die1').textContent = '?';
@@ -3016,12 +3069,201 @@ function startAuction(propertyId) {
             document.getElementById('manageModal').classList.remove('active');
         }
         
+        // ===== ONLINE MULTIPLAYER SYSTEM =====
+        
+        function initializeOnlineMode() {
+            console.log('🌐 Initializing online mode');
+            
+            // Initialize Supabase
+            onlineState.supabase = window.supabase.createClient(
+                'https://enwyccsukcsaffeukxka.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14'
+            );
+            
+            const gameData = JSON.parse(localStorage.getItem('monopoly-online-game'));
+            onlineState.roomId = gameData.roomId;
+            onlineState.roomCode = gameData.roomCode;
+            onlineState.enabled = true;
+            
+            // Find my player ID - match by order in the players array
+            onlineState.myPlayerId = gameData.players[0].id; // Will be updated based on who created/joined
+            
+            console.log('🎮 My player ID:', onlineState.myPlayerId);
+            console.log('🏠 Room:', onlineState.roomCode);
+            
+            // Subscribe to game events
+            subscribeToGameEvents();
+        }
+        
+        function subscribeToGameEvents() {
+            console.log('📡 Subscribing to game events for room:', onlineState.roomId);
+            
+            onlineState.subscription = onlineState.supabase
+                .channel(`game:${onlineState.roomId}`)
+                .on('postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'game_events',
+                        filter: `room_id=eq.${onlineState.roomId}`
+                    },
+                    (payload) => {
+                        handleRemoteEvent(payload.new);
+                    }
+                )
+                .subscribe();
+            
+            console.log('✅ Subscribed to game events');
+        }
+        
+        async function broadcastEvent(eventType, eventData) {
+            if (!onlineState.enabled) return;
+            if (onlineState.isProcessingRemoteEvent) return;
+            
+            console.log('📤 Broadcasting:', eventType, eventData);
+            
+            try {
+                const { error } = await onlineState.supabase
+                    .from('game_events')
+                    .insert({
+                        room_id: onlineState.roomId,
+                        event_type: eventType,
+                        event_data: eventData,
+                        player_id: onlineState.myPlayerId,
+                        sequence_number: ++onlineState.eventSequence
+                    });
+                
+                if (error) {
+                    console.error('❌ Broadcast error:', error);
+                }
+            } catch (error) {
+                console.error('❌ Broadcast failed:', error);
+            }
+        }
+        
+        function handleRemoteEvent(event) {
+            if (event.player_id === onlineState.myPlayerId) {
+                return;
+            }
+            
+            console.log('📥 Received:', event.event_type);
+            
+            onlineState.isProcessingRemoteEvent = true;
+            try {
+                applyRemoteEvent(event.event_type, event.event_data);
+            } finally {
+                onlineState.isProcessingRemoteEvent = false;
+            }
+        }
+        
+        function applyRemoteEvent(eventType, data) {
+            switch (eventType) {
+                case 'DICE_ROLLED':
+                    gameState.diceRoll = [data.die1, data.die2];
+                    document.getElementById('die1').textContent = data.die1;
+                    document.getElementById('die2').textContent = data.die2;
+                    gameState.doublesCount = data.doublesCount;
+                    
+                    const player = gameState.players.find(p => p.id === data.playerId);
+                    player.position = data.newPosition;
+                    movePiece(data.playerId, data.newPosition);
+                    
+                    if (data.passedGo) {
+                        player.cash += 200;
+                    }
+                    updateUI();
+                    break;
+                    
+                case 'PROPERTY_BOUGHT':
+                    const buyer = gameState.players.find(p => p.id === data.playerId);
+                    buyer.cash -= data.price;
+                    buyer.properties.push(data.propertyId);
+                    
+                    gameState.ownedProperties[data.propertyId] = {
+                        ownerId: data.playerId,
+                        houses: 0,
+                        hasHotel: false
+                    };
+                    
+                    showPropertyOwnership(data.propertyId, buyer);
+                    gameState.phase = 'END_TURN';
+                    gameState.pendingProperty = null;
+                    updateUI();
+                    break;
+                    
+                case 'PROPERTY_PASSED':
+                    gameState.phase = 'END_TURN';
+                    gameState.pendingProperty = null;
+                    updateUI();
+                    break;
+                    
+                case 'RENT_PAID':
+                    const payer = gameState.players.find(p => p.id === data.payerId);
+                    const owner = gameState.players.find(p => p.id === data.ownerId);
+                    payer.cash -= data.amount;
+                    owner.cash += data.amount;
+                    gameState.phase = 'END_TURN';
+                    updateUI();
+                    break;
+                    
+                case 'TURN_ENDED':
+                    gameState.currentPlayerIndex = data.nextPlayerIndex;
+                    gameState.phase = 'ROLL_DICE';
+                    gameState.diceRoll = null;
+                    gameState.doublesCount = 0;
+                    document.getElementById('die1').textContent = '?';
+                    document.getElementById('die2').textContent = '?';
+                    updateUI();
+                    break;
+                    
+                case 'HOUSE_BUILT':
+                    const builder = gameState.players.find(p => p.id === data.playerId);
+                    builder.cash -= data.cost;
+                    gameState.ownedProperties[data.propertyId].houses = data.newHouses;
+                    updateUI();
+                    break;
+                    
+                case 'HOTEL_BUILT':
+                    const hotelBuilder = gameState.players.find(p => p.id === data.playerId);
+                    hotelBuilder.cash -= data.cost;
+                    gameState.ownedProperties[data.propertyId].houses = 0;
+                    gameState.ownedProperties[data.propertyId].hasHotel = true;
+                    updateUI();
+                    break;
+                    
+                case 'PROPERTY_MORTGAGED':
+                    const mortgager = gameState.players.find(p => p.id === data.playerId);
+                    mortgager.cash += data.value;
+                    gameState.ownedProperties[data.propertyId].isMortgaged = true;
+                    updateUI();
+                    break;
+                    
+                case 'PROPERTY_UNMORTGAGED':
+                    const unmortgager = gameState.players.find(p => p.id === data.playerId);
+                    unmortgager.cash -= data.cost;
+                    gameState.ownedProperties[data.propertyId].isMortgaged = false;
+                    updateUI();
+                    break;
+            }
+        }
+        
+        function isMyTurn() {
+            if (!onlineState.enabled) return true;
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            return currentPlayer.id === onlineState.myPlayerId;
+        }
+        
 // Initialize
         // Check if we should auto-start (players loaded from index.html)
         const mode = localStorage.getItem('monopoly-game-mode');
         if (mode === 'local' || mode === 'online') {
             // Players already loaded, start immediately
             console.log('Auto-starting game in mode:', mode);
+            
+            if (mode === 'online') {
+                initializeOnlineMode();
+            }
+            
             startGame();
         } else {
             // Show setup overlay
