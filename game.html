@@ -1457,8 +1457,20 @@
             if (mode === 'local' && localPlayersData) {
                 // Load from local multiplayer setup
                 console.log('Loading LOCAL multiplayer players');
-                players = JSON.parse(localPlayersData);
-                
+                const loadedPlayers = JSON.parse(localPlayersData);
+                players = loadedPlayers.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    token: p.token,
+                    iconClass: p.iconClass,
+                    cash: 1500,
+                    position: 0,
+                    properties: [],
+                    isBankrupt: false,
+                    inJail: false,
+                    jailTurns: 0,
+                    getOutOfJailFreeCards: 0
+                }));
             } else if (mode === 'online' && onlineGameData) {
                 // Load from online multiplayer
                 console.log('Loading ONLINE multiplayer players');
