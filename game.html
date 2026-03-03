@@ -1071,6 +1071,31 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Auction specific styles */
+        #auctionBidInput {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        #auctionBidInput:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        
+        #auctionLog {
+            font-family: monospace;
+        }
+        
+        .auction-log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .auction-log-entry:last-child {
+            border-bottom: none;
+        }
+
     </style>
 </head>
 <body>
@@ -1268,6 +1293,36 @@
         </div>
     </div>
 
+ <!-- Auction Modal -->
+    <div id="auctionModal" class="modal">
+        <div class="modal-content">
+            <h2>🔨 AUCTION</h2>
+            <div id="auctionPropertyInfo" style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <!-- Property info will be inserted here -->
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h3>Current Bid: $<span id="auctionCurrentBid">0</span></h3>
+                <p>Bidder: <span id="auctionCurrentBidder">None</span></p>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4>Current Turn: <span id="auctionCurrentPlayer"></span></h4>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <input type="number" id="auctionBidInput" placeholder="Enter bid amount" min="1" style="flex: 1; padding: 10px; font-size: 1.1em;">
+                <button onclick="placeBid()" class="modal-btn" style="background: #4caf50;">Place Bid</button>
+            </div>
+            
+            <button onclick="passAuction()" class="modal-btn" style="background: #ff9800; margin-top: 10px;">Pass</button>
+            
+            <div id="auctionLog" style="margin-top: 20px; max-height: 150px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 8px; font-size: 0.9em;">
+                <!-- Auction log will appear here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== BOARD DATA =====
         const SPACES = [
@@ -1325,7 +1380,18 @@
             ownedProperties: {}, // { propertyId: { ownerId, houses, hasHotel, isMortgaged } }
             chanceCards: [],
             communityChestCards: [],
-            doublesCount: 0 // Track consecutive doubles
+            doublesCount: 0, // Track consecutive doubles
+            auction: {
+                active: false,
+                propertyId: null,
+                currentBid: 0,
+                currentBidder: null,
+                currentBidderName: null,
+                participatingPlayers: [],
+                currentAuctionIndex: 0,
+                passedPlayers: [],
+                log: []
+            }
         };
         
         // Shuffle array helper
@@ -2192,19 +2258,186 @@
             updateUI();
         }
         
-        function passProperty() {
+       function passProperty() {
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             
             const space = SPACES[gameState.pendingProperty];
-            showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name}`, 'info');
+            showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name} - Starting auction!`, 'info');
             
-            // TODO: Implement auction
-            
-            gameState.phase = 'END_TURN';
-            gameState.pendingProperty = null;
-            updateUI();
+            // Start auction
+            startAuction(gameState.pendingProperty);
         }
+function startAuction(propertyId) {
+            const space = SPACES[propertyId];
+            
+            // Initialize auction state
+            gameState.auction.active = true;
+            gameState.auction.propertyId = propertyId;
+            gameState.auction.currentBid = 0;
+            gameState.auction.currentBidder = null;
+            gameState.auction.currentBidderName = 'None';
+            gameState.auction.participatingPlayers = gameState.players
+                .filter(p => !p.isBankrupt)
+                .map(p => p.id);
+            gameState.auction.currentAuctionIndex = 0;
+            gameState.auction.passedPlayers = [];
+            gameState.auction.log = [];
+            
+            // Show auction modal
+            const modal = document.getElementById('auctionModal');
+            const propertyInfo = document.getElementById('auctionPropertyInfo');
+            
+            let colorBar = '';
+            if (space.type === 'property') {
+                colorBar = `<div class="color-bar ${space.color}" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+            } else if (space.type === 'railroad') {
+                colorBar = `<div class="color-bar railroad" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+            } else if (space.type === 'utility') {
+                colorBar = `<div class="color-bar utility" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
+            }
+            
+            propertyInfo.innerHTML = colorBar + `
+                <h3>${space.name}</h3>
+                <p>List Price: $${space.price}</p>
+            `;
+            
+            addAuctionLog(`Auction started for ${space.name}`);
+            updateAuctionUI();
+            modal.classList.add('active');
+        }
+        
+        function updateAuctionUI() {
+            if (!gameState.auction.active) return;
+            
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            
+            if (activePlayers.length === 0) {
+                endAuction(false); // No one bid
+                return;
+            }
+            
+            if (activePlayers.length === 1 && gameState.auction.currentBid > 0) {
+                endAuction(true); // Winner!
+                return;
+            }
+            
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
+            document.getElementById('auctionCurrentBid').textContent = gameState.auction.currentBid;
+            document.getElementById('auctionCurrentBidder').textContent = gameState.auction.currentBidderName;
+            document.getElementById('auctionCurrentPlayer').textContent = currentPlayer.name;
+            
+            // Update bid input minimum
+            const bidInput = document.getElementById('auctionBidInput');
+            bidInput.min = gameState.auction.currentBid + 1;
+            bidInput.value = '';
+            bidInput.placeholder = `Min: $${gameState.auction.currentBid + 1}`;
+        }
+        
+        function placeBid() {
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
+            const bidInput = document.getElementById('auctionBidInput');
+            const bidAmount = parseInt(bidInput.value);
+            
+            if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
+                alert(`Bid must be higher than $${gameState.auction.currentBid}`);
+                return;
+            }
+            
+            if (bidAmount > currentPlayer.cash) {
+                alert(`You only have $${currentPlayer.cash}!`);
+                return;
+            }
+            
+            gameState.auction.currentBid = bidAmount;
+            gameState.auction.currentBidder = currentPlayer.id;
+            gameState.auction.currentBidderName = currentPlayer.name;
+            
+            addAuctionLog(`${currentPlayer.name} bids $${bidAmount}`);
+            
+            gameState.auction.currentAuctionIndex++;
+            updateAuctionUI();
+        }
+        
+        function passAuction() {
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
+            gameState.auction.passedPlayers.push(currentPlayer.id);
+            addAuctionLog(`${currentPlayer.name} passes`);
+            
+            updateAuctionUI();
+        }
+        
+        function endAuction(hasWinner) {
+            const modal = document.getElementById('auctionModal');
+            const space = SPACES[gameState.auction.propertyId];
+            
+            if (hasWinner) {
+                const winner = gameState.players.find(p => p.id === gameState.auction.currentBidder);
+                const amount = gameState.auction.currentBid;
+                
+                // Deduct cash
+                winner.cash -= amount;
+                
+                // Add to owned properties
+                gameState.ownedProperties[gameState.auction.propertyId] = {
+                    ownerId: winner.id,
+                    houses: 0,
+                    hasHotel: false
+                };
+                
+                winner.properties.push(gameState.auction.propertyId);
+                
+                showPropertyOwnership(gameState.auction.propertyId, winner);
+                
+                addAuctionLog(`${winner.name} wins for $${amount}!`);
+                showMessage(`${winner.name} won ${space.name} auction for $${amount}!`, 'success');
+                
+                setTimeout(() => {
+                    modal.classList.remove('active');
+                    gameState.auction.active = false;
+                    gameState.phase = 'END_TURN';
+                    gameState.pendingProperty = null;
+                    checkBankruptcy();
+                    updateUI();
+                }, 2000);
+            } else {
+                addAuctionLog('No bids - property remains unowned');
+                showMessage(`No one bid on ${space.name}`, 'info');
+                
+                setTimeout(() => {
+                    modal.classList.remove('active');
+                    gameState.auction.active = false;
+                    gameState.phase = 'END_TURN';
+                    gameState.pendingProperty = null;
+                    updateUI();
+                }, 2000);
+            }
+        }
+        
+        function addAuctionLog(message) {
+            gameState.auction.log.push(message);
+            const logDiv = document.getElementById('auctionLog');
+            const entry = document.createElement('div');
+            entry.className = 'auction-log-entry';
+            entry.textContent = message;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
         
         function payRent(propertyId, ownerId) {
             const space = SPACES[propertyId];
