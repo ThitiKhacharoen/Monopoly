@@ -1,13 +1,10 @@
 /**
  * ai-player.js
- * Integrates NEAT AI into game.html.
+ * Integrates NEAT AI into game.html via polling.
  *
- * Depends on: neat-runner.js (must be loaded first)
+ * Depends on: neat-runner.js
  * Depends on: game.html globals — gameState, SPACES, rollDice(), buyProperty(),
  *             passProperty(), endTurn(), placeBid(), passAuction(), buildHouse()
- *
- * Usage:
- *   AIPlayer.init(['easy', null, 'hard', null])
  */
 
 const AIPlayer = (() => {
@@ -15,15 +12,12 @@ const AIPlayer = (() => {
     const models = {};
     let aiPlayers = {};
 
-    // Re-entrancy guard — only one AI action in flight at a time
-    let aiActing = false;
-
-    // Poll interval handle
+    let aiActing = false;  // Re-entrancy guard
     let pollInterval = null;
 
-    const ACTION_DELAY = 900;
-    const THINK_DELAY  = 450;
-    const POLL_MS      = 300; // How often to check if it's AI's turn
+    const ACTION_DELAY = 1200;  // ms between actions (watchable pace)
+    const THINK_DELAY  = 800;   // ms "thinking" before acting
+    const POLL_MS      = 500;   // polling interval — must be > ACTION_DELAY to avoid double-fire
 
     const COLOR_GROUP_ORDER = [
         'brown', 'light-blue', 'pink', 'orange', 'red',
@@ -78,7 +72,6 @@ const AIPlayer = (() => {
         });
 
         const inputs = [];
-
         inputs.push(Math.min(1.0, player.cash / 2000.0));
         inputs.push(player.position / 40.0);
         inputs.push(player.inJail ? 1.0 : 0.0);
@@ -158,18 +151,15 @@ const AIPlayer = (() => {
     function getDecision(playerIndex) {
         const difficulty = aiPlayers[playerIndex];
         const model = models[difficulty];
-        if (!model) {
-            console.warn(`[AI] No model for difficulty: ${difficulty}`);
-            return null;
-        }
+        if (!model) return null;
         const inputs = buildInputs(playerIndex);
         const outputs = NEATRunner.activate(model, inputs);
         return {
-            buyProperty:           outputs[0],
-            auctionBidRatio:       outputs[1],
-            buildHouse:            outputs[2],
-            tradeAggression:       outputs[3],
-            acceptTradeThreshold:  outputs[4],
+            buyProperty:          outputs[0],
+            auctionBidRatio:      outputs[1],
+            buildHouse:           outputs[2],
+            tradeAggression:      outputs[3],
+            acceptTradeThreshold: outputs[4],
         };
     }
 
@@ -204,6 +194,7 @@ const AIPlayer = (() => {
         const decision = getDecision(playerIndex);
         const player = gameState.players[playerIndex];
 
+        // No model or can't afford minimum — pass
         if (!decision) {
             passAuction();
             aiActing = false;
@@ -231,13 +222,17 @@ const AIPlayer = (() => {
     // ─── Main turn logic ──────────────────────────────────────────────────────
 
     function takeTurn() {
-        if (aiActing) return; // prevent double-firing
+        // Set acting flag SYNCHRONOUSLY before any setTimeout
+        // This prevents the poll from firing again before the action runs
+        aiActing = true;
 
         const idx = gameState.currentPlayerIndex;
-        if (!(idx in aiPlayers)) { aiActing = false; return; }
-        if (!gameState.players[idx] || gameState.players[idx].isBankrupt) { aiActing = false; return; }
 
-        // Auction handled separately
+        if (!(idx in aiPlayers) || !gameState.players[idx] || gameState.players[idx].isBankrupt) {
+            aiActing = false;
+            return;
+        }
+
         if (gameState.auction && gameState.auction.active) {
             handleAuctionPhase();
             return;
@@ -246,21 +241,26 @@ const AIPlayer = (() => {
         const phase = gameState.phase;
 
         if (phase === 'ROLL_DICE') {
-            aiActing = true;
             setTimeout(() => {
-                console.log(`[AI] Player ${idx} rolling dice`);
+                console.log(`[AI] Player ${idx} (${aiPlayers[idx]}) rolling dice`);
                 rollDice();
                 aiActing = false;
             }, THINK_DELAY);
 
         } else if (phase === 'PROPERTY_DECISION') {
-            aiActing = true;
             setTimeout(() => {
-                const decision = getDecision(idx);
+                // Re-validate — state may have changed during think delay
+                if (gameState.phase !== 'PROPERTY_DECISION' || gameState.pendingProperty == null) {
+                    aiActing = false;
+                    return;
+                }
                 const space = SPACES[gameState.pendingProperty];
+                if (!space) { aiActing = false; return; }
+
+                const decision = getDecision(idx);
                 const player = gameState.players[idx];
-                const shouldBuy = decision && decision.buyProperty > 0.5 && space && player.cash >= (space.price || 0);
-                console.log(`[AI] Player ${idx} property decision: ${shouldBuy ? 'BUY' : 'PASS'} (score: ${decision ? decision.buyProperty.toFixed(2) : 'n/a'})`);
+                const shouldBuy = decision && decision.buyProperty > 0.5 && player.cash >= (space.price || 0);
+                console.log(`[AI] Player ${idx} ${shouldBuy ? 'BUYING' : 'PASSING'} ${space.name}`);
                 if (shouldBuy) {
                     buyProperty();
                 } else {
@@ -270,36 +270,40 @@ const AIPlayer = (() => {
             }, THINK_DELAY);
 
         } else if (phase === 'END_TURN') {
-            aiActing = true;
             setTimeout(() => {
                 tryBuildHouses(idx);
                 setTimeout(() => {
-                    console.log(`[AI] Player ${idx} ending turn`);
-                    endTurn();
+                    // Re-validate before ending turn
+                    if (gameState.phase === 'END_TURN') {
+                        console.log(`[AI] Player ${idx} ending turn`);
+                        endTurn();
+                    }
                     aiActing = false;
-                }, THINK_DELAY);
+                }, 400);
             }, THINK_DELAY);
+
+        } else {
+            // PAY_RENT or other phases handled automatically by game — just release lock
+            aiActing = false;
         }
     }
 
     function handleAuctionPhase() {
-        if (aiActing) return;
         const auction = gameState.auction;
-        if (!auction || !auction.active) return;
+        if (!auction || !auction.active) { aiActing = false; return; }
 
         const activeBidders = auction.participatingPlayers.filter(
             id => !auction.passedPlayers.includes(id)
         );
-        if (activeBidders.length === 0) return;
-        if (activeBidders.length === 1 && auction.currentBid > 0) return;
+        if (activeBidders.length === 0) { aiActing = false; return; }
+        if (activeBidders.length === 1 && auction.currentBid > 0) { aiActing = false; return; }
 
         const currentId = activeBidders[auction.currentAuctionIndex % activeBidders.length];
         const playerIndex = gameState.players.findIndex(p => p.id === currentId);
 
-        if (!(playerIndex in aiPlayers)) return;
+        if (!(playerIndex in aiPlayers)) { aiActing = false; return; }
 
-        aiActing = true;
-        console.log(`[AI] Player ${playerIndex} taking auction turn`);
+        console.log(`[AI] Player ${playerIndex} bidding in auction`);
         setTimeout(() => handleAuctionTurn(playerIndex), THINK_DELAY);
     }
 
@@ -308,14 +312,25 @@ const AIPlayer = (() => {
     function startPolling() {
         if (pollInterval) clearInterval(pollInterval);
         pollInterval = setInterval(() => {
+            if (aiActing) return;
             if (!gameState || !gameState.players || gameState.players.length === 0) return;
 
-            // Check for game over
             const activePlayers = gameState.players.filter(p => !p.isBankrupt);
             if (activePlayers.length <= 1) return;
 
+            // Auction check
             if (gameState.auction && gameState.auction.active) {
-                handleAuctionPhase();
+                const auction = gameState.auction;
+                const activeBidders = auction.participatingPlayers.filter(
+                    id => !auction.passedPlayers.includes(id)
+                );
+                if (activeBidders.length > 0) {
+                    const currentId = activeBidders[auction.currentAuctionIndex % activeBidders.length];
+                    const playerIndex = gameState.players.findIndex(p => p.id === currentId);
+                    if (playerIndex in aiPlayers) {
+                        takeTurn();
+                    }
+                }
                 return;
             }
 
@@ -335,8 +350,9 @@ const AIPlayer = (() => {
     async function init(config, modelBasePath = 'models/') {
         aiPlayers = {};
         aiActing = false;
-        const difficultiesToLoad = new Set();
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 
+        const difficultiesToLoad = new Set();
         config.forEach((difficulty, playerIndex) => {
             if (difficulty) {
                 aiPlayers[playerIndex] = difficulty;
@@ -360,7 +376,6 @@ const AIPlayer = (() => {
 
         await Promise.all(loadPromises);
         console.log('[AI] 🤖 Ready. Players:', aiPlayers);
-
         startPolling();
     }
 
