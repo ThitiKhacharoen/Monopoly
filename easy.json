@@ -1,0 +1,104 @@
+{
+  "difficulty": "easy",
+  "fitness": 29146.079253026983,
+  "num_inputs": 47,
+  "num_outputs": 5,
+  "input_keys": [
+    -1,
+    -2,
+    -3,
+    -4,
+    -5,
+    -6,
+    -7,
+    -8,
+    -9,
+    -10,
+    -11,
+    -12,
+    -13,
+    -14,
+    -15,
+    -16,
+    -17,
+    -18,
+    -19,
+    -20,
+    -21,
+    -22,
+    -23,
+    -24,
+    -25,
+    -26,
+    -27,
+    -28,
+    -29,
+    -30,
+    -31,
+    -32,
+    -33,
+    -34,
+    -35,
+    -36,
+    -37,
+    -38,
+    -39,
+    -40,
+    -41,
+    -42,
+    -43,
+    -44,
+    -45,
+    -46,
+    -47
+  ],
+  "output_keys": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "node_evals": [
+    {
+      "node": 1,
+      "bias": -0.002740558524821468,
+      "response": 1.0,
+      "activation": "sigmoid_activation",
+      "links": []
+    },
+    {
+      "node": 2,
+      "bias": 6.143022251267104,
+      "response": 1.0,
+      "activation": "sigmoid_activation",
+      "links": []
+    },
+    {
+      "node": 3,
+      "bias": 0.085824894113166,
+      "response": 1.0,
+      "activation": "sigmoid_activation",
+      "links": []
+    },
+    {
+      "node": 4,
+      "bias": -1.694405597324542,
+      "response": 1.0,
+      "activation": "sigmoid_activation",
+      "links": []
+    },
+    {
+      "node": 0,
+      "bias": 2.884082619263847,
+      "response": 1.0,
+      "activation": "sigmoid_activation",
+      "links": [
+        [
+          -11,
+          -1.175133781549233
+        ]
+      ]
+    }
+  ]
+}
