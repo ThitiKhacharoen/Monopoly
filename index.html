@@ -605,7 +605,8 @@
             localState: {
                 playerCount: 3,
                 selectedTokens: ['🚗', '🚢', '🎩'],
-                aiDifficulties: ['human', 'human', 'human']
+                aiDifficulties: ['human', 'human', 'human'],
+                playerNames: ['', '', '']
             },
 
             onlineState: {
@@ -661,6 +662,13 @@
             },
 
             renderLocalPlayers() {
+                // Save any names the user has already typed before wiping the DOM
+                for (let i = 0; i < this.localState.playerCount; i++) {
+                    const existing = document.getElementById(`localPlayer${i}`);
+                    if (existing && !existing.disabled) {
+                        this.localState.playerNames[i] = existing.value;
+                    }
+                }
                 const container = document.getElementById('localPlayersList');
                 container.innerHTML = '';
 
@@ -721,7 +729,8 @@
                         nameInput.disabled = true;
                         nameInput.placeholder = 'AI Player';
                     } else {
-                        nameInput.value = `Player ${i + 1}`;
+                        // Restore previously typed name, fall back to empty so placeholder shows
+                        nameInput.value = this.localState.playerNames[i] || '';
                         nameInput.placeholder = `Player ${i + 1} Name`;
                     }
                     slot.appendChild(nameInput);
@@ -767,13 +776,20 @@
             },
 
             startLocalGame() {
+                // Save any final edits before reading
+                for (let i = 0; i < this.localState.playerCount; i++) {
+                    const existing = document.getElementById(`localPlayer${i}`);
+                    if (existing && !existing.disabled) {
+                        this.localState.playerNames[i] = existing.value;
+                    }
+                }
                 const players = [];
                 for (let i = 0; i < this.localState.playerCount; i++) {
                     const difficulty = this.localState.aiDifficulties[i] || 'human';
                     const isAI = difficulty !== 'human';
-                    const nameInput = document.getElementById(`localPlayer${i}`);
+                    const savedName = this.localState.playerNames[i] ? this.localState.playerNames[i].trim() : '';
                     const defaultName = isAI ? `AI (${difficulty})` : `Player ${i + 1}`;
-                    const name = (!isAI && nameInput.value.trim()) ? nameInput.value.trim() : defaultName;
+                    const name = (!isAI && savedName) ? savedName : defaultName;
 
                     players.push({
                         id: `p${i + 1}`,
