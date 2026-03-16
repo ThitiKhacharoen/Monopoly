@@ -2368,77 +2368,82 @@ function startAuction(propertyId) {
             modal.classList.add('active');
         }
         
-        function updateAuctionUI() {
-            if (!gameState.auction.active) return;
-            
-            const activePlayers = gameState.auction.participatingPlayers.filter(
+        function getActivePlayers() {
+            return gameState.auction.participatingPlayers.filter(
                 id => !gameState.auction.passedPlayers.includes(id)
             );
-            
-            if (activePlayers.length === 0) {
-                endAuction(false); // No one bid
+        }
+
+        function getCurrentAuctionPlayer() {
+            const active = getActivePlayers();
+            return gameState.players.find(p => p.id === active[gameState.auction.currentAuctionIndex % active.length]);
+        }
+
+        function updateAuctionUI() {
+            if (!gameState.auction.active) return;
+
+            const active = getActivePlayers();
+
+            if (active.length === 0) {
+                endAuction(false);
                 return;
             }
-            
-            if (activePlayers.length === 1 && gameState.auction.currentBid > 0) {
-                endAuction(true); // Winner!
+
+            if (active.length === 1 && gameState.auction.currentBid > 0) {
+                // Last standing player wins — update currentBidder to them, not whoever last bid
+                gameState.auction.currentBidder = active[0];
+                gameState.auction.currentBidderName = gameState.players.find(p => p.id === active[0]).name;
+                endAuction(true);
                 return;
             }
-            
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
+
+            const currentPlayer = getCurrentAuctionPlayer();
+
             document.getElementById('auctionCurrentBid').textContent = gameState.auction.currentBid;
             document.getElementById('auctionCurrentBidder').textContent = gameState.auction.currentBidderName;
             document.getElementById('auctionCurrentPlayer').textContent = currentPlayer.name;
-            
-            // Update bid input minimum
+
             const bidInput = document.getElementById('auctionBidInput');
             bidInput.min = gameState.auction.currentBid + 1;
             bidInput.value = '';
             bidInput.placeholder = `Min: $${gameState.auction.currentBid + 1}`;
         }
-        
+
         function placeBid() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
+            const currentPlayer = getCurrentAuctionPlayer();
+
             const bidInput = document.getElementById('auctionBidInput');
             const bidAmount = parseInt(bidInput.value);
-            
+
             if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
                 alert(`Bid must be higher than $${gameState.auction.currentBid}`);
                 return;
             }
-            
+
             if (bidAmount > currentPlayer.cash) {
                 alert(`You only have $${currentPlayer.cash}!`);
                 return;
             }
-            
+
             gameState.auction.currentBid = bidAmount;
             gameState.auction.currentBidder = currentPlayer.id;
             gameState.auction.currentBidderName = currentPlayer.name;
-            
+
             addAuctionLog(`${currentPlayer.name} bids $${bidAmount}`);
-            
+
+            // Advance to next player
             gameState.auction.currentAuctionIndex++;
             updateAuctionUI();
         }
-        
+
         function passAuction() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
+            const currentPlayer = getCurrentAuctionPlayer();
+
             gameState.auction.passedPlayers.push(currentPlayer.id);
             addAuctionLog(`${currentPlayer.name} passes`);
-            
+
+            // Do NOT increment index — the active array just shrank by 1,
+            // so the same index now naturally points to the next player.
             updateAuctionUI();
         }
         
