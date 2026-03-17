@@ -436,12 +436,8 @@
             <p class="subtitle">Tournament Rules Edition</p>
 
             <div class="menu-options" id="mainMenu">
-                <button class="menu-button" onclick="App.showLocalSetup()">
-                    🎮 Play!
-                </button>
-
-                <button class="menu-button" onclick="App.showOnlineMenu()">
-                    🌐 Online Multiplayer
+                <button class="menu-button" onclick="App.showPlayMenu()">
+                    🎮 Play
                 </button>
 
                 <button class="menu-button" onclick="window.location.href='monopoly-board.html'">
@@ -452,6 +448,49 @@
             <div class="footer">
                 <p>Built with Event Sourcing • Supabase • NEAT AI</p>
             </div>
+        </div>
+
+        <!-- PLAY MENU SCREEN -->
+        <div class="screen" id="playMenuScreen">
+            <div class="logo">🎮</div>
+            <h1 style="font-size: 2em;">Play</h1>
+            <p class="subtitle" style="margin-bottom: 30px;">Choose your game mode</p>
+
+            <div class="menu-options">
+                <button class="menu-button" onclick="App.showLocalOrLoad()">
+                    👥 Local Game
+                </button>
+
+                <button class="menu-button" onclick="App.showOnlineMenu()">
+                    🌐 Online Multiplayer
+                </button>
+            </div>
+
+            <button class="btn-secondary" style="margin-top: 20px;" onclick="App.showScreen('mainMenuScreen')">
+                ← Back
+            </button>
+        </div>
+
+        <!-- LOAD GAME SCREEN -->
+        <div class="screen" id="loadGameScreen">
+            <div class="logo">🎮</div>
+            <h1 style="font-size: 2em;">Local Game</h1>
+
+            <div class="menu-options" style="margin-top: 20px;">
+                <button class="menu-button" id="continueGameBtn" onclick="App.continueGame()">
+                    ▶️ Continue Game
+                </button>
+                <p class="subtitle" id="savedGameInfo" style="margin: 0; font-size: 0.9em;"></p>
+
+                <button class="menu-button" style="background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);"
+                    onclick="App.newLocalGame()">
+                    ➕ New Game
+                </button>
+            </div>
+
+            <button class="btn-secondary" style="margin-top: 20px;" onclick="App.showScreen('playMenuScreen')">
+                ← Back
+            </button>
         </div>
 
         <!-- LOCAL SETUP SCREEN -->
@@ -478,7 +517,7 @@
                 🎮 Start Game
             </button>
 
-            <button class="btn-secondary" onclick="App.showScreen('mainMenuScreen');">
+            <button class="btn-secondary" onclick="App.showScreen('playMenuScreen');">
                 ← Back
             </button>
         </div>
@@ -499,7 +538,7 @@
                 🔗 Join Existing Room
             </button>
 
-            <button class="btn-secondary" onclick="App.showScreen('mainMenuScreen');">
+            <button class="btn-secondary" onclick="App.showScreen('playMenuScreen');">
                 ← Back
             </button>
         </div>
@@ -631,6 +670,47 @@
             showLocalSetup() {
                 this.showScreen('localSetupScreen');
                 this.renderLocalPlayers();
+            },
+
+            showPlayMenu() {
+                this.showScreen('playMenuScreen');
+            },
+
+            showLocalOrLoad() {
+                const saved = localStorage.getItem('monopoly-saved-game');
+                const continueBtn = document.getElementById('continueGameBtn');
+                const savedInfo = document.getElementById('savedGameInfo');
+
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        const date = data.savedAt ? new Date(data.savedAt).toLocaleString() : 'Unknown';
+                        const players = data.players ? data.players.filter(p => !p.isBankrupt).map(p => p.name).join(', ') : '';
+                        savedInfo.textContent = `Last saved: ${date} — Players: ${players}`;
+                    } catch(e) {
+                        savedInfo.textContent = 'A previous game was saved.';
+                    }
+                    continueBtn.style.display = '';
+                    savedInfo.style.display = '';
+                } else {
+                    continueBtn.style.display = 'none';
+                    savedInfo.style.display = 'none';
+                }
+
+                this.showScreen('loadGameScreen');
+            },
+
+            continueGame() {
+                localStorage.setItem('monopoly-continue-game', 'true');
+                localStorage.setItem('monopoly-game-mode', 'local');
+                window.location.href = 'game-loader.html';
+            },
+
+            newLocalGame() {
+                const hasSave = !!localStorage.getItem('monopoly-saved-game');
+                if (hasSave && !confirm('Start a new game? Your saved game will be lost.')) return;
+                localStorage.removeItem('monopoly-saved-game');
+                this.showLocalSetup();
             },
 
             showOnlineMenu() {

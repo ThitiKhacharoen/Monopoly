@@ -1529,7 +1529,25 @@
         
          function startGame() {
             let players = [];
-            
+
+            // If coming from "Continue Game", restore saved state and skip setup
+            const continueGame = localStorage.getItem('monopoly-continue-game');
+            if (continueGame === 'true') {
+                localStorage.removeItem('monopoly-continue-game');
+                const loaded = loadSavedGame();
+                if (loaded) {
+                    document.getElementById('setupOverlay').classList.add('hidden');
+                    initializeBoard();
+                    // Restore property ownership visuals
+                    Object.entries(gameState.ownedProperties).forEach(([propId, data]) => {
+                        const owner = gameState.players.find(p => p.id === data.ownerId);
+                        if (owner) showPropertyOwnership(parseInt(propId), owner);
+                    });
+                    updateUI();
+                    return;
+                }
+            }
+
             // Check if players were loaded from localStorage (via index.html)
             const mode = localStorage.getItem('monopoly-game-mode');
             const localPlayersData = localStorage.getItem('monopoly-players');
@@ -1695,7 +1713,79 @@
             });
         }
         
+        // ===== SAVE / LOAD =====
+        const SAVE_KEY = 'monopoly-saved-game';
+
+        function saveGame() {
+            // Only save local games
+            if (onlineState.enabled) return;
+            // Don't save if game is over
+            const active = gameState.players.filter(p => !p.isBankrupt);
+            if (active.length === 1 && gameState.players.length > 1) return;
+
+            try {
+                const save = {
+                    players: gameState.players,
+                    currentPlayerIndex: gameState.currentPlayerIndex,
+                    diceRoll: gameState.diceRoll,
+                    phase: gameState.phase,
+                    pendingProperty: gameState.pendingProperty,
+                    ownedProperties: gameState.ownedProperties,
+                    doublesCount: gameState.doublesCount,
+                    auction: gameState.auction,
+                    // Save deck order as text keys (actions can't be serialized)
+                    chanceCardOrder: gameState.chanceCards.map(c => c.text),
+                    communityChestCardOrder: gameState.communityChestCards.map(c => c.text),
+                    savedAt: Date.now()
+                };
+                localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+            } catch(e) {
+                console.warn('Could not save game:', e);
+            }
+        }
+
+        function loadSavedGame() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return false;
+                const save = JSON.parse(raw);
+
+                // Restore all serializable state
+                gameState.players = save.players;
+                gameState.currentPlayerIndex = save.currentPlayerIndex;
+                gameState.diceRoll = save.diceRoll;
+                gameState.phase = save.phase;
+                gameState.pendingProperty = save.pendingProperty;
+                gameState.ownedProperties = save.ownedProperties;
+                gameState.doublesCount = save.doublesCount;
+                gameState.auction = save.auction;
+
+                // Reinitialize card decks with actions, then reorder to match saved order
+                initializeCardDecks();
+                if (save.chanceCardOrder) {
+                    gameState.chanceCards.sort((a, b) =>
+                        save.chanceCardOrder.indexOf(a.text) - save.chanceCardOrder.indexOf(b.text)
+                    );
+                }
+                if (save.communityChestCardOrder) {
+                    gameState.communityChestCards.sort((a, b) =>
+                        save.communityChestCardOrder.indexOf(a.text) - save.communityChestCardOrder.indexOf(b.text)
+                    );
+                }
+
+                return true;
+            } catch(e) {
+                console.warn('Could not load saved game:', e);
+                return false;
+            }
+        }
+
+        function clearSavedGame() {
+            localStorage.removeItem(SAVE_KEY);
+        }
+
         function updateUI() {
+            saveGame();
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
             // Update current player banner
@@ -2607,6 +2697,8 @@ function startAuction(propertyId) {
                     const activePlayers = gameState.players.filter(p => !p.isBankrupt);
                     if (activePlayers.length === 1) {
                         setTimeout(() => {
+                            clearSavedGame();
+                            clearSavedGame();
                             alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
                             if (confirm('Play again?')) {
                                 window.location.reload();
@@ -2647,7 +2739,8 @@ function startAuction(propertyId) {
             const activePlayers = gameState.players.filter(p => !p.isBankrupt);
             if (activePlayers.length === 1) {
                 setTimeout(() => {
-                    alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
+                    clearSavedGame();
+                            alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
                     if (confirm('Play again?')) {
                         window.location.reload();
                     }
