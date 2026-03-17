@@ -1538,12 +1538,19 @@
                 if (loaded) {
                     document.getElementById('setupOverlay').classList.add('hidden');
                     initializeBoard();
-                    // Restore property ownership visuals
-                    Object.entries(gameState.ownedProperties).forEach(([propId, data]) => {
-                        const owner = gameState.players.find(p => p.id === data.ownerId);
-                        if (owner) showPropertyOwnership(parseInt(propId), owner);
-                    });
-                    updateUI();
+                    // Defer visual restore until after DOM is ready
+                    setTimeout(() => {
+                        // Restore player piece positions
+                        gameState.players.forEach(player => {
+                            movePiece(player.id, player.position);
+                        });
+                        // Restore property ownership visuals
+                        Object.entries(gameState.ownedProperties).forEach(([propId, data]) => {
+                            const owner = gameState.players.find(p => p.id === data.ownerId);
+                            if (owner) showPropertyOwnership(parseInt(propId), owner);
+                        });
+                        updateUI();
+                    }, 0);
                     return;
                 }
             }
