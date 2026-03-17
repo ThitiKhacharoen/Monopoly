@@ -1542,6 +1542,9 @@
                     setTimeout(() => {
                         // Restore player piece positions
                         gameState.players.forEach(player => {
+                            const piece = document.getElementById(`piece-${player.id}`);
+                            const space = document.querySelector(`.space-${player.position}`);
+                            console.log(`Restoring ${player.name}: piece=${!!piece}, space=${!!space}, position=${player.position}`);
                             movePiece(player.id, player.position);
                         });
                         // Restore property ownership visuals
