@@ -1285,6 +1285,18 @@
         </div>
     </div>
     
+    <!-- Trade Confirm Modal -->
+    <div class="property-modal" id="tradeConfirmModal">
+        <div class="property-modal-content" style="max-width: 420px;">
+            <h3 style="margin-bottom: 16px;">🤝 Trade Proposal</h3>
+            <div id="tradeConfirmDesc" style="white-space: pre-line; background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 0.95em; line-height: 1.6; margin-bottom: 20px;"></div>
+            <div style="display: flex; gap: 12px;">
+                <button class="modal-btn" style="background: #4caf50; flex: 1;" onclick="acceptTrade()">✅ Accept</button>
+                <button class="modal-btn" style="background: #f44336; flex: 1;" onclick="rejectTrade()">❌ Reject</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Manage Properties Modal -->
     <div class="manage-modal" id="manageModal">
         <div class="manage-modal-content">
@@ -1578,7 +1590,7 @@
                     isBankrupt: false,
                     inJail: false,
                     jailTurns: 0,
-                    getOutOfJailFreeCards: 0,
+                    getOutOfJailFreeCards: [],
                     aiDifficulty: p.aiDifficulty || null,
                 }));
             } else if (mode === 'online' && onlineGameData) {
@@ -1826,7 +1838,7 @@
                     <div class="player-card-info">
                         <div class="player-card-name">${nameText}</div>
                         <div class="player-card-cash">$${player.cash}</div>
-                        <div class="player-card-properties">${player.properties.length} properties${player.getOutOfJailFreeCards > 0 ? ' | ' + player.getOutOfJailFreeCards + '🎟️' : ''}</div>
+                        <div class="player-card-properties">${player.properties.length} properties${player.getOutOfJailFreeCards.length > 0 ? ' | ' + player.getOutOfJailFreeCards.length + '🎟️' : ''}</div>
                     </div>
                 `;
                 
@@ -1856,7 +1868,7 @@
             // Show/hide jail buttons
             if (currentPlayer.inJail && gameState.phase === 'ROLL_DICE') {
                 payJailBtn.style.display = 'block';
-                useJailCardBtn.style.display = currentPlayer.getOutOfJailFreeCards > 0 ? 'block' : 'none';
+                useJailCardBtn.style.display = currentPlayer.getOutOfJailFreeCards.length > 0 ? 'block' : 'none';
             } else {
                 payJailBtn.style.display = 'none';
                 useJailCardBtn.style.display = 'none';
@@ -1896,17 +1908,21 @@
         function useGetOutOfJailFree() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
-            if (currentPlayer.getOutOfJailFreeCards <= 0) return;
+            if (currentPlayer.getOutOfJailFreeCards.length === 0) return;
             
-            currentPlayer.getOutOfJailFreeCards--;
+            const deckType = currentPlayer.getOutOfJailFreeCards.pop();
             currentPlayer.inJail = false;
             currentPlayer.jailTurns = 0;
             
             showMessage(`${currentPlayer.name} used Get Out of Jail Free card!`, 'success');
             
-            // Put card back in deck
-            const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree() };
-            gameState.chanceCards.push(card); // Put in one of the decks
+            // Return card to its original deck
+            const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree(deckType) };
+            if (deckType === 'community') {
+                gameState.communityChestCards.push(card);
+            } else {
+                gameState.chanceCards.push(card);
+            }
             
             updateUI();
         }
@@ -2082,8 +2098,15 @@
             const deck = deckType === 'chance' ? gameState.chanceCards : gameState.communityChestCards;
             const card = deck[0];
             
-            // Move card to bottom of deck (unless it's Get Out of Jail Free)
-            if (card.type !== 'jail') {
+            if (card.type === 'jail') {
+                // Remove from deck entirely — held by player until used or traded
+                if (deckType === 'chance') {
+                    gameState.chanceCards = deck.slice(1);
+                } else {
+                    gameState.communityChestCards = deck.slice(1);
+                }
+            } else {
+                // Rotate to bottom
                 if (deckType === 'chance') {
                     gameState.chanceCards = [...deck.slice(1), deck[0]];
                 } else {
@@ -2308,9 +2331,9 @@
             updateUI();
         }
         
-        function getOutOfJailFree() {
+        function getOutOfJailFree(deckType) {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-            currentPlayer.getOutOfJailFreeCards++;
+            currentPlayer.getOutOfJailFreeCards.push(deckType || 'chance');
             
             showMessage(`${currentPlayer.name} got a Get Out of Jail Free card!`, 'success');
             gameState.phase = 'END_TURN';
@@ -2830,7 +2853,13 @@ function startAuction(propertyId) {
         let tradeState = {
             player1SelectedProps: [],
             player2SelectedProps: [],
-            partnerId: null
+            player1SelectedGoojf: [],
+            player2SelectedGoojf: [],
+            partnerId: null,
+            pendingP1: null,
+            pendingP2: null,
+            pendingCashOffer: 0,
+            pendingCashRequest: 0
         };
         
         function openTradeModal() {
@@ -2859,6 +2888,8 @@ function startAuction(propertyId) {
             document.getElementById('tradePlayer2CashRequest').value = 0;
             tradeState.player1SelectedProps = [];
             tradeState.player2SelectedProps = [];
+            tradeState.player1SelectedGoojf = [];
+            tradeState.player2SelectedGoojf = [];
             
             updateTradePartner();
             modal.classList.add('active');
@@ -2889,6 +2920,14 @@ function startAuction(propertyId) {
                 div.onclick = () => toggleTradeProperty(1, propId, div);
                 p1PropsDiv.appendChild(div);
             });
+            // GOOJF cards
+            currentPlayer.getOutOfJailFreeCards.forEach((deckType, i) => {
+                const div = document.createElement('div');
+                div.className = 'trade-property-item';
+                div.textContent = `🎟️ Get Out of Jail Free (${deckType})`;
+                div.onclick = () => toggleTradeGoojf(1, deckType, i, div);
+                p1PropsDiv.appendChild(div);
+            });
             
             const p2PropsDiv = document.getElementById('tradePlayer2Properties');
             p2PropsDiv.innerHTML = '';
@@ -2898,6 +2937,14 @@ function startAuction(propertyId) {
                 div.className = 'trade-property-item';
                 div.textContent = space.name;
                 div.onclick = () => toggleTradeProperty(2, propId, div);
+                p2PropsDiv.appendChild(div);
+            });
+            // GOOJF cards
+            partner.getOutOfJailFreeCards.forEach((deckType, i) => {
+                const div = document.createElement('div');
+                div.className = 'trade-property-item';
+                div.textContent = `🎟️ Get Out of Jail Free (${deckType})`;
+                div.onclick = () => toggleTradeGoojf(2, deckType, i, div);
                 p2PropsDiv.appendChild(div);
             });
         }
@@ -2924,6 +2971,19 @@ function startAuction(propertyId) {
             }
         }
         
+        function toggleTradeGoojf(player, deckType, index, element) {
+            const arr = player === 1 ? tradeState.player1SelectedGoojf : tradeState.player2SelectedGoojf;
+            const key = `${deckType}-${index}`;
+            const pos = arr.indexOf(key);
+            if (pos > -1) {
+                arr.splice(pos, 1);
+                element.classList.remove('selected');
+            } else {
+                arr.push(key);
+                element.classList.add('selected');
+            }
+        }
+
         function proposeTrade() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const partner = gameState.players.find(p => p.id === tradeState.partnerId);
@@ -2942,15 +3002,16 @@ function startAuction(propertyId) {
                 return;
             }
             
-            // Show confirmation
+            // Show in-game confirmation modal
             const tradeDesc = buildTradeDescription(currentPlayer, partner, cashOffer, cashRequest);
-            
-            if (confirm(`${partner.name}, do you accept this trade?\n\n${tradeDesc}`)) {
-                executeTrade(currentPlayer, partner, cashOffer, cashRequest);
-                closeTradeModal();
-            } else {
-                showMessage('Trade rejected', 'info');
-            }
+            const header = `${partner.name}, do you accept this trade?\n\n`;
+            document.getElementById('tradeConfirmDesc').textContent = header + tradeDesc;
+            // Store pending trade for accept/reject
+            tradeState.pendingP1 = currentPlayer;
+            tradeState.pendingP2 = partner;
+            tradeState.pendingCashOffer = cashOffer;
+            tradeState.pendingCashRequest = cashRequest;
+            document.getElementById('tradeConfirmModal').classList.add('active');
         }
         
         function buildTradeDescription(p1, p2, cashOffer, cashRequest) {
@@ -2959,11 +3020,17 @@ function startAuction(propertyId) {
             tradeState.player1SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
             });
+            tradeState.player1SelectedGoojf.forEach(() => {
+                desc += `- 🎟️ Get Out of Jail Free\n`;
+            });
             
             desc += `\n${p2.name} gives:\n`;
             if (cashRequest > 0) desc += `- $${cashRequest}\n`;
             tradeState.player2SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
+            });
+            tradeState.player2SelectedGoojf.forEach(() => {
+                desc += `- 🎟️ Get Out of Jail Free\n`;
             });
             
             return desc;
@@ -2998,12 +3065,41 @@ function startAuction(propertyId) {
                 }
             });
             
+            // Transfer GOOJF cards
+            tradeState.player1SelectedGoojf.forEach(key => {
+                const deckType = key.split('-')[0];
+                const idx = p1.getOutOfJailFreeCards.indexOf(deckType);
+                if (idx > -1) {
+                    p1.getOutOfJailFreeCards.splice(idx, 1);
+                    p2.getOutOfJailFreeCards.push(deckType);
+                }
+            });
+            tradeState.player2SelectedGoojf.forEach(key => {
+                const deckType = key.split('-')[0];
+                const idx = p2.getOutOfJailFreeCards.indexOf(deckType);
+                if (idx > -1) {
+                    p2.getOutOfJailFreeCards.splice(idx, 1);
+                    p1.getOutOfJailFreeCards.push(deckType);
+                }
+            });
+
             showMessage(`Trade completed between ${p1.name} and ${p2.name}!`, 'success');
             updateUI();
         }
         
         function closeTradeModal() {
             document.getElementById('tradeModal').classList.remove('active');
+        }
+
+        function acceptTrade() {
+            document.getElementById('tradeConfirmModal').classList.remove('active');
+            executeTrade(tradeState.pendingP1, tradeState.pendingP2, tradeState.pendingCashOffer, tradeState.pendingCashRequest);
+            closeTradeModal();
+        }
+
+        function rejectTrade() {
+            document.getElementById('tradeConfirmModal').classList.remove('active');
+            showMessage('Trade rejected', 'info');
         }
         
         // ===== PROPERTY MANAGEMENT =====
