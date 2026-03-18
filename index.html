@@ -703,7 +703,7 @@
             continueGame() {
                 localStorage.setItem('monopoly-continue-game', 'true');
                 localStorage.setItem('monopoly-game-mode', 'local');
-                window.location.href = 'game-loader.html';
+                window.location.href = 'game.html';
             },
 
             newLocalGame() {
@@ -882,7 +882,7 @@
 
                 localStorage.setItem('monopoly-game-mode', 'local');
                 localStorage.setItem('monopoly-players', JSON.stringify(players));
-                window.location.href = 'game-loader.html';
+                window.location.href = 'game.html';
             },
 
             renderTokenSelector(containerId, usedTokens) {
@@ -1065,9 +1065,33 @@
                     )
                     .on('postgres_changes',
                         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${this.onlineState.roomId}` },
-                        (payload) => {
+                        async (payload) => {
                             if (payload.new.status === 'playing') {
-                                window.location.href = 'game-loader.html';
+                                // Host already saved localStorage before redirecting.
+                                // Joiner needs to fetch players and save it themselves.
+                                if (!this.onlineState.isHost) {
+                                    const { data: players } = await this.supabase
+                                        .from('room_players').select('*')
+                                        .eq('room_id', this.onlineState.roomId).order('player_order');
+
+                                    const gameData = {
+                                        roomId: this.onlineState.roomId,
+                                        roomCode: this.onlineState.roomCode,
+                                        players: players.map(p => ({
+                                            id: p.id,
+                                            name: p.player_name,
+                                            token: p.token,
+                                            iconClass: p.icon_class,
+                                            order: p.player_order,
+                                            aiDifficulty: null
+                                        }))
+                                    };
+
+                                    localStorage.setItem('monopoly-game-mode', 'online');
+                                    localStorage.setItem('monopoly-online-game', JSON.stringify(gameData));
+                                }
+
+                                window.location.href = 'game.html';
                             }
                         }
                     )
@@ -1103,7 +1127,7 @@
                     .update({ status: 'playing', started_at: new Date().toISOString() })
                     .eq('id', this.onlineState.roomId);
 
-                window.location.href = 'game-loader.html';
+                window.location.href = 'game.html';
             },
 
             async leaveOnlineRoom() {
