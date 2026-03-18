@@ -1291,8 +1291,8 @@
             <h3 style="margin-bottom: 16px;">🤝 Trade Proposal</h3>
             <div id="tradeConfirmDesc" style="white-space: pre-line; background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 0.95em; line-height: 1.6; margin-bottom: 20px;"></div>
             <div style="display: flex; gap: 12px;">
-                <button class="modal-btn" style="background: #4caf50; flex: 1;" onclick="acceptTrade()">✅ Accept</button>
-                <button class="modal-btn" style="background: #f44336; flex: 1;" onclick="rejectTrade()">❌ Reject</button>
+                <button style="background:#4caf50;color:white;border:none;padding:12px 20px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;flex:1;" onclick="acceptTrade()">✅ Accept</button>
+                <button style="background:#f44336;color:white;border:none;padding:12px 20px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;flex:1;" onclick="rejectTrade()">❌ Reject</button>
             </div>
         </div>
     </div>
@@ -1541,35 +1541,7 @@
         
          function startGame() {
             let players = [];
-
-            // If coming from "Continue Game", restore saved state and skip setup
-            const continueGame = localStorage.getItem('monopoly-continue-game');
-            if (continueGame === 'true') {
-                localStorage.removeItem('monopoly-continue-game');
-                const loaded = loadSavedGame();
-                if (loaded) {
-                    document.getElementById('setupOverlay').classList.add('hidden');
-                    initializeBoard();
-                    // Defer visual restore until after DOM is ready
-                    setTimeout(() => {
-                        // Restore player piece positions
-                        gameState.players.forEach(player => {
-                            const piece = document.getElementById(`piece-${player.id}`);
-                            const space = document.querySelector(`.space-${player.position}`);
-                            console.log(`Restoring ${player.name}: piece=${!!piece}, space=${!!space}, position=${player.position}`);
-                            movePiece(player.id, player.position);
-                        });
-                        // Restore property ownership visuals
-                        Object.entries(gameState.ownedProperties).forEach(([propId, data]) => {
-                            const owner = gameState.players.find(p => p.id === data.ownerId);
-                            if (owner) showPropertyOwnership(parseInt(propId), owner);
-                        });
-                        updateUI();
-                    }, 0);
-                    return;
-                }
-            }
-
+            
             // Check if players were loaded from localStorage (via index.html)
             const mode = localStorage.getItem('monopoly-game-mode');
             const localPlayersData = localStorage.getItem('monopoly-players');
@@ -1608,7 +1580,7 @@
                     isBankrupt: false,
                     inJail: false,
                     jailTurns: 0,
-                    getOutOfJailFreeCards: 0
+                    getOutOfJailFreeCards: []
                 }));
                 
             } else {
@@ -1631,7 +1603,7 @@
                         isBankrupt: false,
                         inJail: false,
                         jailTurns: 0,
-                        getOutOfJailFreeCards: 0
+                        getOutOfJailFreeCards: []
                     });
                 }
             }
@@ -1735,79 +1707,7 @@
             });
         }
         
-        // ===== SAVE / LOAD =====
-        const SAVE_KEY = 'monopoly-saved-game';
-
-        function saveGame() {
-            // Only save local games
-            if (onlineState.enabled) return;
-            // Don't save if game is over
-            const active = gameState.players.filter(p => !p.isBankrupt);
-            if (active.length === 1 && gameState.players.length > 1) return;
-
-            try {
-                const save = {
-                    players: gameState.players,
-                    currentPlayerIndex: gameState.currentPlayerIndex,
-                    diceRoll: gameState.diceRoll,
-                    phase: gameState.phase,
-                    pendingProperty: gameState.pendingProperty,
-                    ownedProperties: gameState.ownedProperties,
-                    doublesCount: gameState.doublesCount,
-                    auction: gameState.auction,
-                    // Save deck order as text keys (actions can't be serialized)
-                    chanceCardOrder: gameState.chanceCards.map(c => c.text),
-                    communityChestCardOrder: gameState.communityChestCards.map(c => c.text),
-                    savedAt: Date.now()
-                };
-                localStorage.setItem(SAVE_KEY, JSON.stringify(save));
-            } catch(e) {
-                console.warn('Could not save game:', e);
-            }
-        }
-
-        function loadSavedGame() {
-            try {
-                const raw = localStorage.getItem(SAVE_KEY);
-                if (!raw) return false;
-                const save = JSON.parse(raw);
-
-                // Restore all serializable state
-                gameState.players = save.players;
-                gameState.currentPlayerIndex = save.currentPlayerIndex;
-                gameState.diceRoll = save.diceRoll;
-                gameState.phase = save.phase;
-                gameState.pendingProperty = save.pendingProperty;
-                gameState.ownedProperties = save.ownedProperties;
-                gameState.doublesCount = save.doublesCount;
-                gameState.auction = save.auction;
-
-                // Reinitialize card decks with actions, then reorder to match saved order
-                initializeCardDecks();
-                if (save.chanceCardOrder) {
-                    gameState.chanceCards.sort((a, b) =>
-                        save.chanceCardOrder.indexOf(a.text) - save.chanceCardOrder.indexOf(b.text)
-                    );
-                }
-                if (save.communityChestCardOrder) {
-                    gameState.communityChestCards.sort((a, b) =>
-                        save.communityChestCardOrder.indexOf(a.text) - save.communityChestCardOrder.indexOf(b.text)
-                    );
-                }
-
-                return true;
-            } catch(e) {
-                console.warn('Could not load saved game:', e);
-                return false;
-            }
-        }
-
-        function clearSavedGame() {
-            localStorage.removeItem(SAVE_KEY);
-        }
-
         function updateUI() {
-            saveGame();
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
             // Update current player banner
@@ -1916,7 +1816,6 @@
             
             showMessage(`${currentPlayer.name} used Get Out of Jail Free card!`, 'success');
             
-            // Return card to its original deck
             const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree(deckType) };
             if (deckType === 'community') {
                 gameState.communityChestCards.push(card);
@@ -2106,7 +2005,6 @@
                     gameState.communityChestCards = deck.slice(1);
                 }
             } else {
-                // Rotate to bottom
                 if (deckType === 'chance') {
                     gameState.chanceCards = [...deck.slice(1), deck[0]];
                 } else {
@@ -2491,82 +2389,77 @@ function startAuction(propertyId) {
             modal.classList.add('active');
         }
         
-        function getActivePlayers() {
-            return gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-        }
-
-        function getCurrentAuctionPlayer() {
-            const active = getActivePlayers();
-            return gameState.players.find(p => p.id === active[gameState.auction.currentAuctionIndex % active.length]);
-        }
-
         function updateAuctionUI() {
             if (!gameState.auction.active) return;
-
-            const active = getActivePlayers();
-
-            if (active.length === 0) {
-                endAuction(false);
+            
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            
+            if (activePlayers.length === 0) {
+                endAuction(false); // No one bid
                 return;
             }
-
-            if (active.length === 1 && gameState.auction.currentBid > 0) {
-                // Last standing player wins — update currentBidder to them, not whoever last bid
-                gameState.auction.currentBidder = active[0];
-                gameState.auction.currentBidderName = gameState.players.find(p => p.id === active[0]).name;
-                endAuction(true);
+            
+            if (activePlayers.length === 1 && gameState.auction.currentBid > 0) {
+                endAuction(true); // Winner!
                 return;
             }
-
-            const currentPlayer = getCurrentAuctionPlayer();
-
+            
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
             document.getElementById('auctionCurrentBid').textContent = gameState.auction.currentBid;
             document.getElementById('auctionCurrentBidder').textContent = gameState.auction.currentBidderName;
             document.getElementById('auctionCurrentPlayer').textContent = currentPlayer.name;
-
+            
+            // Update bid input minimum
             const bidInput = document.getElementById('auctionBidInput');
             bidInput.min = gameState.auction.currentBid + 1;
             bidInput.value = '';
             bidInput.placeholder = `Min: $${gameState.auction.currentBid + 1}`;
         }
-
+        
         function placeBid() {
-            const currentPlayer = getCurrentAuctionPlayer();
-
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
             const bidInput = document.getElementById('auctionBidInput');
             const bidAmount = parseInt(bidInput.value);
-
+            
             if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
                 alert(`Bid must be higher than $${gameState.auction.currentBid}`);
                 return;
             }
-
+            
             if (bidAmount > currentPlayer.cash) {
                 alert(`You only have $${currentPlayer.cash}!`);
                 return;
             }
-
+            
             gameState.auction.currentBid = bidAmount;
             gameState.auction.currentBidder = currentPlayer.id;
             gameState.auction.currentBidderName = currentPlayer.name;
-
+            
             addAuctionLog(`${currentPlayer.name} bids $${bidAmount}`);
-
-            // Advance to next player
+            
             gameState.auction.currentAuctionIndex++;
             updateAuctionUI();
         }
-
+        
         function passAuction() {
-            const currentPlayer = getCurrentAuctionPlayer();
-
+            const activePlayers = gameState.auction.participatingPlayers.filter(
+                id => !gameState.auction.passedPlayers.includes(id)
+            );
+            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
+            
             gameState.auction.passedPlayers.push(currentPlayer.id);
             addAuctionLog(`${currentPlayer.name} passes`);
-
-            // Do NOT increment index — the active array just shrank by 1,
-            // so the same index now naturally points to the next player.
+            
             updateAuctionUI();
         }
         
@@ -2730,8 +2623,6 @@ function startAuction(propertyId) {
                     const activePlayers = gameState.players.filter(p => !p.isBankrupt);
                     if (activePlayers.length === 1) {
                         setTimeout(() => {
-                            clearSavedGame();
-                            clearSavedGame();
                             alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
                             if (confirm('Play again?')) {
                                 window.location.reload();
@@ -2772,8 +2663,7 @@ function startAuction(propertyId) {
             const activePlayers = gameState.players.filter(p => !p.isBankrupt);
             if (activePlayers.length === 1) {
                 setTimeout(() => {
-                    clearSavedGame();
-                            alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
+                    alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
                     if (confirm('Play again?')) {
                         window.location.reload();
                     }
@@ -2920,7 +2810,6 @@ function startAuction(propertyId) {
                 div.onclick = () => toggleTradeProperty(1, propId, div);
                 p1PropsDiv.appendChild(div);
             });
-            // GOOJF cards
             currentPlayer.getOutOfJailFreeCards.forEach((deckType, i) => {
                 const div = document.createElement('div');
                 div.className = 'trade-property-item';
@@ -2939,7 +2828,6 @@ function startAuction(propertyId) {
                 div.onclick = () => toggleTradeProperty(2, propId, div);
                 p2PropsDiv.appendChild(div);
             });
-            // GOOJF cards
             partner.getOutOfJailFreeCards.forEach((deckType, i) => {
                 const div = document.createElement('div');
                 div.className = 'trade-property-item';
@@ -3002,11 +2890,8 @@ function startAuction(propertyId) {
                 return;
             }
             
-            // Show in-game confirmation modal
             const tradeDesc = buildTradeDescription(currentPlayer, partner, cashOffer, cashRequest);
-            const header = `${partner.name}, do you accept this trade?\n\n`;
-            document.getElementById('tradeConfirmDesc').textContent = header + tradeDesc;
-            // Store pending trade for accept/reject
+            document.getElementById('tradeConfirmDesc').textContent = `${partner.name}, do you accept this trade?\n\n` + tradeDesc;
             tradeState.pendingP1 = currentPlayer;
             tradeState.pendingP2 = partner;
             tradeState.pendingCashOffer = cashOffer;
@@ -3020,18 +2905,14 @@ function startAuction(propertyId) {
             tradeState.player1SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
             });
-            tradeState.player1SelectedGoojf.forEach(() => {
-                desc += `- 🎟️ Get Out of Jail Free\n`;
-            });
+            tradeState.player1SelectedGoojf.forEach(() => { desc += `- 🎟️ Get Out of Jail Free\n`; });
             
             desc += `\n${p2.name} gives:\n`;
             if (cashRequest > 0) desc += `- $${cashRequest}\n`;
             tradeState.player2SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
             });
-            tradeState.player2SelectedGoojf.forEach(() => {
-                desc += `- 🎟️ Get Out of Jail Free\n`;
-            });
+            tradeState.player2SelectedGoojf.forEach(() => { desc += `- 🎟️ Get Out of Jail Free\n`; });
             
             return desc;
         }
@@ -3069,18 +2950,12 @@ function startAuction(propertyId) {
             tradeState.player1SelectedGoojf.forEach(key => {
                 const deckType = key.split('-')[0];
                 const idx = p1.getOutOfJailFreeCards.indexOf(deckType);
-                if (idx > -1) {
-                    p1.getOutOfJailFreeCards.splice(idx, 1);
-                    p2.getOutOfJailFreeCards.push(deckType);
-                }
+                if (idx > -1) { p1.getOutOfJailFreeCards.splice(idx, 1); p2.getOutOfJailFreeCards.push(deckType); }
             });
             tradeState.player2SelectedGoojf.forEach(key => {
                 const deckType = key.split('-')[0];
                 const idx = p2.getOutOfJailFreeCards.indexOf(deckType);
-                if (idx > -1) {
-                    p2.getOutOfJailFreeCards.splice(idx, 1);
-                    p1.getOutOfJailFreeCards.push(deckType);
-                }
+                if (idx > -1) { p2.getOutOfJailFreeCards.splice(idx, 1); p1.getOutOfJailFreeCards.push(deckType); }
             });
 
             showMessage(`Trade completed between ${p1.name} and ${p2.name}!`, 'success');
