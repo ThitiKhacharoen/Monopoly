@@ -527,8 +527,6 @@
             <h1 style="font-size: 2em;">🌐 Online Multiplayer</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Play with friends around the world</p>
 
-            <div class="error-message" id="onlineError"></div>
-
             <button class="btn-primary" onclick="App.showOnlineCreate()">
                 🎮 Create New Room
             </button>
@@ -548,11 +546,10 @@
             <h1 style="font-size: 2em;">🎮 Create Room</h1>
             <p class="subtitle" style="margin-bottom: 30px;">Host a new online game</p>
 
+            <div class="error-message" id="onlineError"></div>
+
             <label>Your Name</label>
             <input type="text" id="onlineHostName" placeholder="Enter your name" maxlength="20">
-
-            <label>Choose Your Token</label>
-            <div class="token-selector" id="onlineHostTokens"></div>
 
             <label>Maximum Players</label>
             <select id="onlineMaxPlayers">
@@ -613,13 +610,14 @@
                 <div id="lobbyPlayersList"></div>
             </div>
 
-            <!-- Token picker — shown only for joiners before they confirm -->
+            <!-- Token picker — shown for all players before they confirm token -->
             <div id="lobbyTokenPicker" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 20px 0;">
                 <h3 style="color: #667eea; margin-bottom: 12px;">Choose Your Token</h3>
+                <p style="color: #999; font-size: 0.85em; margin-bottom: 10px;">Leave unselected to be assigned randomly</p>
                 <div class="error-message" id="lobbyJoinError"></div>
                 <div class="token-selector" id="lobbyTokenSelector" style="justify-content: center;"></div>
-                <button class="btn-primary" style="margin-top: 15px;" onclick="App.confirmJoinRoom()">
-                    ✅ Join Game
+                <button class="btn-primary" style="margin-top: 15px;" id="lobbyConfirmTokenBtn" onclick="App.confirmToken()">
+                    ✅ Confirm Token
                 </button>
             </div>
 
@@ -663,6 +661,10 @@
                 playerId: null,
                 isHost: false,
                 selectedToken: null,
+                tokenConfirmed: false,
+                pendingRoomId: null,
+                pendingRoomCode: null,
+                pendingName: null,
                 subscription: null
             },
 
@@ -723,17 +725,17 @@
             },
 
             showOnlineMenu() {
+                this.onlineState.tokenConfirmed = false;
+                this.onlineState.selectedToken = null;
                 this.showScreen('onlineMenuScreen');
             },
 
             showOnlineCreate() {
                 this.showScreen('onlineCreateScreen');
-                this.renderTokenSelector('onlineHostTokens', []);
             },
 
             showOnlineJoin() {
                 this.showScreen('onlineJoinScreen');
-                this.renderTokenSelector('onlineJoinTokens', []);
             },
 
             setLocalPlayerCount(count) {
@@ -933,7 +935,6 @@
                 const maxPlayers = parseInt(document.getElementById('onlineMaxPlayers').value);
 
                 if (!name) { this.showError('onlineError', 'Please enter your name'); return; }
-                if (!this.onlineState.selectedToken) { this.showError('onlineError', 'Please select a token'); return; }
 
                 try {
                     const { data: codeData } = await this.supabase.rpc('generate_room_code');
@@ -944,23 +945,26 @@
                         .insert({ room_code: roomCode, max_players: maxPlayers, status: 'waiting' })
                         .select().single();
 
+                    // Insert host with no token yet — will be confirmed in lobby
                     const { data: player } = await this.supabase
                         .from('room_players')
                         .insert({
                             room_id: room.id,
                             player_name: name,
-                            token: this.onlineState.selectedToken,
+                            token: '❓',
                             icon_class: this.ICON_CLASSES[0],
                             is_host: true,
                             player_order: 0
                         })
                         .select().single();
 
-                    localStorage.setItem("myPlayerId", player.id);
+                    localStorage.setItem('myPlayerId', player.id);
                     this.onlineState.roomId = room.id;
                     this.onlineState.roomCode = roomCode;
                     this.onlineState.playerId = player.id;
                     this.onlineState.isHost = true;
+                    this.onlineState.selectedToken = null;
+                    this.onlineState.tokenConfirmed = false;
 
                     this.subscribeToRoom();
                     this.showOnlineLobby();
@@ -994,14 +998,12 @@
                     this.onlineState.pendingRoomId = room.id;
                     this.onlineState.pendingRoomCode = roomCode;
                     this.onlineState.pendingName = name;
-                    this.onlineState.pendingExistingPlayers = existingPlayers;
                     this.onlineState.isHost = false;
+                    this.onlineState.tokenConfirmed = false;
+                    this.onlineState.selectedToken = null;
 
-                    // Show lobby in preview mode with token picker
-                    document.getElementById('lobbyRoomCode').textContent = roomCode;
-                    this.showScreen('onlineLobbyScreen');
+                    this.showOnlineLobby();
                     this.renderLobbyPreview(existingPlayers, room.max_players);
-                    this.renderLobbyTokenPicker(existingPlayers.map(p => p.token));
                 } catch (error) {
                     console.error('Error:', error);
                     this.showError('joinError', error.message || 'Failed to find room');
@@ -1029,7 +1031,11 @@
 
             renderLobbyTokenPicker(usedTokens) {
                 document.getElementById('lobbyTokenPicker').style.display = 'block';
-                this.onlineState.selectedToken = null;
+                // Don't reset selectedToken — preserve any existing selection
+                // But if current selection was just taken, clear it
+                if (this.onlineState.selectedToken && usedTokens.includes(this.onlineState.selectedToken)) {
+                    this.onlineState.selectedToken = null;
+                }
                 const container = document.getElementById('lobbyTokenSelector');
                 container.innerHTML = '';
                 this.TOKENS.forEach(token => {
@@ -1040,6 +1046,9 @@
                     if (usedTokens.includes(token)) {
                         btn.classList.add('disabled');
                         btn.disabled = true;
+                    }
+                    if (this.onlineState.selectedToken === token) {
+                        btn.classList.add('selected');
                     }
                     btn.onclick = () => {
                         if (this.onlineState.selectedToken === token) {
@@ -1055,22 +1064,23 @@
                 });
             },
 
-            async confirmJoinRoom() {
+            async confirmToken() {
                 try {
-                    // Re-fetch to catch any tokens taken since preview loaded
+                    const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
+
+                    // Re-fetch taken tokens
                     const { data: existingPlayers } = await this.supabase
-                        .from('room_players').select('token, player_order')
-                        .eq('room_id', this.onlineState.pendingRoomId).order('player_order');
+                        .from('room_players').select('token, player_order, id')
+                        .eq('room_id', roomId).order('player_order');
 
-                    const usedTokens = existingPlayers.map(p => p.token);
+                    const usedTokens = existingPlayers
+                        .filter(p => p.id !== this.onlineState.playerId)
+                        .map(p => p.token).filter(t => t !== '❓');
 
-                    // Assign random available token if none selected
+                    // Assign random if none selected
                     if (!this.onlineState.selectedToken) {
                         const available = this.TOKENS.filter(t => !usedTokens.includes(t));
-                        if (available.length === 0) {
-                            this.showError('lobbyJoinError', 'No tokens available');
-                            return;
-                        }
+                        if (available.length === 0) { this.showError('lobbyJoinError', 'No tokens available'); return; }
                         this.onlineState.selectedToken = available[Math.floor(Math.random() * available.length)];
                     }
 
@@ -1080,51 +1090,73 @@
                         return;
                     }
 
-                    const playerOrder = existingPlayers.length;
+                    if (this.onlineState.isHost) {
+                        // Host already has a DB row — just update their token
+                        await this.supabase.from('room_players')
+                            .update({ token: this.onlineState.selectedToken })
+                            .eq('id', this.onlineState.playerId);
+                    } else {
+                        // Joiner — insert their row now
+                        const playerOrder = existingPlayers.length;
+                        const { data: player } = await this.supabase
+                            .from('room_players')
+                            .insert({
+                                room_id: roomId,
+                                player_name: this.onlineState.pendingName,
+                                token: this.onlineState.selectedToken,
+                                icon_class: this.ICON_CLASSES[playerOrder],
+                                is_host: false,
+                                player_order: playerOrder
+                            })
+                            .select().single();
 
-                    const { data: player } = await this.supabase
-                        .from('room_players')
-                        .insert({
-                            room_id: this.onlineState.pendingRoomId,
-                            player_name: this.onlineState.pendingName,
-                            token: this.onlineState.selectedToken,
-                            icon_class: this.ICON_CLASSES[playerOrder],
-                            is_host: false,
-                            player_order: playerOrder
-                        })
-                        .select().single();
+                        localStorage.setItem('myPlayerId', player.id);
+                        this.onlineState.roomId = this.onlineState.pendingRoomId;
+                        this.onlineState.roomCode = this.onlineState.pendingRoomCode;
+                        this.onlineState.playerId = player.id;
+                        this.subscribeToRoom();
+                    }
 
-                    localStorage.setItem('myPlayerId', player.id);
-                    this.onlineState.roomId = this.onlineState.pendingRoomId;
-                    this.onlineState.roomCode = this.onlineState.pendingRoomCode;
-                    this.onlineState.playerId = player.id;
-
-                    // Hide token picker, show waiting state
+                    this.onlineState.tokenConfirmed = true;
                     document.getElementById('lobbyTokenPicker').style.display = 'none';
-                    document.getElementById('lobbyStatusMessage').textContent = 'Waiting for host to start...';
-
-                    this.subscribeToRoom();
                     this.loadLobbyPlayers();
                 } catch (error) {
                     console.error('Error:', error);
-                    this.showError('lobbyJoinError', error.message || 'Failed to join room');
+                    this.showError('lobbyJoinError', error.message || 'Failed to confirm token');
                 }
             },
 
             showOnlineLobby() {
-                document.getElementById('lobbyRoomCode').textContent = this.onlineState.roomCode;
+                document.getElementById('lobbyRoomCode').textContent = this.onlineState.roomCode || this.onlineState.pendingRoomCode || '';
                 this.showScreen('onlineLobbyScreen');
                 this.loadLobbyPlayers();
+                // Show token picker for everyone until they confirm
+                if (!this.onlineState.tokenConfirmed) {
+                    this.showLobbyTokenPicker();
+                }
+            },
+
+            async showLobbyTokenPicker() {
+                // Fetch current taken tokens
+                const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
+                const { data: players } = await this.supabase
+                    .from('room_players').select('token')
+                    .eq('room_id', roomId);
+                const usedTokens = (players || []).map(p => p.token).filter(t => t !== '❓');
+                this.renderLobbyTokenPicker(usedTokens);
             },
 
             async loadLobbyPlayers() {
+                const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
+                if (!roomId) return;
+
                 const { data: players } = await this.supabase
                     .from('room_players').select('*')
-                    .eq('room_id', this.onlineState.roomId).order('player_order');
+                    .eq('room_id', roomId).order('player_order');
 
                 const { data: room } = await this.supabase
                     .from('rooms').select('max_players')
-                    .eq('id', this.onlineState.roomId).single();
+                    .eq('id', roomId).single();
 
                 const container = document.getElementById('lobbyPlayersList');
                 container.innerHTML = '';
@@ -1143,12 +1175,9 @@
                 document.getElementById('lobbyPlayerCount').textContent = players.length;
                 document.getElementById('lobbyMaxPlayers').textContent = room.max_players;
 
-                if (players.length >= 2 && this.onlineState.isHost) {
+                if (this.onlineState.isHost) {
                     document.getElementById('lobbyStartBtn').style.display = 'block';
-                    document.getElementById('lobbyStatusMessage').textContent = 'Ready to start!';
-                } else if (players.length < 2) {
-                    document.getElementById('lobbyStartBtn').style.display = 'none';
-                    document.getElementById('lobbyStatusMessage').textContent = 'Need at least 2 players...';
+                    document.getElementById('lobbyStatusMessage').textContent = players.length >= 2 ? 'Ready to start!' : 'Waiting for more players...';
                 } else {
                     document.getElementById('lobbyStartBtn').style.display = 'none';
                     document.getElementById('lobbyStatusMessage').textContent = 'Waiting for host to start...';
@@ -1204,7 +1233,22 @@
                     .from('room_players').select('*')
                     .eq('room_id', this.onlineState.roomId).order('player_order');
 
-                if (players.length < 2) { alert('Need at least 2 players!'); return; }
+                if (players.length < 1) { alert('No players in room!'); return; }
+
+                // Assign random tokens to anyone still on ❓
+                const usedTokens = players.filter(p => p.token !== '❓').map(p => p.token);
+                for (const player of players.filter(p => p.token === '❓')) {
+                    const available = this.TOKENS.filter(t => !usedTokens.includes(t));
+                    const token = available.length > 0
+                        ? available[Math.floor(Math.random() * available.length)]
+                        : this.TOKENS[Math.floor(Math.random() * this.TOKENS.length)];
+                    usedTokens.push(token);
+                    await this.supabase.from('room_players')
+                        .update({ token })
+                        .eq('id', player.id);
+                    // Update local copy
+                    player.token = token;
+                }
 
                 const gameData = {
                     roomId: this.onlineState.roomId,
@@ -1232,11 +1276,25 @@
             async leaveOnlineRoom() {
                 if (this.onlineState.subscription) this.onlineState.subscription.unsubscribe();
 
-                await this.supabase.from('room_players').delete().eq('id', this.onlineState.playerId);
+                if (this.onlineState.playerId) {
+                    await this.supabase.from('room_players').delete().eq('id', this.onlineState.playerId);
+                }
 
                 if (this.onlineState.isHost) {
-                    await this.supabase.from('rooms').delete().eq('id', this.onlineState.roomId);
+                    const roomId = this.onlineState.roomId;
+                    if (roomId) await this.supabase.from('rooms').delete().eq('id', roomId);
                 }
+
+                // Reset online state
+                this.onlineState.roomId = null;
+                this.onlineState.roomCode = null;
+                this.onlineState.playerId = null;
+                this.onlineState.isHost = false;
+                this.onlineState.selectedToken = null;
+                this.onlineState.tokenConfirmed = false;
+                this.onlineState.pendingRoomId = null;
+                this.onlineState.pendingRoomCode = null;
+                this.onlineState.pendingName = null;
 
                 this.showOnlineMenu();
             },
