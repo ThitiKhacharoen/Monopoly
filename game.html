@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monopoly - Game</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="neat-runner.js"></script>
-    <script src="ai-player.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -1074,31 +1070,6 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-
-        /* Auction specific styles */
-        #auctionBidInput {
-            border: 2px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        #auctionBidInput:focus {
-            outline: none;
-            border-color: #4caf50;
-        }
-        
-        #auctionLog {
-            font-family: monospace;
-        }
-        
-        .auction-log-entry {
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .auction-log-entry:last-child {
-            border-bottom: none;
-        }
-
     </style>
 </head>
 <body>
@@ -1285,18 +1256,6 @@
         </div>
     </div>
     
-    <!-- Trade Confirm Modal -->
-    <div class="property-modal" id="tradeConfirmModal">
-        <div class="property-modal-content" style="max-width: 420px;">
-            <h3 style="margin-bottom: 16px;">🤝 Trade Proposal</h3>
-            <div id="tradeConfirmDesc" style="white-space: pre-line; background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 0.95em; line-height: 1.6; margin-bottom: 20px;"></div>
-            <div style="display: flex; gap: 12px;">
-                <button style="background:#4caf50;color:white;border:none;padding:12px 20px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;flex:1;" onclick="acceptTrade()">✅ Accept</button>
-                <button style="background:#f44336;color:white;border:none;padding:12px 20px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;flex:1;" onclick="rejectTrade()">❌ Reject</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Manage Properties Modal -->
     <div class="manage-modal" id="manageModal">
         <div class="manage-modal-content">
@@ -1305,36 +1264,6 @@
                 <!-- Properties will be populated -->
             </div>
             <button class="action-btn action-btn-secondary" onclick="closeManageModal()" style="margin-top: 20px;">Close</button>
-        </div>
-    </div>
-
- <!-- Auction Modal -->
-    <div id="auctionModal" class="property-modal">
-        <div class="property-modal-content">
-            <h2>🔨 AUCTION</h2>
-            <div id="auctionPropertyInfo" style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-                <!-- Property info will be inserted here -->
-            </div>
-            
-            <div style="margin: 20px 0;">
-                <h3>Current Bid: $<span id="auctionCurrentBid">0</span></h3>
-                <p>Bidder: <span id="auctionCurrentBidder">None</span></p>
-            </div>
-            
-            <div style="margin: 20px 0;">
-                <h4>Current Turn: <span id="auctionCurrentPlayer"></span></h4>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <input type="number" id="auctionBidInput" placeholder="Enter bid amount" min="1" style="flex: 1; padding: 10px; font-size: 1.1em;">
-                <button onclick="placeBid()" class="modal-btn" style="background: #4caf50;">Place Bid</button>
-            </div>
-            
-            <button onclick="passAuction()" class="modal-btn" style="background: #ff9800; margin-top: 10px;">Pass</button>
-            
-            <div id="auctionLog" style="margin-top: 20px; max-height: 150px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 8px; font-size: 0.9em;">
-                <!-- Auction log will appear here -->
-            </div>
         </div>
     </div>
 
@@ -1395,30 +1324,7 @@
             ownedProperties: {}, // { propertyId: { ownerId, houses, hasHotel, isMortgaged } }
             chanceCards: [],
             communityChestCards: [],
-            doublesCount: 0, // Track consecutive doubles
-            auction: {
-                active: false,
-                propertyId: null,
-                currentBid: 0,
-                currentBidder: null,
-                currentBidderName: null,
-                participatingPlayers: [],
-                currentAuctionIndex: 0,
-                passedPlayers: [],
-                log: []
-            }
-        };
-        
-        // ===== ONLINE MULTIPLAYER STATE =====
-        let onlineState = {
-            enabled: false,
-            roomId: null,
-            roomCode: null,
-            myPlayerId: null,
-            supabase: null,
-            subscription: null,
-            eventSequence: 0,
-            isProcessingRemoteEvent: false
+            doublesCount: 0 // Track consecutive doubles
         };
         
         // Shuffle array helper
@@ -1539,90 +1445,31 @@
             renderPlayerInputs();
         }
         
-         function startGame() {
-            let players = [];
-            
-            // Check if players were loaded from localStorage (via index.html)
-            const mode = localStorage.getItem('monopoly-game-mode');
-            const localPlayersData = localStorage.getItem('monopoly-players');
-            const onlineGameData = localStorage.getItem('monopoly-online-game');
-            
-            if (mode === 'local' && localPlayersData) {
-                // Load from local multiplayer setup
-                console.log('Loading LOCAL multiplayer players');
-                const loadedPlayers = JSON.parse(localPlayersData);
-                players = loadedPlayers.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    token: p.token,
-                    iconClass: p.iconClass,
-                    cash: 1500,
-                    position: 0,
-                    properties: [],
-                    isBankrupt: false,
-                    inJail: false,
-                    jailTurns: 0,
-                    getOutOfJailFreeCards: [],
-                    aiDifficulty: p.aiDifficulty || null,
-                }));
-            } else if (mode === 'online' && onlineGameData) {
-                // Load from online multiplayer
-                console.log('Loading ONLINE multiplayer players');
-                const gameData = JSON.parse(onlineGameData);
-                players = gameData.players.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    token: p.token,
-                    iconClass: p.iconClass,
-                    cash: 1500,
-                    position: 0,
-                    properties: [],
-                    isBankrupt: false,
-                    inJail: false,
-                    jailTurns: 0,
-                    getOutOfJailFreeCards: []
-                }));
+        function startGame() {
+            // Collect player data
+            const players = [];
+            for (let i = 0; i < setupState.playerCount; i++) {
+                const nameInput = document.getElementById(`player-${i}`);
+                const name = nameInput.value.trim() || `Player ${i + 1}`;
+                const token = setupState.selectedTokens[i] || TOKENS[i];
+                const iconClass = `player-icon-${i + 1}`;
                 
-            } else {
-                // Fallback: Use setup overlay data
-                console.log('Using setup overlay data');
-                for (let i = 0; i < setupState.playerCount; i++) {
-                    const nameInput = document.getElementById(`player-${i}`);
-                    const name = nameInput.value.trim() || `Player ${i + 1}`;
-                    const token = setupState.selectedTokens[i] || TOKENS[i];
-                    const iconClass = `player-icon-${i + 1}`;
-                    
-                    players.push({
-                        id: `p${i + 1}`,
-                        name: name,
-                        token: token,
-                        iconClass: iconClass,
-                        cash: 1500,
-                        position: 0,
-                        properties: [],
-                        isBankrupt: false,
-                        inJail: false,
-                        jailTurns: 0,
-                        getOutOfJailFreeCards: []
-                    });
-                }
+                players.push({
+                    id: `p${i + 1}`,
+                    name: name,
+                    token: token,
+                    iconClass: iconClass,
+                    cash: 1500,
+                    position: 0,
+                    properties: [],
+                    isBankrupt: false,
+                    inJail: false,
+                    jailTurns: 0,
+                    getOutOfJailFreeCards: 0
+                });
             }
             
             gameState.players = players;
-                        // Initialize AI players if any
-            const aiConfig = gameState.players.map(p => p.aiDifficulty || null);
-            const hasAI = aiConfig.some(d => d !== null);
-            if (hasAI) {
-                gameState.currentPlayerIndex = 0;
-                initializeCardDecks();
-                document.getElementById('setupOverlay').classList.add('hidden');
-                AIPlayer.init(aiConfig).then(() => {
-                    initializeBoard();
-                    updateUI();
-                });
-                return;
-            }
-
             gameState.currentPlayerIndex = 0;
             
             // Initialize card decks
@@ -1738,7 +1585,7 @@
                     <div class="player-card-info">
                         <div class="player-card-name">${nameText}</div>
                         <div class="player-card-cash">$${player.cash}</div>
-                        <div class="player-card-properties">${player.properties.length} properties${player.getOutOfJailFreeCards.length > 0 ? ' | ' + player.getOutOfJailFreeCards.length + '🎟️' : ''}</div>
+                        <div class="player-card-properties">${player.properties.length} properties${player.getOutOfJailFreeCards > 0 ? ' | ' + player.getOutOfJailFreeCards + '🎟️' : ''}</div>
                     </div>
                 `;
                 
@@ -1756,19 +1603,10 @@
             const payJailBtn = document.getElementById('payJailBtn');
             const useJailCardBtn = document.getElementById('useJailCardBtn');
             
-            // Disable all buttons if online and not my turn
-            if (onlineState.enabled && !isMyTurn()) {
-                rollBtn.disabled = true;
-                endBtn.disabled = true;
-                payJailBtn.style.display = 'none';
-                useJailCardBtn.style.display = 'none';
-                return;
-            }
-            
             // Show/hide jail buttons
             if (currentPlayer.inJail && gameState.phase === 'ROLL_DICE') {
                 payJailBtn.style.display = 'block';
-                useJailCardBtn.style.display = currentPlayer.getOutOfJailFreeCards.length > 0 ? 'block' : 'none';
+                useJailCardBtn.style.display = currentPlayer.getOutOfJailFreeCards > 0 ? 'block' : 'none';
             } else {
                 payJailBtn.style.display = 'none';
                 useJailCardBtn.style.display = 'none';
@@ -1808,20 +1646,17 @@
         function useGetOutOfJailFree() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
-            if (currentPlayer.getOutOfJailFreeCards.length === 0) return;
+            if (currentPlayer.getOutOfJailFreeCards <= 0) return;
             
-            const deckType = currentPlayer.getOutOfJailFreeCards.pop();
+            currentPlayer.getOutOfJailFreeCards--;
             currentPlayer.inJail = false;
             currentPlayer.jailTurns = 0;
             
             showMessage(`${currentPlayer.name} used Get Out of Jail Free card!`, 'success');
             
-            const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree(deckType) };
-            if (deckType === 'community') {
-                gameState.communityChestCards.push(card);
-            } else {
-                gameState.chanceCards.push(card);
-            }
+            // Put card back in deck
+            const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree() };
+            gameState.chanceCards.push(card); // Put in one of the decks
             
             updateUI();
         }
@@ -1865,18 +1700,6 @@
             const passedGo = newPosition < oldPosition;
             
             currentPlayer.position = newPosition;
-            
-            // Broadcast dice roll if online
-            if (onlineState.enabled && isMyTurn()) {
-                broadcastEvent('DICE_ROLLED', {
-                    playerId: currentPlayer.id,
-                    die1: die1,
-                    die2: die2,
-                    newPosition: newPosition,
-                    passedGo: passedGo,
-                    doublesCount: gameState.doublesCount
-                });
-            }
             
             // Move piece visually
             movePiece(currentPlayer.id, newPosition);
@@ -1997,14 +1820,8 @@
             const deck = deckType === 'chance' ? gameState.chanceCards : gameState.communityChestCards;
             const card = deck[0];
             
-            if (card.type === 'jail') {
-                // Remove from deck entirely — held by player until used or traded
-                if (deckType === 'chance') {
-                    gameState.chanceCards = deck.slice(1);
-                } else {
-                    gameState.communityChestCards = deck.slice(1);
-                }
-            } else {
+            // Move card to bottom of deck (unless it's Get Out of Jail Free)
+            if (card.type !== 'jail') {
                 if (deckType === 'chance') {
                     gameState.chanceCards = [...deck.slice(1), deck[0]];
                 } else {
@@ -2229,9 +2046,9 @@
             updateUI();
         }
         
-        function getOutOfJailFree(deckType) {
+        function getOutOfJailFree() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-            currentPlayer.getOutOfJailFreeCards.push(deckType || 'chance');
+            currentPlayer.getOutOfJailFreeCards++;
             
             showMessage(`${currentPlayer.name} got a Get Out of Jail Free card!`, 'success');
             gameState.phase = 'END_TURN';
@@ -2324,202 +2141,25 @@
             showMessage(`${currentPlayer.name} bought ${space.name} for $${space.price}!`, 'success');
             
             gameState.phase = 'END_TURN';
-            const propId = gameState.pendingProperty;
             gameState.pendingProperty = null;
-            
-            // Broadcast if online
-            if (onlineState.enabled && isMyTurn()) {
-                broadcastEvent('PROPERTY_BOUGHT', {
-                    playerId: currentPlayer.id,
-                    propertyId: propId,
-                    price: space.price
-                });
-            }
             
             checkBankruptcy();
             updateUI();
         }
         
-       function passProperty() {
+        function passProperty() {
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             
             const space = SPACES[gameState.pendingProperty];
-            showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name} - Starting auction!`, 'info');
+            showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name}`, 'info');
             
-            // Start auction
-            startAuction(gameState.pendingProperty);
+            // TODO: Implement auction
+            
+            gameState.phase = 'END_TURN';
+            gameState.pendingProperty = null;
+            updateUI();
         }
-function startAuction(propertyId) {
-            const space = SPACES[propertyId];
-            
-            // Initialize auction state
-            gameState.auction.active = true;
-            gameState.auction.propertyId = propertyId;
-            gameState.auction.currentBid = 0;
-            gameState.auction.currentBidder = null;
-            gameState.auction.currentBidderName = 'None';
-            gameState.auction.participatingPlayers = gameState.players
-                .filter(p => !p.isBankrupt)
-                .map(p => p.id);
-            gameState.auction.currentAuctionIndex = 0;
-            gameState.auction.passedPlayers = [];
-            gameState.auction.log = [];
-            
-            // Show auction modal
-            const modal = document.getElementById('auctionModal');
-            const propertyInfo = document.getElementById('auctionPropertyInfo');
-            
-            let colorBar = '';
-            if (space.type === 'property') {
-                colorBar = `<div class="color-bar ${space.color}" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-            } else if (space.type === 'railroad') {
-                colorBar = `<div class="color-bar railroad" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-            } else if (space.type === 'utility') {
-                colorBar = `<div class="color-bar utility" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-            }
-            
-            propertyInfo.innerHTML = colorBar + `
-                <h3>${space.name}</h3>
-                <p>List Price: $${space.price}</p>
-            `;
-            
-            addAuctionLog(`Auction started for ${space.name}`);
-            updateAuctionUI();
-            modal.classList.add('active');
-        }
-        
-        function updateAuctionUI() {
-            if (!gameState.auction.active) return;
-            
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            
-            if (activePlayers.length === 0) {
-                endAuction(false); // No one bid
-                return;
-            }
-            
-            if (activePlayers.length === 1 && gameState.auction.currentBid > 0) {
-                endAuction(true); // Winner!
-                return;
-            }
-            
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
-            document.getElementById('auctionCurrentBid').textContent = gameState.auction.currentBid;
-            document.getElementById('auctionCurrentBidder').textContent = gameState.auction.currentBidderName;
-            document.getElementById('auctionCurrentPlayer').textContent = currentPlayer.name;
-            
-            // Update bid input minimum
-            const bidInput = document.getElementById('auctionBidInput');
-            bidInput.min = gameState.auction.currentBid + 1;
-            bidInput.value = '';
-            bidInput.placeholder = `Min: $${gameState.auction.currentBid + 1}`;
-        }
-        
-        function placeBid() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
-            const bidInput = document.getElementById('auctionBidInput');
-            const bidAmount = parseInt(bidInput.value);
-            
-            if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
-                alert(`Bid must be higher than $${gameState.auction.currentBid}`);
-                return;
-            }
-            
-            if (bidAmount > currentPlayer.cash) {
-                alert(`You only have $${currentPlayer.cash}!`);
-                return;
-            }
-            
-            gameState.auction.currentBid = bidAmount;
-            gameState.auction.currentBidder = currentPlayer.id;
-            gameState.auction.currentBidderName = currentPlayer.name;
-            
-            addAuctionLog(`${currentPlayer.name} bids $${bidAmount}`);
-            
-            gameState.auction.currentAuctionIndex++;
-            updateAuctionUI();
-        }
-        
-        function passAuction() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
-            gameState.auction.passedPlayers.push(currentPlayer.id);
-            addAuctionLog(`${currentPlayer.name} passes`);
-            
-            updateAuctionUI();
-        }
-        
-        function endAuction(hasWinner) {
-            const modal = document.getElementById('auctionModal');
-            const space = SPACES[gameState.auction.propertyId];
-            
-            if (hasWinner) {
-                const winner = gameState.players.find(p => p.id === gameState.auction.currentBidder);
-                const amount = gameState.auction.currentBid;
-                
-                // Deduct cash
-                winner.cash -= amount;
-                
-                // Add to owned properties
-                gameState.ownedProperties[gameState.auction.propertyId] = {
-                    ownerId: winner.id,
-                    houses: 0,
-                    hasHotel: false
-                };
-                
-                winner.properties.push(gameState.auction.propertyId);
-                
-                showPropertyOwnership(gameState.auction.propertyId, winner);
-                
-                addAuctionLog(`${winner.name} wins for $${amount}!`);
-                showMessage(`${winner.name} won ${space.name} auction for $${amount}!`, 'success');
-                
-                setTimeout(() => {
-                    modal.classList.remove('active');
-                    gameState.auction.active = false;
-                    gameState.phase = 'END_TURN';
-                    gameState.pendingProperty = null;
-                    checkBankruptcy();
-                    updateUI();
-                }, 2000);
-            } else {
-                addAuctionLog('No bids - property remains unowned');
-                showMessage(`No one bid on ${space.name}`, 'info');
-                
-                setTimeout(() => {
-                    modal.classList.remove('active');
-                    gameState.auction.active = false;
-                    gameState.phase = 'END_TURN';
-                    gameState.pendingProperty = null;
-                    updateUI();
-                }, 2000);
-            }
-        }
-        
-        function addAuctionLog(message) {
-            gameState.auction.log.push(message);
-            const logDiv = document.getElementById('auctionLog');
-            const entry = document.createElement('div');
-            entry.className = 'auction-log-entry';
-            entry.textContent = message;
-            logDiv.appendChild(entry);
-            logDiv.scrollTop = logDiv.scrollHeight;
-        }
-
         
         function payRent(propertyId, ownerId) {
             const space = SPACES[propertyId];
@@ -2713,8 +2353,6 @@ function startAuction(propertyId) {
         }
         
         function endTurn() {
-            const oldIndex = gameState.currentPlayerIndex;
-            
             // Move to next player
             do {
                 gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
@@ -2722,15 +2360,7 @@ function startAuction(propertyId) {
             
             gameState.phase = 'ROLL_DICE';
             gameState.diceRoll = null;
-            gameState.doublesCount = 0;
-            
-            // Broadcast turn end if online
-            if (onlineState.enabled && !onlineState.isProcessingRemoteEvent) {
-                broadcastEvent('TURN_ENDED', {
-                    playerId: gameState.players[oldIndex].id,
-                    nextPlayerIndex: gameState.currentPlayerIndex
-                });
-            }
+            gameState.doublesCount = 0; // Reset doubles count
             
             // Reset dice
             document.getElementById('die1').textContent = '?';
@@ -2743,13 +2373,7 @@ function startAuction(propertyId) {
         let tradeState = {
             player1SelectedProps: [],
             player2SelectedProps: [],
-            player1SelectedGoojf: [],
-            player2SelectedGoojf: [],
-            partnerId: null,
-            pendingP1: null,
-            pendingP2: null,
-            pendingCashOffer: 0,
-            pendingCashRequest: 0
+            partnerId: null
         };
         
         function openTradeModal() {
@@ -2778,8 +2402,6 @@ function startAuction(propertyId) {
             document.getElementById('tradePlayer2CashRequest').value = 0;
             tradeState.player1SelectedProps = [];
             tradeState.player2SelectedProps = [];
-            tradeState.player1SelectedGoojf = [];
-            tradeState.player2SelectedGoojf = [];
             
             updateTradePartner();
             modal.classList.add('active');
@@ -2810,13 +2432,6 @@ function startAuction(propertyId) {
                 div.onclick = () => toggleTradeProperty(1, propId, div);
                 p1PropsDiv.appendChild(div);
             });
-            currentPlayer.getOutOfJailFreeCards.forEach((deckType, i) => {
-                const div = document.createElement('div');
-                div.className = 'trade-property-item';
-                div.textContent = `🎟️ Get Out of Jail Free (${deckType})`;
-                div.onclick = () => toggleTradeGoojf(1, deckType, i, div);
-                p1PropsDiv.appendChild(div);
-            });
             
             const p2PropsDiv = document.getElementById('tradePlayer2Properties');
             p2PropsDiv.innerHTML = '';
@@ -2826,13 +2441,6 @@ function startAuction(propertyId) {
                 div.className = 'trade-property-item';
                 div.textContent = space.name;
                 div.onclick = () => toggleTradeProperty(2, propId, div);
-                p2PropsDiv.appendChild(div);
-            });
-            partner.getOutOfJailFreeCards.forEach((deckType, i) => {
-                const div = document.createElement('div');
-                div.className = 'trade-property-item';
-                div.textContent = `🎟️ Get Out of Jail Free (${deckType})`;
-                div.onclick = () => toggleTradeGoojf(2, deckType, i, div);
                 p2PropsDiv.appendChild(div);
             });
         }
@@ -2859,19 +2467,6 @@ function startAuction(propertyId) {
             }
         }
         
-        function toggleTradeGoojf(player, deckType, index, element) {
-            const arr = player === 1 ? tradeState.player1SelectedGoojf : tradeState.player2SelectedGoojf;
-            const key = `${deckType}-${index}`;
-            const pos = arr.indexOf(key);
-            if (pos > -1) {
-                arr.splice(pos, 1);
-                element.classList.remove('selected');
-            } else {
-                arr.push(key);
-                element.classList.add('selected');
-            }
-        }
-
         function proposeTrade() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const partner = gameState.players.find(p => p.id === tradeState.partnerId);
@@ -2890,13 +2485,15 @@ function startAuction(propertyId) {
                 return;
             }
             
+            // Show confirmation
             const tradeDesc = buildTradeDescription(currentPlayer, partner, cashOffer, cashRequest);
-            document.getElementById('tradeConfirmDesc').textContent = `${partner.name}, do you accept this trade?\n\n` + tradeDesc;
-            tradeState.pendingP1 = currentPlayer;
-            tradeState.pendingP2 = partner;
-            tradeState.pendingCashOffer = cashOffer;
-            tradeState.pendingCashRequest = cashRequest;
-            document.getElementById('tradeConfirmModal').classList.add('active');
+            
+            if (confirm(`${partner.name}, do you accept this trade?\n\n${tradeDesc}`)) {
+                executeTrade(currentPlayer, partner, cashOffer, cashRequest);
+                closeTradeModal();
+            } else {
+                showMessage('Trade rejected', 'info');
+            }
         }
         
         function buildTradeDescription(p1, p2, cashOffer, cashRequest) {
@@ -2905,14 +2502,12 @@ function startAuction(propertyId) {
             tradeState.player1SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
             });
-            tradeState.player1SelectedGoojf.forEach(() => { desc += `- 🎟️ Get Out of Jail Free\n`; });
             
             desc += `\n${p2.name} gives:\n`;
             if (cashRequest > 0) desc += `- $${cashRequest}\n`;
             tradeState.player2SelectedProps.forEach(propId => {
                 desc += `- ${SPACES[propId].name}\n`;
             });
-            tradeState.player2SelectedGoojf.forEach(() => { desc += `- 🎟️ Get Out of Jail Free\n`; });
             
             return desc;
         }
@@ -2946,35 +2541,12 @@ function startAuction(propertyId) {
                 }
             });
             
-            // Transfer GOOJF cards
-            tradeState.player1SelectedGoojf.forEach(key => {
-                const deckType = key.split('-')[0];
-                const idx = p1.getOutOfJailFreeCards.indexOf(deckType);
-                if (idx > -1) { p1.getOutOfJailFreeCards.splice(idx, 1); p2.getOutOfJailFreeCards.push(deckType); }
-            });
-            tradeState.player2SelectedGoojf.forEach(key => {
-                const deckType = key.split('-')[0];
-                const idx = p2.getOutOfJailFreeCards.indexOf(deckType);
-                if (idx > -1) { p2.getOutOfJailFreeCards.splice(idx, 1); p1.getOutOfJailFreeCards.push(deckType); }
-            });
-
             showMessage(`Trade completed between ${p1.name} and ${p2.name}!`, 'success');
             updateUI();
         }
         
         function closeTradeModal() {
             document.getElementById('tradeModal').classList.remove('active');
-        }
-
-        function acceptTrade() {
-            document.getElementById('tradeConfirmModal').classList.remove('active');
-            executeTrade(tradeState.pendingP1, tradeState.pendingP2, tradeState.pendingCashOffer, tradeState.pendingCashRequest);
-            closeTradeModal();
-        }
-
-        function rejectTrade() {
-            document.getElementById('tradeConfirmModal').classList.remove('active');
-            showMessage('Trade rejected', 'info');
         }
         
         // ===== PROPERTY MANAGEMENT =====
@@ -2988,43 +2560,14 @@ function startAuction(propertyId) {
             if (currentPlayer.properties.length === 0) {
                 list.innerHTML = '<p style="color: #999; padding: 20px; text-align: center;">You don\'t own any properties yet.</p>';
             } else {
-                // Group properties by color
-                const colorOrder = ['brown', 'lightblue', 'pink', 'orange', 'red', 'yellow', 'green', 'darkblue', 'railroad', 'utility'];
-                
-                // Sort properties by color group
-                const sortedProperties = [...currentPlayer.properties].sort((a, b) => {
-                    const spaceA = SPACES[a];
-                    const spaceB = SPACES[b];
-                    
-                    // Get color/type for sorting
-                    const colorA = spaceA.type === 'property' ? spaceA.color : spaceA.type;
-                    const colorB = spaceB.type === 'property' ? spaceB.color : spaceB.type;
-                    
-                    const indexA = colorOrder.indexOf(colorA);
-                    const indexB = colorOrder.indexOf(colorB);
-                    
-                    return indexA - indexB;
-                });
-                
-                sortedProperties.forEach(propId => {
+                currentPlayer.properties.forEach(propId => {
                     const space = SPACES[propId];
                     const ownership = gameState.ownedProperties[propId];
                     
                     const div = document.createElement('div');
                     div.className = 'property-manage-item';
                     
-                    // Add color bar (like on the board)
-                    let colorBarHTML = '';
-                    if (space.type === 'property') {
-                        colorBarHTML = `<div class="color-bar ${space.color}" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-                    } else if (space.type === 'railroad') {
-                        colorBarHTML = `<div class="color-bar railroad" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-                    } else if (space.type === 'utility') {
-                        colorBarHTML = `<div class="color-bar utility" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
-                    }
-                    
-                    let html = colorBarHTML;
-                    html += `<h4>${space.name}</h4>`;
+                    let html = `<h4>${space.name}</h4>`;
                     html += `<p>Value: $${space.price}</p>`;
                     
                     if (ownership.isMortgaged) {
@@ -3166,207 +2709,8 @@ function startAuction(propertyId) {
             document.getElementById('manageModal').classList.remove('active');
         }
         
-        // ===== ONLINE MULTIPLAYER SYSTEM =====
-        
-        function initializeOnlineMode() {
-            console.log('🌐 Initializing online mode');
-            
-            // Initialize Supabase
-            onlineState.supabase = window.supabase.createClient(
-                'https://enwyccsukcsaffeukxka.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14'
-            );
-            
-            const gameData = JSON.parse(localStorage.getItem('monopoly-online-game'));
-            onlineState.roomId = gameData.roomId;
-            onlineState.roomCode = gameData.roomCode;
-            onlineState.enabled = true;
-            
-            // Find my player ID - match by order in the players array
-            onlineState.myPlayerId = localStorage.getItem('myPlayerId') || gameData.players[0].id; // Will be updated based on who created/joined
-            
-            console.log('🎮 My player ID:', onlineState.myPlayerId);
-            console.log('🏠 Room:', onlineState.roomCode);
-            
-            // Subscribe to game events
-            subscribeToGameEvents();
-        }
-        
-        function subscribeToGameEvents() {
-            console.log('📡 Subscribing to game events for room:', onlineState.roomId);
-            
-            onlineState.subscription = onlineState.supabase
-                .channel(`game:${onlineState.roomId}`)
-                .on('postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'game_events',
-                        filter: `room_id=eq.${onlineState.roomId}`
-                    },
-                    (payload) => {
-                        handleRemoteEvent(payload.new);
-                    }
-                )
-                .subscribe();
-            
-            console.log('✅ Subscribed to game events');
-        }
-        
-        async function broadcastEvent(eventType, eventData) {
-            if (!onlineState.enabled) return;
-            if (onlineState.isProcessingRemoteEvent) return;
-            
-            console.log('📤 Broadcasting:', eventType, eventData);
-            
-            try {
-                const { error } = await onlineState.supabase
-                    .from('game_events')
-                    .insert({
-                        room_id: onlineState.roomId,
-                        event_type: eventType,
-                        event_data: eventData,
-                        player_id: onlineState.myPlayerId,
-                        sequence_number: ++onlineState.eventSequence
-                    });
-                
-                if (error) {
-                    console.error('❌ Broadcast error:', error);
-                }
-            } catch (error) {
-                console.error('❌ Broadcast failed:', error);
-            }
-        }
-        
-        function handleRemoteEvent(event) {
-            if (event.player_id === onlineState.myPlayerId) {
-                return;
-            }
-            
-            console.log('📥 Received:', event.event_type);
-            
-            onlineState.isProcessingRemoteEvent = true;
-            try {
-                applyRemoteEvent(event.event_type, event.event_data);
-            } finally {
-                onlineState.isProcessingRemoteEvent = false;
-            }
-        }
-        
-        function applyRemoteEvent(eventType, data) {
-            switch (eventType) {
-                case 'DICE_ROLLED':
-                    gameState.diceRoll = [data.die1, data.die2];
-                    document.getElementById('die1').textContent = data.die1;
-                    document.getElementById('die2').textContent = data.die2;
-                    gameState.doublesCount = data.doublesCount;
-                    
-                    const player = gameState.players.find(p => p.id === data.playerId);
-                    player.position = data.newPosition;
-                    movePiece(data.playerId, data.newPosition);
-                    
-                    if (data.passedGo) {
-                        player.cash += 200;
-                    }
-                    updateUI();
-                    break;
-                    
-                case 'PROPERTY_BOUGHT':
-                    const buyer = gameState.players.find(p => p.id === data.playerId);
-                    buyer.cash -= data.price;
-                    buyer.properties.push(data.propertyId);
-                    
-                    gameState.ownedProperties[data.propertyId] = {
-                        ownerId: data.playerId,
-                        houses: 0,
-                        hasHotel: false
-                    };
-                    
-                    showPropertyOwnership(data.propertyId, buyer);
-                    gameState.phase = 'END_TURN';
-                    gameState.pendingProperty = null;
-                    updateUI();
-                    break;
-                    
-                case 'PROPERTY_PASSED':
-                    gameState.phase = 'END_TURN';
-                    gameState.pendingProperty = null;
-                    updateUI();
-                    break;
-                    
-                case 'RENT_PAID':
-                    const payer = gameState.players.find(p => p.id === data.payerId);
-                    const owner = gameState.players.find(p => p.id === data.ownerId);
-                    payer.cash -= data.amount;
-                    owner.cash += data.amount;
-                    gameState.phase = 'END_TURN';
-                    updateUI();
-                    break;
-                    
-                case 'TURN_ENDED':
-                    gameState.currentPlayerIndex = data.nextPlayerIndex;
-                    gameState.phase = 'ROLL_DICE';
-                    gameState.diceRoll = null;
-                    gameState.doublesCount = 0;
-                    document.getElementById('die1').textContent = '?';
-                    document.getElementById('die2').textContent = '?';
-                    updateUI();
-                    break;
-                    
-                case 'HOUSE_BUILT':
-                    const builder = gameState.players.find(p => p.id === data.playerId);
-                    builder.cash -= data.cost;
-                    gameState.ownedProperties[data.propertyId].houses = data.newHouses;
-                    updateUI();
-                    break;
-                    
-                case 'HOTEL_BUILT':
-                    const hotelBuilder = gameState.players.find(p => p.id === data.playerId);
-                    hotelBuilder.cash -= data.cost;
-                    gameState.ownedProperties[data.propertyId].houses = 0;
-                    gameState.ownedProperties[data.propertyId].hasHotel = true;
-                    updateUI();
-                    break;
-                    
-                case 'PROPERTY_MORTGAGED':
-                    const mortgager = gameState.players.find(p => p.id === data.playerId);
-                    mortgager.cash += data.value;
-                    gameState.ownedProperties[data.propertyId].isMortgaged = true;
-                    updateUI();
-                    break;
-                    
-                case 'PROPERTY_UNMORTGAGED':
-                    const unmortgager = gameState.players.find(p => p.id === data.playerId);
-                    unmortgager.cash -= data.cost;
-                    gameState.ownedProperties[data.propertyId].isMortgaged = false;
-                    updateUI();
-                    break;
-            }
-        }
-        
-        function isMyTurn() {
-            if (!onlineState.enabled) return true;
-            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-            return currentPlayer.id === onlineState.myPlayerId;
-        }
-        
-// Initialize
-        // Check if we should auto-start (players loaded from index.html)
-        const mode = localStorage.getItem('monopoly-game-mode');
-        if (mode === 'local' || mode === 'online') {
-            // Players already loaded, start immediately
-            console.log('Auto-starting game in mode:', mode);
-            
-            if (mode === 'online') {
-                initializeOnlineMode();
-            }
-            
-            startGame();
-        } else {
-            // Show setup overlay
-            renderPlayerInputs();
-        }
+        // Initialize
+        renderPlayerInputs();
     </script>
-
 </body>
 </html>
