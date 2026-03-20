@@ -1,29 +1,45 @@
 /**
  * ai-player.js
- * Integrates NEAT AI into game.html via polling.
+ * Integrates NEAT AI into game.html.
  *
- * Depends on: neat-runner.js
+ * Depends on: neat-runner.js (must be loaded first)
  * Depends on: game.html globals — gameState, SPACES, rollDice(), buyProperty(),
- *             passProperty(), endTurn(), placeBid(), passAuction(), buildHouse()
+ *             passProperty(), endTurn(), placeBid(), passAuction()
+ *
+ * Usage: After including both scripts in game.html, call:
+ *   AIPlayer.init(['easy', null, 'hard', null])
+ *   // Array index = player index, value = difficulty or null for human
  */
 
 const AIPlayer = (() => {
 
+    // Loaded models keyed by difficulty
     const models = {};
+
+    // Which player indices are AI, and what difficulty
+    // e.g. { 1: 'easy', 2: 'hard' }
     let aiPlayers = {};
 
-    let aiActing = false;  // Re-entrancy guard
-    let pollInterval = null;
+    // Delay in ms between AI actions (makes it watchable)
+    const ACTION_DELAY = 800;
+    const THINK_DELAY = 400;
 
-    const ACTION_DELAY = 1200;  // ms between actions (watchable pace)
-    const THINK_DELAY  = 800;   // ms "thinking" before acting
-    const POLL_MS      = 500;   // polling interval — must be > ACTION_DELAY to avoid double-fire
-
+    // Color group order must match Python COLOR_GROUPS iteration order
+    // From monopoly_engine.py COLOR_GROUPS (dict insertion order, Python 3.7+)
     const COLOR_GROUP_ORDER = [
-        'brown', 'light-blue', 'pink', 'orange', 'red',
-        'yellow', 'green', 'dark-blue', 'railroad', 'utility',
+        'brown',
+        'light-blue',
+        'pink',
+        'orange',
+        'red',
+        'yellow',
+        'green',
+        'dark-blue',
+        'railroad',
+        'utility',
     ];
 
+    // Map color name → property IDs (matches SPACES in game.html)
     const COLOR_GROUP_PROPS = {
         'brown':      [1, 3],
         'light-blue': [6, 8, 9],
@@ -37,57 +53,67 @@ const AIPlayer = (() => {
         'utility':    [12, 28],
     };
 
-    // ─── Input builder ────────────────────────────────────────────────────────
-
+    /**
+     * Build the 47-input vector for the current player, matching Python get_nn_inputs().
+     */
     function buildInputs(playerIndex) {
         const player = gameState.players[playerIndex];
         const activePlayers = gameState.players.filter(p => !p.isBankrupt);
 
+        // Total net worth across all active players
         let totalNW = 0;
         activePlayers.forEach(p => {
             totalNW += p.cash;
             p.properties.forEach(pid => {
                 const space = SPACES[pid];
-                if (!space) return;
-                totalNW += space.price || 0;
-                const o = gameState.ownedProperties[pid];
-                if (o) {
-                    totalNW += (o.houses || 0) * (space.houseCost || 0);
-                    if (o.hasHotel) totalNW += (space.houseCost || 0);
+                totalNW += space.price;
+                const ownership = gameState.ownedProperties[pid];
+                if (ownership) {
+                    totalNW += ownership.houses * (space.houseCost || 0);
+                    if (ownership.hasHotel) totalNW += (space.houseCost || 0);
                 }
             });
         });
         totalNW = Math.max(1, totalNW);
 
+        // Player net worth
         let playerNW = player.cash;
         player.properties.forEach(pid => {
             const space = SPACES[pid];
-            if (!space) return;
-            playerNW += space.price || 0;
-            const o = gameState.ownedProperties[pid];
-            if (o) {
-                playerNW += (o.houses || 0) * (space.houseCost || 0);
-                if (o.hasHotel) playerNW += (space.houseCost || 0);
+            playerNW += space.price;
+            const ownership = gameState.ownedProperties[pid];
+            if (ownership) {
+                playerNW += ownership.houses * (space.houseCost || 0);
+                if (ownership.hasHotel) playerNW += (space.houseCost || 0);
             }
         });
 
         const inputs = [];
-        inputs.push(Math.min(1.0, player.cash / 2000.0));
-        inputs.push(player.position / 40.0);
-        inputs.push(player.inJail ? 1.0 : 0.0);
-        inputs.push((player.jailTurns || 0) / 3.0);
-        inputs.push(Math.min(1.0, (player.getOutOfJailFreeCards || 0) / 2.0));
-        inputs.push(playerNW / totalNW);
-        inputs.push(player.properties.length / 28.0);
-        inputs.push(Math.min(1.0, Object.keys(gameState.ownedProperties).length / 28.0));
 
+        // --- Player state (8 inputs) ---
+        inputs.push(Math.min(1.0, player.cash / 2000.0));                          // cash normalized
+        inputs.push(player.position / 40.0);                                        // board position
+        inputs.push(player.inJail ? 1.0 : 0.0);                                    // in jail
+        inputs.push((player.jailTurns || 0) / 3.0);                               // jail turns
+        inputs.push(Math.min(1.0, (player.getOutOfJailFreeCards || 0) / 2.0));    // gojf cards
+        inputs.push(playerNW / totalNW);                                            // wealth ratio
+        inputs.push(player.properties.length / 28.0);                              // properties owned ratio
+
+        // game progress — use a rough estimate from turn count
+        // gameState doesn't track turns directly, use properties on board as proxy
+        const totalPropsOwned = Object.keys(gameState.ownedProperties).length;
+        inputs.push(Math.min(1.0, totalPropsOwned / 28.0));                        // game progress proxy
+
+        // --- Property ownership per color group (10 groups × 2 = 20 inputs) ---
         for (const color of COLOR_GROUP_ORDER) {
             const group = COLOR_GROUP_PROPS[color];
             const owned = group.filter(pid => {
                 const o = gameState.ownedProperties[pid];
                 return o && o.ownerId === player.id;
             }).length;
-            inputs.push(owned / group.length);
+            inputs.push(owned / group.length);  // my ownership ratio
+
+            // monopoly flag
             const hasMonopoly = group.every(pid => {
                 const o = gameState.ownedProperties[pid];
                 return o && o.ownerId === player.id;
@@ -95,6 +121,7 @@ const AIPlayer = (() => {
             inputs.push(hasMonopoly ? 1.0 : 0.0);
         }
 
+        // --- Buildings (10 groups × 1 = 10 inputs, railroad/utility = 0) ---
         for (const color of COLOR_GROUP_ORDER) {
             if (color === 'railroad' || color === 'utility') {
                 inputs.push(0.0);
@@ -117,6 +144,7 @@ const AIPlayer = (() => {
             inputs.push(avgHouses);
         }
 
+        // --- Opponents aggregate (up to 3 × 3 = 9 inputs) ---
         const opponents = activePlayers.filter(p => p.id !== player.id).slice(0, 3);
         for (let i = 0; i < 3; i++) {
             if (i < opponents.length) {
@@ -124,11 +152,10 @@ const AIPlayer = (() => {
                 let oppNW = opp.cash;
                 opp.properties.forEach(pid => {
                     const space = SPACES[pid];
-                    if (!space) return;
-                    oppNW += space.price || 0;
+                    oppNW += space.price;
                     const o = gameState.ownedProperties[pid];
                     if (o) {
-                        oppNW += (o.houses || 0) * (space.houseCost || 0);
+                        oppNW += o.houses * (space.houseCost || 0);
                         if (o.hasHotel) oppNW += (space.houseCost || 0);
                     }
                 });
@@ -140,219 +167,156 @@ const AIPlayer = (() => {
             }
         }
 
+        // Should be exactly 47
         if (inputs.length !== 47) {
-            console.error(`[AI] Input vector length ${inputs.length}, expected 47`);
+            console.error(`AI input vector length is ${inputs.length}, expected 47`);
         }
+
         return inputs;
     }
 
-    // ─── Decision ─────────────────────────────────────────────────────────────
-
+    /**
+     * Get AI decision outputs for the current player.
+     * Returns { buyProperty, auctionBidRatio, buildHouse, tradeAggression, acceptTradeThreshold }
+     */
     function getDecision(playerIndex) {
+        const player = gameState.players[playerIndex];
         const difficulty = aiPlayers[playerIndex];
         const model = models[difficulty];
-        if (!model) return null;
+
+        if (!model) {
+            console.warn(`No model loaded for difficulty: ${difficulty}`);
+            return null;
+        }
+
         const inputs = buildInputs(playerIndex);
         const outputs = NEATRunner.activate(model, inputs);
+
         return {
-            buyProperty:          outputs[0],
-            auctionBidRatio:      outputs[1],
-            buildHouse:           outputs[2],
-            tradeAggression:      outputs[3],
+            buyProperty: outputs[0],          // >0.5 = buy
+            auctionBidRatio: outputs[1],      // 0-1, multiply by cash for bid
+            buildHouse: outputs[2],            // >0.5 = build
+            tradeAggression: outputs[3],
             acceptTradeThreshold: outputs[4],
         };
     }
 
-    // ─── House building ───────────────────────────────────────────────────────
-
-    function tryBuildHouses(playerIndex) {
-        const decision = getDecision(playerIndex);
-        if (!decision || decision.buildHouse <= 0.5) return;
-        const player = gameState.players[playerIndex];
-        for (const color of COLOR_GROUP_ORDER) {
-            if (color === 'railroad' || color === 'utility') continue;
-            const group = COLOR_GROUP_PROPS[color];
-            const hasAll = group.every(pid => {
-                const o = gameState.ownedProperties[pid];
-                return o && o.ownerId === player.id;
-            });
-            if (!hasAll) continue;
-            for (const pid of group) {
-                const o = gameState.ownedProperties[pid];
-                const space = SPACES[pid];
-                if (!o || o.isMortgaged || o.hasHotel || (o.houses || 0) >= 4) continue;
-                if (player.cash < (space.houseCost || 9999)) continue;
-                buildHouse(pid);
-                return;
-            }
-        }
-    }
-
-    // ─── Auction ──────────────────────────────────────────────────────────────
-
-    function handleAuctionTurn(playerIndex) {
-        const decision = getDecision(playerIndex);
-        const player = gameState.players[playerIndex];
-
-        // No model or can't afford minimum — pass
-        if (!decision) {
-            passAuction();
-            aiActing = false;
-            return;
-        }
-
-        const maxBid = Math.floor(player.cash * Math.max(0.1, decision.auctionBidRatio));
-        const minBid = (gameState.auction.currentBid || 0) + 1;
-
-        if (maxBid >= minBid && maxBid <= player.cash) {
-            const input = document.getElementById('auctionBidInput');
-            if (input) input.value = maxBid;
-            setTimeout(() => {
-                placeBid();
-                aiActing = false;
-            }, THINK_DELAY);
-        } else {
-            setTimeout(() => {
-                passAuction();
-                aiActing = false;
-            }, THINK_DELAY);
-        }
-    }
-
-    // ─── Main turn logic ──────────────────────────────────────────────────────
-
+    /**
+     * Main AI turn handler. Called after updateUI() detects it's an AI turn.
+     */
     function takeTurn() {
-        // Set acting flag SYNCHRONOUSLY before any setTimeout
-        // This prevents the poll from firing again before the action runs
-        aiActing = true;
-
         const idx = gameState.currentPlayerIndex;
-
-        if (!(idx in aiPlayers) || !gameState.players[idx] || gameState.players[idx].isBankrupt) {
-            aiActing = false;
-            return;
-        }
-
-        if (gameState.auction && gameState.auction.active) {
-            handleAuctionPhase();
-            return;
-        }
+        if (!(idx in aiPlayers)) return; // Not an AI player
+        if (gameState.players[idx].isBankrupt) return;
 
         const phase = gameState.phase;
 
         if (phase === 'ROLL_DICE') {
             setTimeout(() => {
-                console.log(`[AI] Player ${idx} (${aiPlayers[idx]}) rolling dice`);
                 rollDice();
-                aiActing = false;
+                // After rolling, check again (might open a modal)
+                setTimeout(takeTurn, ACTION_DELAY);
             }, THINK_DELAY);
 
         } else if (phase === 'PROPERTY_DECISION') {
             setTimeout(() => {
-                // Re-validate — state may have changed during think delay
-                if (gameState.phase !== 'PROPERTY_DECISION' || gameState.pendingProperty == null) {
-                    aiActing = false;
-                    return;
-                }
-                const space = SPACES[gameState.pendingProperty];
-                if (!space) { aiActing = false; return; }
-
                 const decision = getDecision(idx);
+                const space = SPACES[gameState.pendingProperty];
                 const player = gameState.players[idx];
-                const shouldBuy = decision && decision.buyProperty > 0.5 && player.cash >= (space.price || 0);
-                console.log(`[AI] Player ${idx} ${shouldBuy ? 'BUYING' : 'PASSING'} ${space.name}`);
+
+                // Also check affordability — don't buy if can't afford
+                const shouldBuy = decision && decision.buyProperty > 0.5 && player.cash >= space.price;
+
                 if (shouldBuy) {
                     buyProperty();
                 } else {
                     passProperty();
                 }
-                aiActing = false;
+                setTimeout(takeTurn, ACTION_DELAY);
             }, THINK_DELAY);
 
         } else if (phase === 'END_TURN') {
+            // Optionally build houses before ending turn
             setTimeout(() => {
                 tryBuildHouses(idx);
                 setTimeout(() => {
-                    // Re-validate before ending turn
-                    if (gameState.phase === 'END_TURN') {
-                        console.log(`[AI] Player ${idx} ending turn`);
-                        endTurn();
-                    }
-                    aiActing = false;
-                }, 400);
+                    endTurn();
+                }, THINK_DELAY);
             }, THINK_DELAY);
 
-        } else {
-            // PAY_RENT or other phases handled automatically by game — just release lock
-            aiActing = false;
+        }
+        // PAY_RENT is resolved automatically by game.html — no AI action needed
+    }
+
+    /**
+     * Try to build houses if AI has monopoly and decision says to build.
+     */
+    function tryBuildHouses(playerIndex) {
+        const decision = getDecision(playerIndex);
+        if (!decision || decision.buildHouse <= 0.5) return;
+
+        const player = gameState.players[playerIndex];
+
+        for (const color of COLOR_GROUP_ORDER) {
+            if (color === 'railroad' || color === 'utility') continue;
+
+            const group = COLOR_GROUP_PROPS[color];
+            const hasAllProps = group.every(pid => {
+                const o = gameState.ownedProperties[pid];
+                return o && o.ownerId === player.id;
+            });
+
+            if (!hasAllProps) continue;
+
+            // Find a property in this group that can have a house built
+            for (const pid of group) {
+                const o = gameState.ownedProperties[pid];
+                const space = SPACES[pid];
+                if (!o || o.isMortgaged || o.hasHotel || o.houses >= 4) continue;
+                if (player.cash < space.houseCost) continue;
+
+                buildHouse(pid);
+                return; // Build one at a time, let game update
+            }
         }
     }
 
-    function handleAuctionPhase() {
-        const auction = gameState.auction;
-        if (!auction || !auction.active) { aiActing = false; return; }
+    /**
+     * Handle AI auction bidding. Called when auction modal is active and it's AI's turn.
+     */
+    function handleAuctionTurn(playerIndex) {
+        if (!(playerIndex in aiPlayers)) return;
 
-        const activeBidders = auction.participatingPlayers.filter(
-            id => !auction.passedPlayers.includes(id)
-        );
-        if (activeBidders.length === 0) { aiActing = false; return; }
-        if (activeBidders.length === 1 && auction.currentBid > 0) { aiActing = false; return; }
+        const decision = getDecision(playerIndex);
+        const player = gameState.players[playerIndex];
 
-        const currentId = activeBidders[auction.currentAuctionIndex % activeBidders.length];
-        const playerIndex = gameState.players.findIndex(p => p.id === currentId);
+        if (!decision) {
+            passAuction();
+            return;
+        }
 
-        if (!(playerIndex in aiPlayers)) { aiActing = false; return; }
+        const space = SPACES[gameState.auction.propertyId];
+        const maxBid = Math.floor(player.cash * Math.max(0.1, decision.auctionBidRatio));
+        const minBid = gameState.auction.currentBid + 1;
 
-        console.log(`[AI] Player ${playerIndex} bidding in auction`);
-        setTimeout(() => handleAuctionTurn(playerIndex), THINK_DELAY);
+        if (maxBid >= minBid && maxBid <= player.cash) {
+            // Place bid
+            document.getElementById('auctionBidInput').value = maxBid;
+            setTimeout(() => placeBid(), THINK_DELAY);
+        } else {
+            setTimeout(() => passAuction(), THINK_DELAY);
+        }
     }
 
-    // ─── Polling loop ─────────────────────────────────────────────────────────
-
-    function startPolling() {
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(() => {
-            if (aiActing) return;
-            if (!gameState || !gameState.players || gameState.players.length === 0) return;
-
-            const activePlayers = gameState.players.filter(p => !p.isBankrupt);
-            if (activePlayers.length <= 1) return;
-
-            // Auction check
-            if (gameState.auction && gameState.auction.active) {
-                const auction = gameState.auction;
-                const activeBidders = auction.participatingPlayers.filter(
-                    id => !auction.passedPlayers.includes(id)
-                );
-                if (activeBidders.length > 0) {
-                    const currentId = activeBidders[auction.currentAuctionIndex % activeBidders.length];
-                    const playerIndex = gameState.players.findIndex(p => p.id === currentId);
-                    if (playerIndex in aiPlayers) {
-                        takeTurn();
-                    }
-                }
-                return;
-            }
-
-            const idx = gameState.currentPlayerIndex;
-            if (!(idx in aiPlayers)) return;
-            if (gameState.players[idx].isBankrupt) return;
-
-            const actionablePhases = ['ROLL_DICE', 'PROPERTY_DECISION', 'END_TURN'];
-            if (actionablePhases.includes(gameState.phase)) {
-                takeTurn();
-            }
-        }, POLL_MS);
-    }
-
-    // ─── Init ─────────────────────────────────────────────────────────────────
-
+    /**
+     * Initialize AI players.
+     * @param {Array} config - Array indexed by player index, value = 'easy'|'medium'|'hard'|null
+     * @param {string} modelBasePath - Base path to model JSON files (default: 'models/')
+     */
     async function init(config, modelBasePath = 'models/') {
         aiPlayers = {};
-        aiActing = false;
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-
         const difficultiesToLoad = new Set();
+
         config.forEach((difficulty, playerIndex) => {
             if (difficulty) {
                 aiPlayers[playerIndex] = difficulty;
@@ -360,25 +324,84 @@ const AIPlayer = (() => {
             }
         });
 
-        if (difficultiesToLoad.size === 0) {
-            console.log('[AI] No AI players configured.');
-            return;
-        }
-
+        // Load required models
         const loadPromises = [...difficultiesToLoad].map(async diff => {
             try {
                 models[diff] = await NEATRunner.loadModel(`${modelBasePath}${diff}.json`);
-                console.log(`[AI] ✅ Loaded model: ${diff} (fitness: ${models[diff].fitness.toFixed(0)})`);
+                console.log(`✅ Loaded AI model: ${diff} (fitness: ${models[diff].fitness.toFixed(0)})`);
             } catch (e) {
-                console.error(`[AI] ❌ Failed to load model: ${diff}`, e);
+                console.error(`❌ Failed to load model: ${diff}`, e);
             }
         });
 
         await Promise.all(loadPromises);
-        console.log('[AI] 🤖 Ready. Players:', aiPlayers);
-        startPolling();
+        console.log(`🤖 AI ready. Players:`, aiPlayers);
+
+        // Patch updateUI to trigger AI turns
+        patchGame();
     }
 
+    /**
+     * Patch game.html functions to trigger AI turns automatically.
+     */
+    function patchGame() {
+        // Patch updateUI to check if it's an AI's turn after every state update
+        const originalUpdateUI = window.updateUI;
+        window.updateUI = function() {
+            originalUpdateUI.apply(this, arguments);
+            checkAITurn();
+        };
+
+        // Patch updateAuctionUI to handle AI auction turns
+        const originalUpdateAuctionUI = window.updateAuctionUI;
+        window.updateAuctionUI = function() {
+            originalUpdateAuctionUI.apply(this, arguments);
+            checkAIAuctionTurn();
+        };
+    }
+
+    /**
+     * Check if current player is AI and trigger their turn.
+     */
+    function checkAITurn() {
+        const idx = gameState.currentPlayerIndex;
+        if (!(idx in aiPlayers)) return;
+        if (gameState.players[idx].isBankrupt) return;
+
+        // Don't trigger during auction (handled separately)
+        if (gameState.auction && gameState.auction.active) return;
+
+        // Only trigger on actionable phases
+        const actionablePhases = ['ROLL_DICE', 'PROPERTY_DECISION', 'END_TURN'];
+        if (actionablePhases.includes(gameState.phase)) {
+            takeTurn();
+        }
+    }
+
+    /**
+     * Check if current auction bidder is AI and handle their bid.
+     */
+    function checkAIAuctionTurn() {
+        if (!gameState.auction || !gameState.auction.active) return;
+
+        const activePlayers = gameState.auction.participatingPlayers.filter(
+            id => !gameState.auction.passedPlayers.includes(id)
+        );
+
+        if (activePlayers.length === 0) return;
+        if (activePlayers.length === 1 && gameState.auction.currentBid > 0) return;
+
+        const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+        const playerIndex = gameState.players.findIndex(p => p.id === currentPlayerId);
+
+        if (playerIndex in aiPlayers) {
+            setTimeout(() => handleAuctionTurn(playerIndex), ACTION_DELAY);
+        }
+    }
+
+    /**
+     * Check if a given player index is an AI.
+     */
     function isAI(playerIndex) {
         return playerIndex in aiPlayers;
     }
