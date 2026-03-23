@@ -22,207 +22,6 @@
             background: #1a1a1a;
         }
         
-        /* ===== SETUP OVERLAY ===== */
-        .setup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-        
-        .setup-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        
-        .setup-container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .setup-container h1 {
-            color: #667eea;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
-        
-        .player-count-selector {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        
-        .count-btn {
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2em;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .count-btn:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-        
-        .count-btn.active {
-            border-color: #667eea;
-            background: #667eea;
-            color: white;
-        }
-        
-        .players-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .player-input-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .player-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            flex-shrink: 0;
-        }
-        
-        .player-icon-1 { background: #ff6b6b; }
-        .player-icon-2 { background: #4ecdc4; }
-        .player-icon-3 { background: #45b7d1; }
-        .player-icon-4 { background: #f9ca24; }
-        .player-icon-5 { background: #6c5ce7; }
-        .player-icon-6 { background: #a29bfe; }
-        .player-icon-7 { background: #fd79a8; }
-        .player-icon-8 { background: #fdcb6e; }
-        
-        input[type="text"] {
-            flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .player-tokens {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 5px;
-        }
-        
-        .token-btn {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .token-btn:hover {
-            border-color: #667eea;
-            transform: scale(1.1);
-        }
-        
-        .token-btn.selected {
-            border-color: #667eea;
-            background: #667eea;
-        }
-        
-        .token-btn.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        .token-btn.disabled:hover {
-            transform: none;
-        }
-        
-        .start-button {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.3em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            margin-top: 10px;
-        }
-        
-        .start-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
         /* ===== GAME INTERFACE ===== */
         .game-wrapper {
             display: flex;
@@ -1157,40 +956,6 @@
     </style>
 </head>
 <body>
-    <!-- Setup Overlay -->
-    <div class="setup-overlay" id="setupOverlay">
-        <div class="setup-container">
-            <h1>🎲 Player Setup</h1>
-            <p class="subtitle">Configure your game</p>
-            
-            <div class="form-group">
-                <label>Number of Players</label>
-                <div class="player-count-selector">
-                    <button class="count-btn" onclick="setPlayerCount(2)">2</button>
-                    <button class="count-btn active" onclick="setPlayerCount(3)">3</button>
-                    <button class="count-btn" onclick="setPlayerCount(4)">4</button>
-                    <button class="count-btn" onclick="setPlayerCount(5)">5</button>
-                    <button class="count-btn" onclick="setPlayerCount(6)">6</button>
-                    <button class="count-btn" onclick="setPlayerCount(7)">7</button>
-                    <button class="count-btn" onclick="setPlayerCount(8)">8</button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Player Names & Tokens</label>
-                <div class="players-list" id="playersList">
-                    <!-- Generated by JavaScript -->
-                </div>
-            </div>
-            
-            <button class="start-button" onclick="startGame()">
-                🎮 Start Game
-            </button>
-            
-            <a href="index.html" class="back-link">← Back to Main Menu</a>
-        </div>
-    </div>
-
     <!-- Game Interface -->
     <div class="game-wrapper">
         <div class="board-container">
@@ -1536,168 +1301,49 @@
             ]);
         }
         
-        let setupState = {
-            playerCount: 3,
-            selectedTokens: ['🚗', '🚢', '🎩']
-        };
-
-        // ===== SETUP FUNCTIONS =====
-        function setPlayerCount(count) {
-            setupState.playerCount = count;
-            document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderPlayerInputs();
-        }
-        
-        function renderPlayerInputs() {
-            const container = document.getElementById('playersList');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < setupState.playerCount; i++) {
-                const playerDiv = document.createElement('div');
-                playerDiv.className = 'player-input-group';
-                
-                const icon = document.createElement('div');
-                icon.className = `player-icon player-icon-${i + 1}`;
-                icon.textContent = setupState.selectedTokens[i] || TOKENS[i];
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = `Player ${i + 1} Name`;
-                input.value = `Player ${i + 1}`;
-                input.id = `player-${i}`;
-                input.maxLength = 20;
-                
-                playerDiv.appendChild(icon);
-                playerDiv.appendChild(input);
-                container.appendChild(playerDiv);
-                
-                // Token selector
-                const tokenSelector = document.createElement('div');
-                tokenSelector.className = 'player-tokens';
-                
-                TOKENS.forEach(token => {
-                    const btn = document.createElement('button');
-                    btn.className = 'token-btn';
-                    btn.textContent = token;
-                    btn.type = 'button';
-                    
-                    if (setupState.selectedTokens[i] === token) {
-                        btn.classList.add('selected');
-                    }
-                    if (setupState.selectedTokens.includes(token) && setupState.selectedTokens[i] !== token) {
-                        btn.classList.add('disabled');
-                        btn.disabled = true;
-                    }
-                    
-                    btn.onclick = () => selectToken(i, token);
-                    tokenSelector.appendChild(btn);
-                });
-                
-                container.appendChild(tokenSelector);
-            }
-        }
-        
-        function selectToken(playerIndex, token) {
-            setupState.selectedTokens[playerIndex] = token;
-            renderPlayerInputs();
-        }
-        
-         function startGame() {
-            let players = [];
-            
-            // Check if players were loaded from localStorage (via index.html)
+        function startGame() {
             const mode = localStorage.getItem('monopoly-game-mode');
-            const localPlayersData = localStorage.getItem('monopoly-players');
-            const onlineGameData = localStorage.getItem('monopoly-online-game');
-            
-            if (mode === 'local' && localPlayersData) {
-                // Load from local multiplayer setup
-                console.log('Loading LOCAL multiplayer players');
-                const loadedPlayers = JSON.parse(localPlayersData);
-                players = loadedPlayers.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    token: p.token,
-                    iconClass: p.iconClass,
-                    cash: 1500,
-                    position: 0,
-                    properties: [],
-                    isBankrupt: false,
-                    inJail: false,
-                    jailTurns: 0,
-                    getOutOfJailFreeCards: [],
+            const localData = localStorage.getItem('monopoly-players');
+            const onlineData = localStorage.getItem('monopoly-online-game');
+
+            let players = [];
+
+            if (mode === 'local' && localData) {
+                players = JSON.parse(localData).map(p => ({
+                    id: p.id, name: p.name, token: p.token, iconClass: p.iconClass,
+                    cash: 1500, position: 0, properties: [], isBankrupt: false,
+                    inJail: false, jailTurns: 0, getOutOfJailFreeCards: [],
                     aiDifficulty: p.aiDifficulty || null,
                 }));
-            } else if (mode === 'online' && onlineGameData) {
-                // Load from online multiplayer
-                console.log('Loading ONLINE multiplayer players');
-                const gameData = JSON.parse(onlineGameData);
-                players = gameData.players.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    token: p.token,
-                    iconClass: p.iconClass,
-                    cash: 1500,
-                    position: 0,
-                    properties: [],
-                    isBankrupt: false,
-                    inJail: false,
-                    jailTurns: 0,
-                    getOutOfJailFreeCards: []
+            } else if (mode === 'online' && onlineData) {
+                const gd = JSON.parse(onlineData);
+                players = gd.players.map(p => ({
+                    id: p.id, name: p.name, token: p.token, iconClass: p.iconClass,
+                    cash: 1500, position: 0, properties: [], isBankrupt: false,
+                    inJail: false, jailTurns: 0, getOutOfJailFreeCards: [],
+                    aiDifficulty: null,
                 }));
-                
             } else {
-                // Fallback: Use setup overlay data
-                console.log('Using setup overlay data');
-                for (let i = 0; i < setupState.playerCount; i++) {
-                    const nameInput = document.getElementById(`player-${i}`);
-                    const name = nameInput.value.trim() || `Player ${i + 1}`;
-                    const token = setupState.selectedTokens[i] || TOKENS[i];
-                    const iconClass = `player-icon-${i + 1}`;
-                    
-                    players.push({
-                        id: `p${i + 1}`,
-                        name: name,
-                        token: token,
-                        iconClass: iconClass,
-                        cash: 1500,
-                        position: 0,
-                        properties: [],
-                        isBankrupt: false,
-                        inJail: false,
-                        jailTurns: 0,
-                        getOutOfJailFreeCards: []
-                    });
-                }
+                window.location.href = 'index.html';
+                return;
             }
-            
+
             gameState.players = players;
-                        // Initialize AI players if any
-            const aiConfig = gameState.players.map(p => p.aiDifficulty || null);
+            gameState.currentPlayerIndex = 0;
+            initializeCardDecks();
+
+            const aiConfig = players.map(p => p.aiDifficulty || null);
             const hasAI = aiConfig.some(d => d !== null);
+
             if (hasAI) {
-                gameState.currentPlayerIndex = 0;
-                initializeCardDecks();
-                document.getElementById('setupOverlay').classList.add('hidden');
                 AIPlayer.init(aiConfig).then(() => {
                     initializeBoard();
                     updateUI();
                 });
-                return;
+            } else {
+                initializeBoard();
+                updateUI();
             }
-
-            gameState.currentPlayerIndex = 0;
-            
-            // Initialize card decks
-            initializeCardDecks();
-            
-            // Hide overlay
-            document.getElementById('setupOverlay').classList.add('hidden');
-            
-            // Initialize game board
-            initializeBoard();
-            updateUI();
         }
         
         // ===== GAME FUNCTIONS =====
@@ -3542,21 +3188,9 @@ function startAuction(propertyId) {
         }
         
 // Initialize
-        // Check if we should auto-start (players loaded from index.html)
         const mode = localStorage.getItem('monopoly-game-mode');
-        if (mode === 'local' || mode === 'online') {
-            // Players already loaded, start immediately
-            console.log('Auto-starting game in mode:', mode);
-            
-            if (mode === 'online') {
-                initializeOnlineMode();
-            }
-            
-            startGame();
-        } else {
-            // Show setup overlay
-            renderPlayerInputs();
-        }
+        if (mode === 'online') initializeOnlineMode();
+        startGame();
     </script>
 
 </body>
