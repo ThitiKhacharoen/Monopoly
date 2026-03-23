@@ -1459,6 +1459,7 @@
             chanceCards: [],
             communityChestCards: [],
             doublesCount: 0, // Track consecutive doubles
+            rolledDoubles: false, // Whether current turn had doubles
             auction: {
                 active: false,
                 propertyId: null,
@@ -1919,14 +1920,17 @@
             // Check for three doubles
             if (isDoubles) {
                 gameState.doublesCount++;
+                gameState.rolledDoubles = true;
                 if (gameState.doublesCount === 3) {
                     showMessage(`${currentPlayer.name} rolled 3 doubles! Go to Jail!`, 'error');
                     goToJail();
                     gameState.doublesCount = 0;
+                    gameState.rolledDoubles = false;
                     return;
                 }
             } else {
                 gameState.doublesCount = 0;
+                gameState.rolledDoubles = false;
             }
             
             // Move player
@@ -1960,13 +1964,7 @@
             // Resolve landing space
             setTimeout(() => {
                 resolveSpace(newPosition);
-                
-                // If rolled doubles and not going to jail, allow another roll
-                if (isDoubles && gameState.phase === 'END_TURN') {
-                    showMessage(`${currentPlayer.name} rolled doubles! Roll again!`, 'info');
-                    gameState.phase = 'ROLL_DICE';
-                    updateUI();
-                }
+                checkDoublesReroll(currentPlayer);
             }, 500);
         }
         
@@ -2021,6 +2019,14 @@
             }
         }
         
+        function checkDoublesReroll(player) {
+            if (gameState.rolledDoubles && gameState.phase === 'END_TURN' && !player.inJail) {
+                showMessage(`${player.name} rolled doubles! Roll again!`, 'info');
+                gameState.phase = 'ROLL_DICE';
+                updateUI();
+            }
+        }
+
         function resolveSpace(position) {
             const space = SPACES[position];
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -2408,9 +2414,8 @@
             
             checkBankruptcy();
             updateUI();
+            checkDoublesReroll(currentPlayer);
         }
-        
-       function passProperty() {
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             
@@ -2565,6 +2570,7 @@ function startAuction(propertyId) {
                     gameState.pendingProperty = null;
                     checkBankruptcy();
                     updateUI();
+                    checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
                 }, 2000);
             } else {
                 addAuctionLog('No bids - property remains unowned');
@@ -2576,6 +2582,7 @@ function startAuction(propertyId) {
                     gameState.phase = 'END_TURN';
                     gameState.pendingProperty = null;
                     updateUI();
+                    checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
                 }, 2000);
             }
         }
@@ -2793,6 +2800,7 @@ function startAuction(propertyId) {
             gameState.phase = 'ROLL_DICE';
             gameState.diceRoll = null;
             gameState.doublesCount = 0;
+            gameState.rolledDoubles = false;
             
             // Broadcast turn end if online
             if (onlineState.enabled && !onlineState.isProcessingRemoteEvent) {
