@@ -2014,17 +2014,24 @@
             } else {
                 // Still in jail
                 showMessage(`${currentPlayer.name} didn't roll doubles. Still in jail! (Turn ${currentPlayer.jailTurns}/3)`, 'info');
-                gameState.phase = 'END_TURN';
+                setEndTurn();
                 updateUI();
             }
         }
         
         function checkDoublesReroll(player) {
             if (gameState.rolledDoubles && gameState.phase === 'END_TURN' && !player.inJail) {
-                showMessage(`${player.name} rolled doubles! Roll again!`, 'info');
-                gameState.phase = 'ROLL_DICE';
-                updateUI();
+                setTimeout(() => {
+                    showMessage(`${player.name} rolled doubles! Roll again!`, 'info');
+                    gameState.phase = 'ROLL_DICE';
+                    updateUI();
+                }, 800);
             }
+        }
+
+        function setEndTurn() {
+            setEndTurn();
+            checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
         }
 
         function resolveSpace(position) {
@@ -2044,13 +2051,13 @@
                     payRent(position, ownership.ownerId);
                 } else {
                     // Own it - just end turn
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                 }
             } else if (space.type === 'tax') {
                 // Pay tax
                 currentPlayer.cash -= space.amount;
                 showMessage(`${currentPlayer.name} paid $${space.amount} tax`, 'error');
-                gameState.phase = 'END_TURN';
+                setEndTurn();
                 checkBankruptcy();
             } else if (space.type === 'chance') {
                 // Draw Chance card
@@ -2063,7 +2070,7 @@
                 goToJail();
             } else {
                 // Other spaces (GO, Free Parking, Just Visiting) - just end turn
-                gameState.phase = 'END_TURN';
+                setEndTurn();
             }
             
             updateUI();
@@ -2155,13 +2162,13 @@
                     owner.cash += doubleRent;
                     
                     showMessage(`Paid $${doubleRent} (2× railroad rent) to ${owner.name}`, 'error');
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     checkBankruptcy();
                     updateUI();
                 } else if (!ownership) {
                     resolveSpace(nearest);
                 } else {
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     updateUI();
                 }
             }, 500);
@@ -2196,13 +2203,13 @@
                     owner.cash += rent;
                     
                     showMessage(`Paid $${rent} (10× dice) to ${owner.name}`, 'error');
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     checkBankruptcy();
                     updateUI();
                 } else if (!ownership) {
                     resolveSpace(nearest);
                 } else {
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     updateUI();
                 }
             }, 500);
@@ -2231,7 +2238,8 @@
             
             showMessage(`${currentPlayer.name} is in Jail!`, 'error');
             gameState.phase = 'END_TURN';
-            gameState.doublesCount = 0; // Reset doubles count
+            gameState.doublesCount = 0;
+            gameState.rolledDoubles = false; // jail cancels doubles reroll
             updateUI();
         }
         
@@ -2239,7 +2247,7 @@
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             currentPlayer.cash += amount;
             showMessage(`${currentPlayer.name} collected $${amount}`, 'success');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             updateUI();
         }
         
@@ -2247,7 +2255,7 @@
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             currentPlayer.cash -= amount;
             showMessage(`${currentPlayer.name} paid $${amount}`, 'error');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             checkBankruptcy();
             updateUI();
         }
@@ -2267,7 +2275,7 @@
             
             currentPlayer.cash -= totalCost;
             showMessage(`${currentPlayer.name} paid $${totalCost} in repairs`, 'error');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             checkBankruptcy();
             updateUI();
         }
@@ -2284,7 +2292,7 @@
             });
             
             showMessage(`${currentPlayer.name} paid $${amount} to each player ($${totalCost} total)`, 'error');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             checkBankruptcy();
             updateUI();
         }
@@ -2301,7 +2309,7 @@
             });
             
             showMessage(`${currentPlayer.name} collected $${amount} from each player ($${totalCollected} total)`, 'success');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             updateUI();
         }
         
@@ -2310,7 +2318,7 @@
             currentPlayer.getOutOfJailFreeCards.push(deckType || 'chance');
             
             showMessage(`${currentPlayer.name} got a Get Out of Jail Free card!`, 'success');
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             updateUI();
         }
         
@@ -2399,7 +2407,7 @@
             
             showMessage(`${currentPlayer.name} bought ${space.name} for $${space.price}!`, 'success');
             
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             const propId = gameState.pendingProperty;
             gameState.pendingProperty = null;
             
@@ -2566,7 +2574,7 @@ function startAuction(propertyId) {
                 setTimeout(() => {
                     modal.classList.remove('active');
                     gameState.auction.active = false;
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     gameState.pendingProperty = null;
                     checkBankruptcy();
                     updateUI();
@@ -2579,7 +2587,7 @@ function startAuction(propertyId) {
                 setTimeout(() => {
                     modal.classList.remove('active');
                     gameState.auction.active = false;
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     gameState.pendingProperty = null;
                     updateUI();
                     checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
@@ -2607,7 +2615,7 @@ function startAuction(propertyId) {
             // No rent on mortgaged properties
             if (ownership.isMortgaged) {
                 showMessage(`${space.name} is mortgaged - no rent!`, 'info');
-                gameState.phase = 'END_TURN';
+                setEndTurn();
                 updateUI();
                 return;
             }
@@ -2655,7 +2663,7 @@ function startAuction(propertyId) {
                 
                 showMessage(`${currentPlayer.name} paid $${rentAmount} rent to ${owner.name}`, 'error');
                 
-                gameState.phase = 'END_TURN';
+                setEndTurn();
                 updateUI();
             }
         }
@@ -2747,7 +2755,7 @@ function startAuction(propertyId) {
                 }, 1000);
             }
             
-            gameState.phase = 'END_TURN';
+            setEndTurn();
             updateUI();
         }
         
@@ -3466,13 +3474,13 @@ function startAuction(propertyId) {
                     };
                     
                     showPropertyOwnership(data.propertyId, buyer);
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     gameState.pendingProperty = null;
                     updateUI();
                     break;
                     
                 case 'PROPERTY_PASSED':
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     gameState.pendingProperty = null;
                     updateUI();
                     break;
@@ -3482,7 +3490,7 @@ function startAuction(propertyId) {
                     const owner = gameState.players.find(p => p.id === data.ownerId);
                     payer.cash -= data.amount;
                     owner.cash += data.amount;
-                    gameState.phase = 'END_TURN';
+                    setEndTurn();
                     updateUI();
                     break;
                     
