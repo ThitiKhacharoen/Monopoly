@@ -50,7 +50,7 @@ const AIPlayer = (() => {
                 const p = allPlayers[i];
                 inputs.push(p.position / 40.0);
                 inputs.push(Math.min(1.0, p.cash / 2000.0));
-                inputs.push(Math.min(1.0, (p.getOutOfJailFreeCards || 0) / 2.0));
+                inputs.push(Math.min(1.0, (p.getOutOfJailFreeCards?.length || 0) / 2.0));
             } else {
                 inputs.push(0.0, 0.0, 0.0);
             }
