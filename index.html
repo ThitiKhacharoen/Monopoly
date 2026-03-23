@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly - Main Menu</title>
+    <title>Monopoly</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -21,1296 +16,549 @@
             justify-content: center;
             padding: 20px;
         }
-
-        .menu-container {
+        .card {
             background: white;
             border-radius: 20px;
-            padding: 50px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            padding: 40px;
+            max-width: 560px;
             width: 100%;
-            text-align: center;
-            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-height: 92vh;
             overflow-y: auto;
         }
-
-        .logo {
-            font-size: 4em;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            color: #667eea;
-            font-size: 3em;
-            margin-bottom: 10px;
-            font-weight: 800;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 40px;
-        }
-
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        .menu-options {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .menu-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 12px;
-            font-size: 1.3em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .menu-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .menu-button.disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .menu-button.disabled:hover {
-            transform: none;
-        }
-
-        .badge {
-            background: #ffd93d;
-            color: #333;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.5em;
-            margin-left: 10px;
-        }
-
-        .submenu {
-            display: none;
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .submenu.active {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .submenu h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
-        .submenu-button {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-
-        .submenu-button:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .back-button {
-            margin-top: 15px;
-            background: transparent;
-            color: #666;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-
-        .back-button:hover {
-            color: #667eea;
-        }
-
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            color: #999;
-            font-size: 0.9em;
-        }
-
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            margin-bottom: 15px;
-        }
-
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        input[type="text"]:disabled {
-            background: #f0f0f0;
-            color: #999;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            text-align: left;
-        }
-
-        .player-count-selector {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .count-btn {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .count-btn:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .count-btn.active {
-            border-color: #667eea;
-            background: #667eea;
-            color: white;
-        }
-
-        .token-selector {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-
-        .token-btn {
-            width: 50px;
-            height: 50px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        h1 { color: #667eea; font-size: 2.8em; font-weight: 800; text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 32px; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .btn {
+            display: block; width: 100%; padding: 16px;
+            border: none; border-radius: 10px; font-size: 1.1em;
+            font-weight: 600; cursor: pointer; margin-bottom: 12px;
             transition: all 0.2s;
         }
-
-        .token-btn:hover {
-            border-color: #667eea;
-            transform: scale(1.1);
-        }
-
-        .token-btn.selected {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .token-btn.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            color: white; box-shadow: 0 4px 14px rgba(102,126,234,0.4);
         }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #f8f9ff;
-        }
-
-        .player-list-item {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .player-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
-        }
-
-        .player-icon-1 { background: #ff6b6b; }
-        .player-icon-2 { background: #4ecdc4; }
-        .player-icon-3 { background: #45b7d1; }
-        .player-icon-4 { background: #f9ca24; }
-        .player-icon-5 { background: #6c5ce7; }
-        .player-icon-6 { background: #a29bfe; }
-        .player-icon-7 { background: #fd79a8; }
-        .player-icon-8 { background: #fdcb6e; }
-
-        .player-slot {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 12px;
-            text-align: left;
-            border: 2px solid #e0e0e0;
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+        .btn-secondary { background: #f0f0f0; color: #444; }
+        .btn-secondary:hover { background: #e4e4e4; }
+        .btn-danger { background: #fee; color: #c00; }
+        .btn-danger:hover { background: #fdd; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; margin-top: 14px; }
+        input[type=text], input[type=number], select {
+            width: 100%; padding: 11px 13px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 1em; margin-bottom: 4px;
             transition: border-color 0.2s;
         }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
+        input:disabled { background: #f8f8f8; color: #999; }
+        .error { background: #fff0f0; color: #c00; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9em; display: none; }
+        .error.show { display: block; }
+        .status { background: #e8f4ff; color: #1565c0; padding: 10px 14px; border-radius: 8px; margin: 12px 0; font-weight: 600; text-align: center; }
 
-        .player-slot.ai-slot {
-            border-color: #667eea;
-            background: #f0f0ff;
+        /* Player count buttons */
+        .count-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .count-btn {
+            padding: 13px; border: 2px solid #e0e0e0; background: white;
+            border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;
+            transition: all 0.2s;
         }
+        .count-btn:hover { border-color: #667eea; }
+        .count-btn.active { border-color: #667eea; background: #667eea; color: white; }
 
-        .player-slot-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+        /* Player slot */
+        .player-slot {
+            background: #f8f9fa; border-radius: 10px; padding: 14px;
+            margin-bottom: 10px; border: 2px solid #e8e8e8;
         }
-
-        .player-slot-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1em;
-            color: white;
-            flex-shrink: 0;
+        .player-slot.ai { border-color: #667eea; background: #f3f0ff; }
+        .slot-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .slot-num {
+            width: 30px; height: 30px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-weight: 700;
+            color: white; font-size: 0.9em; flex-shrink: 0;
         }
-
         .diff-select {
-            width: 100%;
-            padding: 8px 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.95em;
-            margin-bottom: 8px;
-            background: white;
-            cursor: pointer;
+            width: 100%; padding: 8px 10px; border: 2px solid #ddd;
+            border-radius: 7px; font-size: 0.95em; margin-bottom: 8px;
+            background: white; cursor: pointer;
         }
+        .diff-select:focus { outline: none; border-color: #667eea; }
 
-        .diff-select:focus {
-            outline: none;
-            border-color: #667eea;
+        /* Token grid */
+        .tokens { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+        .tok {
+            width: 42px; height: 42px; border: 2px solid #ddd; background: white;
+            border-radius: 8px; cursor: pointer; font-size: 1.3em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
         }
+        .tok:hover:not(:disabled) { border-color: #667eea; transform: scale(1.1); }
+        .tok.selected { border-color: #667eea; background: #f0eeff; }
+        .tok:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .room-code-display {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
+        /* Lobby */
         .room-code {
-            font-size: 2.5em;
-            font-weight: 800;
-            color: #667eea;
-            letter-spacing: 0.1em;
-            font-family: 'Courier New', monospace;
+            font-size: 2.6em; font-weight: 800; color: #667eea;
+            letter-spacing: 0.12em; font-family: monospace;
+            text-align: center; padding: 20px;
+            background: #f8f9fa; border-radius: 10px; margin: 12px 0;
+        }
+        .lobby-player {
+            display: flex; align-items: center; gap: 12px;
+            background: white; padding: 10px 14px; border-radius: 8px;
+            margin-bottom: 8px; border: 2px solid #eee;
+        }
+        .lobby-token { font-size: 1.5em; }
+        .host-badge {
+            background: #ffd93d; color: #333; padding: 3px 9px;
+            border-radius: 10px; font-size: 0.75em; font-weight: 700; margin-left: auto;
         }
 
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .status-message {
-            text-align: center;
-            padding: 12px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            color: #1976d2;
-            margin: 15px 0;
-            font-weight: 600;
-        }
+        .divider { border: none; border-top: 1px solid #eee; margin: 20px 0; }
     </style>
 </head>
-
 <body>
-    <div class="menu-container">
-        <!-- Main Menu Screen -->
-        <div class="screen active" id="mainMenuScreen">
-            <div class="logo">🎲</div>
-            <h1>MONOPOLY</h1>
-            <p class="subtitle">Tournament Rules Edition</p>
+<div class="card">
 
-            <div class="menu-options" id="mainMenu">
-                <button class="menu-button" onclick="App.showPlayMenu()">
-                    🎮 Play
-                </button>
-
-                <button class="menu-button" onclick="window.location.href='monopoly-board.html'">
-                    📋 View Board
-                </button>
-            </div>
-
-            <div class="footer">
-                <p>Built with Event Sourcing • Supabase • NEAT AI</p>
-            </div>
-        </div>
-
-        <!-- PLAY MENU SCREEN -->
-        <div class="screen" id="playMenuScreen">
-            <div class="logo">🎮</div>
-            <h1 style="font-size: 2em;">Play</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">Choose your game mode</p>
-
-            <div class="menu-options">
-                <button class="menu-button" onclick="App.showLocalOrLoad()">
-                    👥 Local Game
-                </button>
-
-                <button class="menu-button" onclick="App.showOnlineMenu()">
-                    🌐 Online Multiplayer
-                </button>
-            </div>
-
-            <button class="btn-secondary" style="margin-top: 20px;" onclick="App.showScreen('mainMenuScreen')">
-                ← Back
-            </button>
-        </div>
-
-        <!-- LOAD GAME SCREEN -->
-        <div class="screen" id="loadGameScreen">
-            <div class="logo">🎮</div>
-            <h1 style="font-size: 2em;">Local Game</h1>
-
-            <div class="menu-options" style="margin-top: 20px;">
-                <button class="menu-button" id="continueGameBtn" onclick="App.continueGame()">
-                    ▶️ Continue Game
-                </button>
-                <p class="subtitle" id="savedGameInfo" style="margin: 0; font-size: 0.9em;"></p>
-
-                <button class="menu-button" style="background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);"
-                    onclick="App.newLocalGame()">
-                    ➕ New Game
-                </button>
-            </div>
-
-            <button class="btn-secondary" style="margin-top: 20px;" onclick="App.showScreen('playMenuScreen')">
-                ← Back
-            </button>
-        </div>
-
-        <!-- LOCAL SETUP SCREEN -->
-        <div class="screen" id="localSetupScreen">
-            <h1 style="font-size: 2em;">🎮 Game Setup</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">Set up players — mix humans and AI</p>
-
-            <label>Number of Players</label>
-            <div class="player-count-selector">
-                <button class="count-btn" onclick="App.setLocalPlayerCount(2)">2</button>
-                <button class="count-btn active" onclick="App.setLocalPlayerCount(3)">3</button>
-                <button class="count-btn" onclick="App.setLocalPlayerCount(4)">4</button>
-                <button class="count-btn" onclick="App.setLocalPlayerCount(5)">5</button>
-                <button class="count-btn" onclick="App.setLocalPlayerCount(6)">6</button>
-                <button class="count-btn" onclick="App.setLocalPlayerCount(7)">7</button>
-                <button class="count-btn" onclick="App.setLocalPlayerCount(8)">8</button>
-            </div>
-
-            <div id="localPlayersList" style="margin-top: 20px;">
-                <!-- Generated by JS -->
-            </div>
-
-            <button class="btn-primary" onclick="App.startLocalGame()">
-                🎮 Start Game
-            </button>
-
-            <button class="btn-secondary" onclick="App.showScreen('playMenuScreen');">
-                ← Back
-            </button>
-        </div>
-
-        <!-- ONLINE MENU SCREEN -->
-        <div class="screen" id="onlineMenuScreen">
-            <h1 style="font-size: 2em;">🌐 Online Multiplayer</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">Play with friends around the world</p>
-
-            <button class="btn-primary" onclick="App.showOnlineCreate()">
-                🎮 Create New Room
-            </button>
-
-            <button class="btn-primary" style="background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);"
-                onclick="App.showOnlineJoin()">
-                🔗 Join Existing Room
-            </button>
-
-            <button class="btn-secondary" onclick="App.showScreen('playMenuScreen');">
-                ← Back
-            </button>
-        </div>
-
-        <!-- ONLINE CREATE SCREEN -->
-        <div class="screen" id="onlineCreateScreen">
-            <h1 style="font-size: 2em;">🎮 Create Room</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">Host a new online game</p>
-
-            <div class="error-message" id="onlineError"></div>
-
-            <label>Your Name</label>
-            <input type="text" id="onlineHostName" placeholder="Enter your name" maxlength="20">
-
-            <label>Maximum Players</label>
-            <select id="onlineMaxPlayers">
-                <option value="2">2 Players</option>
-                <option value="3">3 Players</option>
-                <option value="4" selected>4 Players</option>
-                <option value="5">5 Players</option>
-                <option value="6">6 Players</option>
-                <option value="7">7 Players</option>
-                <option value="8">8 Players</option>
-            </select>
-
-            <button class="btn-primary" onclick="App.createOnlineRoom()">
-                Create Room
-            </button>
-
-            <button class="btn-secondary" onclick="App.showOnlineMenu()">
-                ← Back
-            </button>
-        </div>
-
-        <!-- ONLINE JOIN SCREEN -->
-        <div class="screen" id="onlineJoinScreen">
-            <h1 style="font-size: 2em;">🔗 Join Room</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">Enter room code to join</p>
-
-            <div class="error-message" id="joinError"></div>
-
-            <label>Room Code</label>
-            <input type="text" id="onlineJoinCode" placeholder="Enter 6-digit code" maxlength="6"
-                style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.2em;">
-
-            <label>Your Name</label>
-            <input type="text" id="onlineJoinName" placeholder="Enter your name" maxlength="20">
-
-            <button class="btn-primary" onclick="App.findRoom()">
-                🔍 Find Room
-            </button>
-
-            <button class="btn-secondary" onclick="App.showOnlineMenu()">
-                ← Back
-            </button>
-        </div>
-
-        <!-- ONLINE LOBBY SCREEN -->
-        <div class="screen" id="onlineLobbyScreen">
-            <h1 style="font-size: 2em;">🎮 Lobby</h1>
-
-            <div class="room-code-display">
-                <div style="color: #666; margin-bottom: 10px;">Room Code</div>
-                <div class="room-code" id="lobbyRoomCode">------</div>
-                <div style="margin-top: 10px; color: #666; font-size: 0.9em;">Share this code with friends!</div>
-            </div>
-
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 20px 0;">
-                <h3 style="color: #667eea; margin-bottom: 12px;">Players (<span id="lobbyPlayerCount">0</span>/<span
-                        id="lobbyMaxPlayers">4</span>)</h3>
-                <div id="lobbyPlayersList"></div>
-            </div>
-
-            <!-- Token picker — shown for all players before they confirm token -->
-            <div id="lobbyTokenPicker" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 20px 0;">
-                <h3 style="color: #667eea; margin-bottom: 12px;">Choose Your Token</h3>
-                <p style="color: #999; font-size: 0.85em; margin-bottom: 10px;">Leave unselected to be assigned randomly</p>
-                <div class="error-message" id="lobbyJoinError"></div>
-                <div class="token-selector" id="lobbyTokenSelector" style="justify-content: center;"></div>
-                <button class="btn-primary" style="margin-top: 15px;" id="lobbyConfirmTokenBtn" onclick="App.confirmToken()">
-                    ✅ Confirm Token
-                </button>
-            </div>
-
-            <div class="status-message" id="lobbyStatusMessage">
-                Waiting for players...
-            </div>
-
-            <button class="btn-primary" id="lobbyStartBtn" onclick="App.startOnlineGame()" style="display: none;">
-                🚀 Start Game
-            </button>
-
-            <button class="btn-secondary" onclick="App.leaveOnlineRoom()">
-                Leave Room
-            </button>
-        </div>
+    <!-- MAIN MENU -->
+    <div class="screen active" id="s-main">
+        <div style="text-align:center;font-size:3em;margin-bottom:8px">🎲</div>
+        <h1>MONOPOLY</h1>
+        <p class="subtitle">Tournament Rules Edition</p>
+        <button class="btn btn-primary" onclick="show('s-play')">🎮 Play</button>
+        <button class="btn btn-secondary" onclick="location.href='monopoly-board.html'">📋 View Board</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const App = {
-            SUPABASE_URL: 'https://enwyccsukcsaffeukxka.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14',
-
-            supabase: null,
-
-            TOKENS: ['🚗', '🚢', '🎩', '🐕', '🐱', '👟', '🎸', '⚓'],
-            ICON_CLASSES: ['player-icon-1', 'player-icon-2', 'player-icon-3', 'player-icon-4',
-                'player-icon-5', 'player-icon-6', 'player-icon-7', 'player-icon-8'],
-            SLOT_COLORS: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e'],
-
-            localState: {
-                playerCount: 3,
-                selectedTokens: ['🚗', '🚢', '🎩'],
-                aiDifficulties: ['human', 'human', 'human'],
-                playerNames: ['', '', '']
-            },
-
-            onlineState: {
-                roomId: null,
-                roomCode: null,
-                playerId: null,
-                isHost: false,
-                selectedToken: null,
-                tokenConfirmed: false,
-                pendingRoomId: null,
-                pendingRoomCode: null,
-                pendingName: null,
-                subscription: null
-            },
-
-            init() {
-                this.supabase = window.supabase.createClient(this.SUPABASE_URL, this.SUPABASE_ANON_KEY);
-                this.renderLocalPlayers();
-            },
-
-            showScreen(screenId) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(screenId).classList.add('active');
-            },
-
-            showLocalSetup() {
-                this.showScreen('localSetupScreen');
-                this.renderLocalPlayers();
-            },
-
-            showPlayMenu() {
-                this.showScreen('playMenuScreen');
-            },
-
-            showLocalOrLoad() {
-                const saved = localStorage.getItem('monopoly-saved-game');
-                const continueBtn = document.getElementById('continueGameBtn');
-                const savedInfo = document.getElementById('savedGameInfo');
-
-                if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        const date = data.savedAt ? new Date(data.savedAt).toLocaleString() : 'Unknown';
-                        const players = data.players ? data.players.filter(p => !p.isBankrupt).map(p => p.name).join(', ') : '';
-                        savedInfo.textContent = `Last saved: ${date} — Players: ${players}`;
-                    } catch(e) {
-                        savedInfo.textContent = 'A previous game was saved.';
-                    }
-                    continueBtn.style.display = '';
-                    savedInfo.style.display = '';
-                } else {
-                    continueBtn.style.display = 'none';
-                    savedInfo.style.display = 'none';
-                }
-
-                this.showScreen('loadGameScreen');
-            },
-
-            continueGame() {
-                localStorage.setItem('monopoly-continue-game', 'true');
-                localStorage.setItem('monopoly-game-mode', 'local');
-                window.location.href = 'game.html';
-            },
-
-            newLocalGame() {
-                const hasSave = !!localStorage.getItem('monopoly-saved-game');
-                if (hasSave && !confirm('Start a new game? Your saved game will be lost.')) return;
-                localStorage.removeItem('monopoly-saved-game');
-                this.showLocalSetup();
-            },
-
-            showOnlineMenu() {
-                this.onlineState.tokenConfirmed = false;
-                this.onlineState.selectedToken = null;
-                this.showScreen('onlineMenuScreen');
-            },
-
-            showOnlineCreate() {
-                this.showScreen('onlineCreateScreen');
-            },
-
-            showOnlineJoin() {
-                this.showScreen('onlineJoinScreen');
-            },
-
-            setLocalPlayerCount(count) {
-                this.localState.playerCount = count;
-                // Resize arrays to match
-                while (this.localState.selectedTokens.length < count) {
-                    this.localState.selectedTokens.push(this.TOKENS[this.localState.selectedTokens.length]);
-                }
-                while (this.localState.aiDifficulties.length < count) {
-                    this.localState.aiDifficulties.push('human');
-                }
-                document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
-                this.renderLocalPlayers();
-            },
-
-            renderLocalPlayers() {
-                // Save any names the user has already typed before wiping the DOM
-                for (let i = 0; i < this.localState.playerCount; i++) {
-                    const existing = document.getElementById(`localPlayer${i}`);
-                    if (existing && !existing.disabled) {
-                        this.localState.playerNames[i] = existing.value;
-                    }
-                }
-                const container = document.getElementById('localPlayersList');
-                container.innerHTML = '';
-
-                for (let i = 0; i < this.localState.playerCount; i++) {
-                    const difficulty = this.localState.aiDifficulties[i] || 'human';
-                    const isAI = difficulty !== 'human';
-
-                    const slot = document.createElement('div');
-                    slot.className = 'player-slot' + (isAI ? ' ai-slot' : '');
-                    slot.id = `playerSlot${i}`;
-
-                    // Header row with number badge
-                    const header = document.createElement('div');
-                    header.className = 'player-slot-header';
-
-                    const badge = document.createElement('div');
-                    badge.className = 'player-slot-number';
-                    badge.style.background = this.SLOT_COLORS[i];
-                    badge.textContent = i + 1;
-
-                    const slotTitle = document.createElement('span');
-                    slotTitle.style.fontWeight = '600';
-                    slotTitle.style.color = '#333';
-                    slotTitle.textContent = `Player ${i + 1}`;
-
-                    header.appendChild(badge);
-                    header.appendChild(slotTitle);
-                    slot.appendChild(header);
-
-                    // Difficulty selector
-                    const diffSelect = document.createElement('select');
-                    diffSelect.className = 'diff-select';
-                    diffSelect.id = `diffSelect${i}`;
-                    [
-                        ['human',  '👤 Human'],
-                        ['easy',   '🤖 AI — Easy'],
-                        ['medium', '🤖 AI — Medium'],
-                        ['hard',   '🤖 AI — Hard'],
-                    ].forEach(([val, label]) => {
-                        const opt = document.createElement('option');
-                        opt.value = val;
-                        opt.textContent = label;
-                        if (difficulty === val) opt.selected = true;
-                        diffSelect.appendChild(opt);
-                    });
-                    diffSelect.onchange = (e) => this.setDifficulty(i, e.target.value);
-                    slot.appendChild(diffSelect);
-
-                    // Name input (hidden/disabled for AI)
-                    const nameInput = document.createElement('input');
-                    nameInput.type = 'text';
-                    nameInput.id = `localPlayer${i}`;
-                    nameInput.maxLength = 20;
-                    nameInput.style.marginBottom = '8px';
-
-                    if (isAI) {
-                        nameInput.value = 'AI (' + difficulty + ')';
-                        nameInput.disabled = true;
-                        nameInput.placeholder = 'AI Player';
-                    } else {
-                        // Restore previously typed name, fall back to empty so placeholder shows
-                        nameInput.value = this.localState.playerNames[i] || '';
-                        nameInput.placeholder = `Player ${i + 1} Name`;
-                    }
-                    slot.appendChild(nameInput);
-
-                    // Token selector (shown for all — AI needs a token too)
-                    const tokenRow = document.createElement('div');
-                    tokenRow.className = 'token-selector';
-                    tokenRow.style.justifyContent = 'flex-start';
-
-                    this.TOKENS.forEach(token => {
-                        const btn = document.createElement('button');
-                        btn.className = 'token-btn';
-                        btn.textContent = token;
-                        btn.type = 'button';
-
-                        if (this.localState.selectedTokens[i] === token) {
-                            btn.classList.add('selected');
-                        }
-                        if (this.localState.selectedTokens.includes(token) &&
-                            this.localState.selectedTokens[i] !== token) {
-                            btn.classList.add('disabled');
-                            btn.disabled = true;
-                        }
-
-                        btn.onclick = () => this.selectLocalToken(i, token);
-                        tokenRow.appendChild(btn);
-                    });
-                    slot.appendChild(tokenRow);
-
-                    container.appendChild(slot);
-                }
-            },
-
-            setDifficulty(playerIndex, difficulty) {
-                this.localState.aiDifficulties[playerIndex] = difficulty;
-                // Re-render to update slot styling and name field state
-                this.renderLocalPlayers();
-            },
-
-            selectLocalToken(playerIndex, token) {
-                this.localState.selectedTokens[playerIndex] = token;
-                this.renderLocalPlayers();
-            },
-
-            startLocalGame() {
-                // Save any final edits before reading
-                for (let i = 0; i < this.localState.playerCount; i++) {
-                    const existing = document.getElementById(`localPlayer${i}`);
-                    if (existing && !existing.disabled) {
-                        this.localState.playerNames[i] = existing.value;
-                    }
-                }
-                const players = [];
-                for (let i = 0; i < this.localState.playerCount; i++) {
-                    const difficulty = this.localState.aiDifficulties[i] || 'human';
-                    const isAI = difficulty !== 'human';
-                    const savedName = this.localState.playerNames[i] ? this.localState.playerNames[i].trim() : '';
-                    const defaultName = isAI ? `AI (${difficulty})` : `Player ${i + 1}`;
-                    const name = (!isAI && savedName) ? savedName : defaultName;
-
-                    players.push({
-                        id: `p${i + 1}`,
-                        name: name,
-                        token: this.localState.selectedTokens[i] || this.TOKENS[i],
-                        iconClass: this.ICON_CLASSES[i],
-                        aiDifficulty: isAI ? difficulty : null
-                    });
-                }
-
-                localStorage.setItem('monopoly-game-mode', 'local');
-                localStorage.setItem('monopoly-players', JSON.stringify(players));
-                window.location.href = 'game.html';
-            },
-
-            renderTokenSelector(containerId, usedTokens) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-
-                this.TOKENS.forEach(token => {
-                    const btn = document.createElement('button');
-                    btn.className = 'token-btn';
-                    btn.textContent = token;
-                    btn.type = 'button';
-
-                    if (usedTokens.includes(token)) {
-                        btn.classList.add('disabled');
-                        btn.disabled = true;
-                    }
-
-                    if (this.onlineState.selectedToken === token) {
-                        btn.classList.add('selected');
-                    }
-
-                    btn.onclick = () => this.selectOnlineToken(token);
-                    container.appendChild(btn);
-                });
-            },
-
-            selectOnlineToken(token) {
-                this.onlineState.selectedToken = token;
-                document.querySelectorAll('.token-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                    if (btn.textContent === token && !btn.disabled) {
-                        btn.classList.add('selected');
-                    }
-                });
-            },
-
-            async createOnlineRoom() {
-                const name = document.getElementById('onlineHostName').value.trim();
-                const maxPlayers = parseInt(document.getElementById('onlineMaxPlayers').value);
-
-                if (!name) { this.showError('onlineError', 'Please enter your name'); return; }
-
-                try {
-                    const { data: codeData } = await this.supabase.rpc('generate_room_code');
-                    const roomCode = codeData;
-
-                    const { data: room } = await this.supabase
-                        .from('rooms')
-                        .insert({ room_code: roomCode, max_players: maxPlayers, status: 'waiting' })
-                        .select().single();
-
-                    // Insert host with no token yet — will be confirmed in lobby
-                    const { data: player } = await this.supabase
-                        .from('room_players')
-                        .insert({
-                            room_id: room.id,
-                            player_name: name,
-                            token: '❓',
-                            icon_class: this.ICON_CLASSES[0],
-                            is_host: true,
-                            player_order: 0
-                        })
-                        .select().single();
-
-                    localStorage.setItem('myPlayerId', player.id);
-                    this.onlineState.roomId = room.id;
-                    this.onlineState.roomCode = roomCode;
-                    this.onlineState.playerId = player.id;
-                    this.onlineState.isHost = true;
-                    this.onlineState.selectedToken = null;
-                    this.onlineState.tokenConfirmed = false;
-
-                    this.subscribeToRoom();
-                    this.showOnlineLobby();
-                } catch (error) {
-                    console.error('Error:', error);
-                    this.showError('onlineError', 'Failed to create room');
-                }
-            },
-
-            async findRoom() {
-                const roomCode = document.getElementById('onlineJoinCode').value.trim().toUpperCase();
-                const name = document.getElementById('onlineJoinName').value.trim();
-
-                if (!roomCode || roomCode.length !== 6) { this.showError('joinError', 'Please enter a valid room code'); return; }
-                if (!name) { this.showError('joinError', 'Please enter your name'); return; }
-
-                try {
-                    const { data: room } = await this.supabase
-                        .from('rooms').select('*')
-                        .eq('room_code', roomCode).eq('status', 'waiting').single();
-
-                    if (!room) throw new Error('Room not found or already started');
-
-                    const { data: existingPlayers } = await this.supabase
-                        .from('room_players').select('*')
-                        .eq('room_id', room.id).order('player_order');
-
-                    if (existingPlayers.length >= room.max_players) throw new Error('Room is full');
-
-                    // Store pending join info — don't insert to DB yet
-                    this.onlineState.pendingRoomId = room.id;
-                    this.onlineState.pendingRoomCode = roomCode;
-                    this.onlineState.pendingName = name;
-                    this.onlineState.isHost = false;
-                    this.onlineState.tokenConfirmed = false;
-                    this.onlineState.selectedToken = null;
-
-                    this.showOnlineLobby();
-                    this.renderLobbyPreview(existingPlayers, room.max_players);
-                } catch (error) {
-                    console.error('Error:', error);
-                    this.showError('joinError', error.message || 'Failed to find room');
-                }
-            },
-
-            renderLobbyPreview(players, maxPlayers) {
-                const container = document.getElementById('lobbyPlayersList');
-                container.innerHTML = '';
-                players.forEach(player => {
-                    const div = document.createElement('div');
-                    div.className = 'player-list-item';
-                    div.innerHTML = `
-                        <div class="player-icon ${player.icon_class}">${player.token}</div>
-                        <div style="flex: 1; font-weight: 600;">${player.player_name}</div>
-                        ${player.is_host ? '<span style="background: #ffd93d; padding: 4px 10px; border-radius: 12px; font-size: 0.8em;">HOST</span>' : ''}
-                    `;
-                    container.appendChild(div);
-                });
-                document.getElementById('lobbyPlayerCount').textContent = players.length;
-                document.getElementById('lobbyMaxPlayers').textContent = maxPlayers;
-                document.getElementById('lobbyStatusMessage').textContent = 'Choose your token to join';
-                document.getElementById('lobbyStartBtn').style.display = 'none';
-            },
-
-            renderLobbyTokenPicker(usedTokens) {
-                document.getElementById('lobbyTokenPicker').style.display = 'block';
-                // Don't reset selectedToken — preserve any existing selection
-                // But if current selection was just taken, clear it
-                if (this.onlineState.selectedToken && usedTokens.includes(this.onlineState.selectedToken)) {
-                    this.onlineState.selectedToken = null;
-                }
-                const container = document.getElementById('lobbyTokenSelector');
-                container.innerHTML = '';
-                this.TOKENS.forEach(token => {
-                    const btn = document.createElement('button');
-                    btn.className = 'token-btn';
-                    btn.textContent = token;
-                    btn.type = 'button';
-                    if (usedTokens.includes(token)) {
-                        btn.classList.add('disabled');
-                        btn.disabled = true;
-                    }
-                    if (this.onlineState.selectedToken === token) {
-                        btn.classList.add('selected');
-                    }
-                    btn.onclick = () => {
-                        if (this.onlineState.selectedToken === token) {
-                            btn.classList.remove('selected');
-                            this.onlineState.selectedToken = null;
-                        } else {
-                            container.querySelectorAll('.token-btn').forEach(b => b.classList.remove('selected'));
-                            btn.classList.add('selected');
-                            this.onlineState.selectedToken = token;
-                        }
-                    };
-                    container.appendChild(btn);
-                });
-            },
-
-            async confirmToken() {
-                try {
-                    const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
-
-                    // Re-fetch taken tokens
-                    const { data: existingPlayers } = await this.supabase
-                        .from('room_players').select('token, player_order, id')
-                        .eq('room_id', roomId).order('player_order');
-
-                    const usedTokens = existingPlayers
-                        .filter(p => p.id !== this.onlineState.playerId)
-                        .map(p => p.token).filter(t => t !== '❓');
-
-                    // Assign random if none selected
-                    if (!this.onlineState.selectedToken) {
-                        const available = this.TOKENS.filter(t => !usedTokens.includes(t));
-                        if (available.length === 0) { this.showError('lobbyJoinError', 'No tokens available'); return; }
-                        this.onlineState.selectedToken = available[Math.floor(Math.random() * available.length)];
-                    }
-
-                    if (usedTokens.includes(this.onlineState.selectedToken)) {
-                        this.showError('lobbyJoinError', 'That token was just taken — please pick another');
-                        this.renderLobbyTokenPicker(usedTokens);
-                        return;
-                    }
-
-                    if (this.onlineState.isHost) {
-                        // Host already has a DB row — just update their token
-                        await this.supabase.from('room_players')
-                            .update({ token: this.onlineState.selectedToken })
-                            .eq('id', this.onlineState.playerId);
-                    } else {
-                        // Joiner — insert their row now
-                        const playerOrder = existingPlayers.length;
-                        const { data: player } = await this.supabase
-                            .from('room_players')
-                            .insert({
-                                room_id: roomId,
-                                player_name: this.onlineState.pendingName,
-                                token: this.onlineState.selectedToken,
-                                icon_class: this.ICON_CLASSES[playerOrder],
-                                is_host: false,
-                                player_order: playerOrder
-                            })
-                            .select().single();
-
-                        localStorage.setItem('myPlayerId', player.id);
-                        this.onlineState.roomId = this.onlineState.pendingRoomId;
-                        this.onlineState.roomCode = this.onlineState.pendingRoomCode;
-                        this.onlineState.playerId = player.id;
-                        this.subscribeToRoom();
-                    }
-
-                    this.onlineState.tokenConfirmed = true;
-                    document.getElementById('lobbyTokenPicker').style.display = 'none';
-                    this.loadLobbyPlayers();
-                } catch (error) {
-                    console.error('Error:', error);
-                    this.showError('lobbyJoinError', error.message || 'Failed to confirm token');
-                }
-            },
-
-            showOnlineLobby() {
-                document.getElementById('lobbyRoomCode').textContent = this.onlineState.roomCode || this.onlineState.pendingRoomCode || '';
-                this.showScreen('onlineLobbyScreen');
-                this.loadLobbyPlayers();
-                // Show token picker for everyone until they confirm
-                if (!this.onlineState.tokenConfirmed) {
-                    this.showLobbyTokenPicker();
-                }
-            },
-
-            async showLobbyTokenPicker() {
-                // Fetch current taken tokens
-                const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
-                const { data: players } = await this.supabase
-                    .from('room_players').select('token')
-                    .eq('room_id', roomId);
-                const usedTokens = (players || []).map(p => p.token).filter(t => t !== '❓');
-                this.renderLobbyTokenPicker(usedTokens);
-            },
-
-            async loadLobbyPlayers() {
-                const roomId = this.onlineState.roomId || this.onlineState.pendingRoomId;
-                if (!roomId) return;
-
-                const { data: players } = await this.supabase
-                    .from('room_players').select('*')
-                    .eq('room_id', roomId).order('player_order');
-
-                const { data: room } = await this.supabase
-                    .from('rooms').select('max_players')
-                    .eq('id', roomId).single();
-
-                const container = document.getElementById('lobbyPlayersList');
-                container.innerHTML = '';
-
-                players.forEach(player => {
-                    const div = document.createElement('div');
-                    div.className = 'player-list-item';
-                    div.innerHTML = `
-                        <div class="player-icon ${player.icon_class}">${player.token}</div>
-                        <div style="flex: 1; font-weight: 600;">${player.player_name}</div>
-                        ${player.is_host ? '<span style="background: #ffd93d; padding: 4px 10px; border-radius: 12px; font-size: 0.8em;">HOST</span>' : ''}
-                    `;
-                    container.appendChild(div);
-                });
-
-                document.getElementById('lobbyPlayerCount').textContent = players.length;
-                document.getElementById('lobbyMaxPlayers').textContent = room.max_players;
-
-                if (this.onlineState.isHost) {
-                    document.getElementById('lobbyStartBtn').style.display = 'block';
-                    document.getElementById('lobbyStatusMessage').textContent = players.length >= 2 ? 'Ready to start!' : 'Waiting for more players...';
-                } else {
-                    document.getElementById('lobbyStartBtn').style.display = 'none';
-                    document.getElementById('lobbyStatusMessage').textContent = 'Waiting for host to start...';
-                }
-            },
-
-            subscribeToRoom() {
-                this.onlineState.subscription = this.supabase
-                    .channel(`room:${this.onlineState.roomId}`)
-                    .on('postgres_changes',
-                        { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${this.onlineState.roomId}` },
-                        () => this.loadLobbyPlayers()
-                    )
-                    .on('postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${this.onlineState.roomId}` },
-                        async (payload) => {
-                            if (payload.new.status === 'playing') {
-                                // Host already saved localStorage before redirecting.
-                                // Joiner needs to fetch players and save it themselves.
-                                if (!this.onlineState.isHost) {
-                                    const { data: players } = await this.supabase
-                                        .from('room_players').select('*')
-                                        .eq('room_id', this.onlineState.roomId).order('player_order');
-
-                                    const gameData = {
-                                        roomId: this.onlineState.roomId,
-                                        roomCode: this.onlineState.roomCode,
-                                        players: players.map(p => ({
-                                            id: p.id,
-                                            name: p.player_name,
-                                            token: p.token,
-                                            iconClass: p.icon_class,
-                                            order: p.player_order,
-                                            aiDifficulty: null
-                                        }))
-                                    };
-
-                                    localStorage.setItem('monopoly-game-mode', 'online');
-                                    localStorage.setItem('monopoly-online-game', JSON.stringify(gameData));
-                                }
-
-                                window.location.href = 'game.html';
-                            }
-                        }
-                    )
-                    .subscribe();
-            },
-
-            async startOnlineGame() {
-                if (!this.onlineState.isHost) return;
-
-                const { data: players } = await this.supabase
-                    .from('room_players').select('*')
-                    .eq('room_id', this.onlineState.roomId).order('player_order');
-
-                if (players.length < 1) { alert('No players in room!'); return; }
-
-                // Assign random tokens to anyone still on ❓
-                const usedTokens = players.filter(p => p.token !== '❓').map(p => p.token);
-                for (const player of players.filter(p => p.token === '❓')) {
-                    const available = this.TOKENS.filter(t => !usedTokens.includes(t));
-                    const token = available.length > 0
-                        ? available[Math.floor(Math.random() * available.length)]
-                        : this.TOKENS[Math.floor(Math.random() * this.TOKENS.length)];
-                    usedTokens.push(token);
-                    await this.supabase.from('room_players')
-                        .update({ token })
-                        .eq('id', player.id);
-                    // Update local copy
-                    player.token = token;
-                }
-
-                const gameData = {
-                    roomId: this.onlineState.roomId,
-                    roomCode: this.onlineState.roomCode,
-                    players: players.map(p => ({
-                        id: p.id,
-                        name: p.player_name,
-                        token: p.token,
-                        iconClass: p.icon_class,
-                        order: p.player_order,
-                        aiDifficulty: null  // online players are always human
-                    }))
-                };
-
-                localStorage.setItem('monopoly-game-mode', 'online');
-                localStorage.setItem('monopoly-online-game', JSON.stringify(gameData));
-
-                await this.supabase.from('rooms')
-                    .update({ status: 'playing', started_at: new Date().toISOString() })
-                    .eq('id', this.onlineState.roomId);
-
-                window.location.href = 'game.html';
-            },
-
-            async leaveOnlineRoom() {
-                if (this.onlineState.subscription) this.onlineState.subscription.unsubscribe();
-
-                if (this.onlineState.playerId) {
-                    await this.supabase.from('room_players').delete().eq('id', this.onlineState.playerId);
-                }
-
-                if (this.onlineState.isHost) {
-                    const roomId = this.onlineState.roomId;
-                    if (roomId) await this.supabase.from('rooms').delete().eq('id', roomId);
-                }
-
-                // Reset online state
-                this.onlineState.roomId = null;
-                this.onlineState.roomCode = null;
-                this.onlineState.playerId = null;
-                this.onlineState.isHost = false;
-                this.onlineState.selectedToken = null;
-                this.onlineState.tokenConfirmed = false;
-                this.onlineState.pendingRoomId = null;
-                this.onlineState.pendingRoomCode = null;
-                this.onlineState.pendingName = null;
-
-                this.showOnlineMenu();
-            },
-
-            showError(elementId, message) {
-                const el = document.getElementById(elementId);
-                el.textContent = message;
-                el.classList.add('show');
-                setTimeout(() => el.classList.remove('show'), 5000);
-            }
-        };
-
-        window.addEventListener('DOMContentLoaded', () => App.init());
-        window.addEventListener('beforeunload', () => {
-            if (App.onlineState.subscription) App.onlineState.subscription.unsubscribe();
+    <!-- PLAY MENU -->
+    <div class="screen" id="s-play">
+        <h1 style="font-size:2em">Play</h1>
+        <p class="subtitle" style="margin-bottom:24px">Choose mode</p>
+        <button class="btn btn-primary" onclick="showLocal()">👥 Local Game</button>
+        <button class="btn btn-primary" onclick="show('s-online-menu')">🌐 Online Multiplayer</button>
+        <hr class="divider">
+        <button class="btn btn-secondary" onclick="show('s-main')">← Back</button>
+    </div>
+
+    <!-- LOCAL SETUP -->
+    <div class="screen" id="s-local">
+        <h1 style="font-size:1.8em">🎮 Game Setup</h1>
+        <p class="subtitle" style="margin-bottom:20px">Mix humans and AI</p>
+
+        <label>Number of Players</label>
+        <div class="count-grid" id="countGrid"></div>
+
+        <div id="playerSlots"></div>
+
+        <button class="btn btn-primary" style="margin-top:8px" onclick="startLocal()">🎮 Start Game</button>
+        <button class="btn btn-secondary" onclick="show('s-play')">← Back</button>
+    </div>
+
+    <!-- ONLINE MENU -->
+    <div class="screen" id="s-online-menu">
+        <h1 style="font-size:1.8em">🌐 Online</h1>
+        <p class="subtitle" style="margin-bottom:24px">Play with friends</p>
+        <button class="btn btn-primary" onclick="show('s-create')">🎮 Create Room</button>
+        <button class="btn btn-primary" onclick="show('s-join')">🔗 Join Room</button>
+        <hr class="divider">
+        <button class="btn btn-secondary" onclick="show('s-play')">← Back</button>
+    </div>
+
+    <!-- CREATE ROOM -->
+    <div class="screen" id="s-create">
+        <h1 style="font-size:1.8em">Create Room</h1>
+        <div class="error" id="err-create"></div>
+        <label>Your Name</label>
+        <input type="text" id="host-name" placeholder="Enter your name" maxlength="20">
+        <label>Max Players</label>
+        <select id="max-players">
+            <option value="2">2 Players</option>
+            <option value="3">3 Players</option>
+            <option value="4" selected>4 Players</option>
+            <option value="5">5 Players</option>
+            <option value="6">6 Players</option>
+        </select>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="createRoom()">Create Room</button>
+        <button class="btn btn-secondary" onclick="show('s-online-menu')">← Back</button>
+    </div>
+
+    <!-- JOIN ROOM -->
+    <div class="screen" id="s-join">
+        <h1 style="font-size:1.8em">Join Room</h1>
+        <div class="error" id="err-join"></div>
+        <label>Room Code</label>
+        <input type="text" id="join-code" placeholder="6-digit code" maxlength="6" style="text-transform:uppercase;letter-spacing:0.2em;font-size:1.2em">
+        <label>Your Name</label>
+        <input type="text" id="join-name" placeholder="Enter your name" maxlength="20">
+        <button class="btn btn-primary" style="margin-top:16px" onclick="joinRoom()">Find Room</button>
+        <button class="btn btn-secondary" onclick="show('s-online-menu')">← Back</button>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="screen" id="s-lobby">
+        <h1 style="font-size:1.8em">🎮 Lobby</h1>
+        <div class="room-code" id="lobby-code">------</div>
+        <p style="text-align:center;color:#888;margin-bottom:16px;font-size:0.9em">Share this code with friends</p>
+
+        <div id="lobby-players"></div>
+
+        <!-- Token picker -->
+        <div id="token-picker" style="display:none">
+            <hr class="divider">
+            <label>Choose Your Token</label>
+            <div class="error" id="err-token"></div>
+            <div class="tokens" id="lobby-tokens"></div>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="confirmToken()">✅ Confirm Token</button>
+        </div>
+
+        <div class="status" id="lobby-status">Waiting for players...</div>
+        <button class="btn btn-primary" id="start-online-btn" style="display:none" onclick="startOnline()">🚀 Start Game</button>
+        <button class="btn btn-danger" onclick="leaveRoom()">Leave Room</button>
+    </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://enwyccsukcsaffeukxka.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const TOKENS = ['🚗','🚢','🎩','🐕','🐱','👟','🎸','⚓'];
+const ICON_CLASSES = ['player-icon-1','player-icon-2','player-icon-3','player-icon-4','player-icon-5','player-icon-6','player-icon-7','player-icon-8'];
+const SLOT_COLORS = ['#ff6b6b','#4ecdc4','#45b7d1','#f9ca24','#6c5ce7','#a29bfe','#fd79a8','#fdcb6e'];
+
+// ── Local state ──────────────────────────────────────────────────────────────
+const local = {
+    count: 3,
+    tokens: [null, null, null],
+    diffs: ['human','human','human'],
+    names: ['','',''],
+};
+
+// ── Online state ─────────────────────────────────────────────────────────────
+const online = {
+    roomId: null, roomCode: null, playerId: null,
+    isHost: false, token: null, tokenConfirmed: false,
+    pendingRoomId: null, pendingRoomCode: null, pendingName: null,
+    sub: null,
+};
+
+// ── Screen helper ─────────────────────────────────────────────────────────────
+function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function showErr(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+// ── Local setup ───────────────────────────────────────────────────────────────
+function showLocal() {
+    show('s-local');
+    renderCountGrid();
+    renderSlots();
+}
+
+function renderCountGrid() {
+    const g = document.getElementById('countGrid');
+    g.innerHTML = '';
+    for (let n = 2; n <= 8; n++) {
+        const b = document.createElement('button');
+        b.className = 'count-btn' + (n === local.count ? ' active' : '');
+        b.textContent = n;
+        b.onclick = () => { local.count = n; renderCountGrid(); renderSlots(); };
+        g.appendChild(b);
+    }
+}
+
+function renderSlots() {
+    // Save any typed names first
+    for (let i = 0; i < local.count; i++) {
+        const el = document.getElementById(`ln${i}`);
+        if (el && !el.disabled) local.names[i] = el.value;
+    }
+    // Ensure arrays are long enough
+    while (local.tokens.length < local.count) local.tokens.push(null);
+    while (local.diffs.length < local.count) local.diffs.push('human');
+    while (local.names.length < local.count) local.names.push('');
+
+    const c = document.getElementById('playerSlots');
+    c.innerHTML = '';
+    for (let i = 0; i < local.count; i++) {
+        const isAI = local.diffs[i] !== 'human';
+        const slot = document.createElement('div');
+        slot.className = 'player-slot' + (isAI ? ' ai' : '');
+
+        const hdr = document.createElement('div');
+        hdr.className = 'slot-header';
+        const num = document.createElement('div');
+        num.className = 'slot-num';
+        num.style.background = SLOT_COLORS[i];
+        num.textContent = i + 1;
+        hdr.appendChild(num);
+        hdr.appendChild(Object.assign(document.createElement('span'), { textContent: `Player ${i+1}`, style: 'font-weight:600;color:#333' }));
+        slot.appendChild(hdr);
+
+        // Difficulty
+        const sel = document.createElement('select');
+        sel.className = 'diff-select';
+        [['human','👤 Human'],['easy','🤖 Easy'],['medium','🤖 Medium'],['hard','🤖 Hard']].forEach(([v,l]) => {
+            const o = document.createElement('option');
+            o.value = v; o.textContent = l;
+            if (local.diffs[i] === v) o.selected = true;
+            sel.appendChild(o);
         });
-    </script>
+        sel.onchange = e => { local.diffs[i] = e.target.value; renderSlots(); };
+        slot.appendChild(sel);
+
+        // Name
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.id = `ln${i}`; inp.maxLength = 20;
+        inp.style.marginBottom = '8px';
+        if (isAI) { inp.value = `AI (${local.diffs[i]})`; inp.disabled = true; }
+        else { inp.value = local.names[i] || ''; inp.placeholder = `Player ${i+1} Name`; }
+        slot.appendChild(inp);
+
+        // Tokens
+        const row = document.createElement('div');
+        row.className = 'tokens';
+        // Only tokens selected by OTHER active players are blocked
+        const otherTokens = local.tokens.slice(0, local.count).filter((_, j) => j !== i);
+        TOKENS.forEach(tok => {
+            const b = document.createElement('button');
+            const isSelected = local.tokens[i] === tok;
+            const isBlocked = otherTokens.includes(tok);
+            b.className = 'tok' + (isSelected ? ' selected' : '');
+            b.textContent = tok;
+            b.disabled = isBlocked;
+            b.onclick = () => {
+                // Click selected token to deselect it
+                local.tokens[i] = (local.tokens[i] === tok) ? null : tok;
+                renderSlots();
+            };
+            row.appendChild(b);
+        });
+        slot.appendChild(row);
+        c.appendChild(slot);
+    }
+}
+
+function startLocal() {
+    // Save final names
+    for (let i = 0; i < local.count; i++) {
+        const el = document.getElementById(`ln${i}`);
+        if (el && !el.disabled) local.names[i] = el.value.trim();
+    }
+    // Assign tokens — randomise any that are null/unselected
+    const usedTokens = local.tokens.slice(0, local.count).filter(Boolean);
+    for (let i = 0; i < local.count; i++) {
+        if (!local.tokens[i]) {
+            const avail = TOKENS.filter(t => !usedTokens.includes(t));
+            const pick = avail.length ? avail[Math.floor(Math.random() * avail.length)] : TOKENS[i];
+            local.tokens[i] = pick;
+            usedTokens.push(pick);
+        }
+    }
+    const players = [];
+    for (let i = 0; i < local.count; i++) {
+        const isAI = local.diffs[i] !== 'human';
+        players.push({
+            id: `p${i+1}`,
+            name: isAI ? `AI (${local.diffs[i]})` : (local.names[i] || `Player ${i+1}`),
+            token: local.tokens[i],
+            iconClass: ICON_CLASSES[i],
+            aiDifficulty: isAI ? local.diffs[i] : null,
+        });
+    }
+    localStorage.setItem('monopoly-game-mode', 'local');
+    localStorage.setItem('monopoly-players', JSON.stringify(players));
+    location.href = 'game.html';
+}
+
+// ── Online ────────────────────────────────────────────────────────────────────
+async function createRoom() {
+    const name = document.getElementById('host-name').value.trim();
+    const max = parseInt(document.getElementById('max-players').value);
+    if (!name) { showErr('err-create', 'Enter your name'); return; }
+    try {
+        const { data: code } = await sb.rpc('generate_room_code');
+        const { data: room } = await sb.from('rooms')
+            .insert({ room_code: code, max_players: max, status: 'waiting' })
+            .select().single();
+        const { data: player } = await sb.from('room_players')
+            .insert({ room_id: room.id, player_name: name, token: '❓', icon_class: ICON_CLASSES[0], is_host: true, player_order: 0 })
+            .select().single();
+        localStorage.setItem('myPlayerId', player.id);
+        online.roomId = room.id; online.roomCode = code;
+        online.playerId = player.id; online.isHost = true;
+        online.token = null; online.tokenConfirmed = false;
+        subscribeRoom();
+        showLobby();
+    } catch(e) { showErr('err-create', 'Failed to create room'); }
+}
+
+async function joinRoom() {
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    const name = document.getElementById('join-name').value.trim();
+    if (!code || code.length !== 6) { showErr('err-join', 'Enter a valid 6-digit code'); return; }
+    if (!name) { showErr('err-join', 'Enter your name'); return; }
+    try {
+        const { data: room } = await sb.from('rooms').select('*').eq('room_code', code).eq('status','waiting').single();
+        if (!room) throw new Error('Room not found');
+        const { data: existing } = await sb.from('room_players').select('*').eq('room_id', room.id);
+        if (existing.length >= room.max_players) throw new Error('Room is full');
+        online.pendingRoomId = room.id; online.pendingRoomCode = code;
+        online.pendingName = name; online.isHost = false;
+        online.token = null; online.tokenConfirmed = false;
+        showLobby();
+        renderLobbyPlayers(existing, room.max_players);
+    } catch(e) { showErr('err-join', e.message || 'Failed to find room'); }
+}
+
+function showLobby() {
+    document.getElementById('lobby-code').textContent = online.roomCode || online.pendingRoomCode || '------';
+    show('s-lobby');
+    loadLobbyPlayers();
+    if (!online.tokenConfirmed) showTokenPicker();
+}
+
+async function showTokenPicker() {
+    const roomId = online.roomId || online.pendingRoomId;
+    const { data: ps } = await sb.from('room_players').select('token').eq('room_id', roomId);
+    const used = (ps||[]).map(p=>p.token).filter(t=>t!=='❓');
+    renderTokenPicker(used);
+    document.getElementById('token-picker').style.display = 'block';
+}
+
+function renderTokenPicker(used) {
+    const c = document.getElementById('lobby-tokens');
+    c.innerHTML = '';
+    TOKENS.forEach(tok => {
+        const b = document.createElement('button');
+        b.className = 'tok' + (online.token === tok ? ' selected' : '');
+        b.textContent = tok;
+        b.disabled = used.includes(tok);
+        b.onclick = () => {
+            online.token = online.token === tok ? null : tok;
+            renderTokenPicker(used);
+        };
+        c.appendChild(b);
+    });
+}
+
+async function confirmToken() {
+    const roomId = online.roomId || online.pendingRoomId;
+    const { data: ps } = await sb.from('room_players').select('token,id,player_order').eq('room_id', roomId).order('player_order');
+    const used = ps.filter(p=>p.id!==online.playerId).map(p=>p.token).filter(t=>t!=='❓');
+
+    if (!online.token) {
+        const avail = TOKENS.filter(t=>!used.includes(t));
+        if (!avail.length) { showErr('err-token','No tokens available'); return; }
+        online.token = avail[Math.floor(Math.random()*avail.length)];
+    }
+    if (used.includes(online.token)) { showErr('err-token','Token taken — pick another'); renderTokenPicker(used); return; }
+
+    try {
+        if (online.isHost) {
+            await sb.from('room_players').update({ token: online.token }).eq('id', online.playerId);
+        } else {
+            const order = ps.length;
+            const { data: p } = await sb.from('room_players')
+                .insert({ room_id: roomId, player_name: online.pendingName, token: online.token,
+                          icon_class: ICON_CLASSES[order], is_host: false, player_order: order })
+                .select().single();
+            localStorage.setItem('myPlayerId', p.id);
+            online.roomId = online.pendingRoomId;
+            online.roomCode = online.pendingRoomCode;
+            online.playerId = p.id;
+            subscribeRoom();
+        }
+        online.tokenConfirmed = true;
+        document.getElementById('token-picker').style.display = 'none';
+        loadLobbyPlayers();
+    } catch(e) { showErr('err-token', 'Failed to confirm — try again'); }
+}
+
+async function loadLobbyPlayers() {
+    const roomId = online.roomId || online.pendingRoomId;
+    if (!roomId) return;
+    const { data: ps } = await sb.from('room_players').select('*').eq('room_id', roomId).order('player_order');
+    const { data: room } = await sb.from('rooms').select('max_players').eq('id', roomId).single();
+    renderLobbyPlayers(ps, room?.max_players || 4);
+}
+
+function renderLobbyPlayers(players, max) {
+    const c = document.getElementById('lobby-players');
+    c.innerHTML = '';
+    players.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'lobby-player';
+        div.innerHTML = `<span class="lobby-token">${p.token}</span>
+            <span style="font-weight:600;flex:1">${p.player_name}</span>
+            ${p.is_host ? '<span class="host-badge">HOST</span>' : ''}`;
+        c.appendChild(div);
+    });
+    document.getElementById('lobby-players').previousElementSibling;
+    const countEl = document.querySelector('#s-lobby .room-code');
+    document.getElementById('lobby-status').textContent =
+        online.isHost ? (players.length >= 2 ? 'Ready to start!' : 'Waiting for more players...') : 'Waiting for host to start...';
+    document.getElementById('start-online-btn').style.display = online.isHost ? 'block' : 'none';
+}
+
+function subscribeRoom() {
+    online.sub = sb.channel(`room:${online.roomId}`)
+        .on('postgres_changes', { event:'*', schema:'public', table:'room_players', filter:`room_id=eq.${online.roomId}` },
+            () => loadLobbyPlayers())
+        .on('postgres_changes', { event:'UPDATE', schema:'public', table:'rooms', filter:`id=eq.${online.roomId}` },
+            async payload => {
+                if (payload.new.status === 'playing') {
+                    if (!online.isHost) {
+                        const { data: ps } = await sb.from('room_players').select('*').eq('room_id', online.roomId).order('player_order');
+                        localStorage.setItem('monopoly-game-mode', 'online');
+                        localStorage.setItem('monopoly-online-game', JSON.stringify({
+                            roomId: online.roomId, roomCode: online.roomCode,
+                            players: ps.map(p => ({ id: p.id, name: p.player_name, token: p.token, iconClass: p.icon_class, order: p.player_order, aiDifficulty: null }))
+                        }));
+                    }
+                    location.href = 'game.html';
+                }
+            })
+        .subscribe();
+}
+
+async function startOnline() {
+    if (!online.isHost) return;
+    const { data: ps } = await sb.from('room_players').select('*').eq('room_id', online.roomId).order('player_order');
+    if (ps.length < 1) { alert('No players!'); return; }
+    // Assign tokens to anyone still on ❓
+    const used = ps.filter(p=>p.token!=='❓').map(p=>p.token);
+    for (const p of ps.filter(p=>p.token==='❓')) {
+        const avail = TOKENS.filter(t=>!used.includes(t));
+        const tok = avail.length ? avail[0] : TOKENS[0];
+        used.push(tok);
+        await sb.from('room_players').update({ token: tok }).eq('id', p.id);
+        p.token = tok;
+    }
+    localStorage.setItem('monopoly-game-mode', 'online');
+    localStorage.setItem('monopoly-online-game', JSON.stringify({
+        roomId: online.roomId, roomCode: online.roomCode,
+        players: ps.map(p => ({ id: p.id, name: p.player_name, token: p.token, iconClass: p.icon_class, order: p.player_order, aiDifficulty: null }))
+    }));
+    await sb.from('rooms').update({ status: 'playing', started_at: new Date().toISOString() }).eq('id', online.roomId);
+    location.href = 'game.html';
+}
+
+async function leaveRoom() {
+    if (online.sub) online.sub.unsubscribe();
+    if (online.playerId) await sb.from('room_players').delete().eq('id', online.playerId);
+    if (online.isHost && online.roomId) await sb.from('rooms').delete().eq('id', online.roomId);
+    Object.assign(online, { roomId:null, roomCode:null, playerId:null, isHost:false, token:null, tokenConfirmed:false, pendingRoomId:null, pendingRoomCode:null, pendingName:null, sub:null });
+    show('s-online-menu');
+}
+</script>
 </body>
 </html>
