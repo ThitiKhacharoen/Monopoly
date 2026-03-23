@@ -198,12 +198,8 @@ const AIPlayer = (() => {
             setTimeout(() => {
                 console.log(`[AI] Player ${idx} (${aiPlayers[idx]}) rolling dice`);
                 rollDice();
-<<<<<<< HEAD
                 // Don't release aiActing here — keep it locked until
                 // the polling loop detects the phase has changed away from ROLL_DICE
-=======
-                aiActing = false;
->>>>>>> 46481ca5b8ff7a40c7b37e2817be513dc34c522f
             }, THINK_DELAY);
 
         } else if (phase === 'PROPERTY_DECISION') {
@@ -265,7 +261,6 @@ const AIPlayer = (() => {
 
     // ─── Polling loop ─────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
     let lastPhase = null;
 
     function startPolling() {
@@ -305,36 +300,6 @@ const AIPlayer = (() => {
             if (!(idx in aiPlayers)) return;
             if (gameState.players[idx].isBankrupt) return;
 
-=======
-    function startPolling() {
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(() => {
-            if (aiActing) return;
-            if (!gameState || !gameState.players || gameState.players.length === 0) return;
-
-            const activePlayers = gameState.players.filter(p => !p.isBankrupt);
-            if (activePlayers.length <= 1) return;
-
-            if (gameState.auction && gameState.auction.active) {
-                const auction = gameState.auction;
-                const activeBidders = auction.participatingPlayers.filter(
-                    id => !auction.passedPlayers.includes(id)
-                );
-                if (activeBidders.length > 0) {
-                    const currentId = activeBidders[auction.currentAuctionIndex % activeBidders.length];
-                    const playerIndex = gameState.players.findIndex(p => p.id === currentId);
-                    if (playerIndex in aiPlayers) {
-                        takeTurn();
-                    }
-                }
-                return;
-            }
-
-            const idx = gameState.currentPlayerIndex;
-            if (!(idx in aiPlayers)) return;
-            if (gameState.players[idx].isBankrupt) return;
-
->>>>>>> 46481ca5b8ff7a40c7b37e2817be513dc34c522f
             const actionablePhases = ['ROLL_DICE', 'PROPERTY_DECISION', 'END_TURN'];
             if (actionablePhases.includes(gameState.phase)) {
                 takeTurn();
