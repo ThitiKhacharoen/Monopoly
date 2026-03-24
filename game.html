@@ -291,6 +291,13 @@
             justify-content: space-between;
             position: relative;
             background: white;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .space:hover {
+            transform: scale(1.08);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         
         .space-name {
