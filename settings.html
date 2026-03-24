@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly – Settings</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+        .header h1 { color: #667eea; font-size: 1.9em; font-weight: 800; }
+        .section { margin-bottom: 28px; }
+        .section-title {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #999; margin-bottom: 14px;
+        }
+        .setting-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 0; border-bottom: 1px solid #f0f0f0;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { display: flex; flex-direction: column; gap: 2px; }
+        .setting-label span { font-weight: 600; color: #333; font-size: 1em; }
+        .setting-label small { color: #aaa; font-size: 0.82em; }
+        .toggle { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0; background: #ddd;
+            border-radius: 26px; cursor: pointer; transition: background 0.2s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            width: 20px; height: 20px; left: 3px; top: 3px;
+            background: white; border-radius: 50%;
+            transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked + .toggle-slider { background: #667eea; }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+        .volume-wrap { display: flex; align-items: center; gap: 10px; width: 180px; }
+        .volume-icon { font-size: 1.1em; flex-shrink: 0; }
+        input[type=range] {
+            -webkit-appearance: none; appearance: none; flex: 1;
+            height: 4px; border-radius: 2px; background: #ddd; outline: none; cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px;
+            border-radius: 50%; background: #667eea; cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: #667eea; cursor: pointer; border: none;
+        }
+        .vol-label { font-size: 0.82em; color: #888; width: 30px; text-align: right; flex-shrink: 0; }
+        .test-btn {
+            padding: 6px 14px; background: #f0f0f0; border: none; border-radius: 20px;
+            font-size: 0.85em; font-weight: 600; cursor: pointer; color: #555;
+            transition: background 0.15s; flex-shrink: 0;
+        }
+        .test-btn:hover { background: #e4e4e4; }
+        .test-btn:active { background: #667eea; color: white; }
+        hr { border: none; border-top: 1px solid #f0f0f0; margin: 4px 0 20px; }
+        .back-btn {
+            display: block; width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; border-radius: 10px;
+            font-size: 1em; font-weight: 600; cursor: pointer;
+            margin-top: 8px; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <span style="font-size:1.8em">⚙️</span>
+        <h1>Settings</h1>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🎵 Music</div>
+        <div class="setting-row">
+            <div class="setting-label">
+                <span>Background Music</span>
+                <small>Looping jazz during gameplay</small>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="musicEnabled" onchange="onMusicToggle()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Volume</span></div>
+            <div class="volume-wrap">
+                <span class="volume-icon">🔈</span>
+                <input type="range" id="musicVol" min="0" max="100" value="35" oninput="onMusicVol(this)">
+                <span class="vol-label" id="musicVolLabel">35%</span>
+            </div>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Preview</span></div>
+            <button class="test-btn" id="musicPreviewBtn" onclick="testMusic()">▶ Play</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+        <div class="section-title">🔊 Sound Effects</div>
+        <div class="setting-row">
+            <div class="setting-label">
+                <span>Sound Effects</span>
+                <small>Buy, rent, bid, jail, win</small>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="sfxEnabled" onchange="onSfxToggle()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Volume</span></div>
+            <div class="volume-wrap">
+                <span class="volume-icon">🔈</span>
+                <input type="range" id="sfxVol" min="0" max="100" value="70" oninput="onSfxVol(this)">
+                <span class="vol-label" id="sfxVolLabel">70%</span>
+            </div>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Buy Property</span></div>
+            <button class="test-btn" onclick="testSfx('buy')">▶ Test</button>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Pay Rent</span></div>
+            <button class="test-btn" onclick="testSfx('rent')">▶ Test</button>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Auction Bid</span></div>
+            <button class="test-btn" onclick="testSfx('bid')">▶ Test</button>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Go to Jail</span></div>
+            <button class="test-btn" onclick="testSfx('jail')">▶ Test</button>
+        </div>
+        <div class="setting-row">
+            <div class="setting-label"><span>Win</span></div>
+            <button class="test-btn" onclick="testSfx('win')">▶ Test</button>
+        </div>
+    </div>
+
+    <button class="back-btn" onclick="goBack()">← Back</button>
+</div>
+
+<script>
+    const FILES = {
+        music: 'sounds/music-bg.ogg',
+        buy:   'sounds/sfx-buy.wav',
+        rent:  'sounds/sfx-rent.wav',
+        bid:   'sounds/sfx-bid.wav',
+        jail:  'sounds/sfx-jail.wav',
+        win:   'sounds/sfx-win.wav',
+    };
+    const cache = {};
+    let musicPlaying = false;
+
+    function getAudio(key) {
+        if (!cache[key]) {
+            cache[key] = new Audio(FILES[key]);
+            if (key === 'music') cache[key].loop = true;
+        }
+        return cache[key];
+    }
+
+    function load() {
+        const musicMuted = localStorage.getItem('monopoly-music-muted') === 'true';
+        const sfxMuted   = localStorage.getItem('monopoly-sfx-muted')   === 'true';
+        const musicVol   = parseFloat(localStorage.getItem('monopoly-music-vol') ?? '0.35');
+        const sfxVol     = parseFloat(localStorage.getItem('monopoly-sfx-vol')   ?? '0.70');
+
+        document.getElementById('musicEnabled').checked = !musicMuted;
+        document.getElementById('sfxEnabled').checked   = !sfxMuted;
+
+        const mv = Math.round(musicVol * 100);
+        const sv = Math.round(sfxVol   * 100);
+        document.getElementById('musicVol').value = mv;
+        document.getElementById('sfxVol').value   = sv;
+        document.getElementById('musicVolLabel').textContent = mv + '%';
+        document.getElementById('sfxVolLabel').textContent   = sv + '%';
+    }
+
+    function onMusicToggle() {
+        localStorage.setItem('monopoly-music-muted', !document.getElementById('musicEnabled').checked);
+    }
+    function onSfxToggle() {
+        localStorage.setItem('monopoly-sfx-muted', !document.getElementById('sfxEnabled').checked);
+    }
+    function onMusicVol(el) {
+        const v = el.value / 100;
+        localStorage.setItem('monopoly-music-vol', v);
+        document.getElementById('musicVolLabel').textContent = el.value + '%';
+        if (cache['music']) cache['music'].volume = v;
+    }
+    function onSfxVol(el) {
+        const v = el.value / 100;
+        localStorage.setItem('monopoly-sfx-vol', v);
+        document.getElementById('sfxVolLabel').textContent = el.value + '%';
+    }
+
+    function testMusic() {
+        const a = getAudio('music');
+        const btn = document.getElementById('musicPreviewBtn');
+        if (!musicPlaying) {
+            a.volume = parseFloat(localStorage.getItem('monopoly-music-vol') ?? '0.35');
+            a.currentTime = 0;
+            a.play().catch(() => {});
+            musicPlaying = true;
+            btn.textContent = '⏹ Stop';
+        } else {
+            a.pause(); a.currentTime = 0;
+            musicPlaying = false;
+            btn.textContent = '▶ Play';
+        }
+    }
+
+    function testSfx(key) {
+        const a = getAudio(key);
+        a.volume = parseFloat(localStorage.getItem('monopoly-sfx-vol') ?? '0.70');
+        a.currentTime = 0;
+        a.play().catch(() => {});
+    }
+
+    function goBack() {
+        if (cache['music'] && !cache['music'].paused) {
+            cache['music'].pause(); cache['music'].currentTime = 0;
+        }
+        history.back();
+    }
+
+    load();
+</script>
+</body>
+</html>
