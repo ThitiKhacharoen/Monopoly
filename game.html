@@ -1141,6 +1141,15 @@
             border-bottom: none;
         }
 
+
+        @keyframes modalShake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-8px); }
+            40%       { transform: translateX(8px); }
+            60%       { transform: translateX(-5px); }
+            80%       { transform: translateX(5px); }
+        }
+        .modal-shake { animation: modalShake 0.4s ease-out; }
     </style>
 </head>
 <body>
@@ -1274,6 +1283,15 @@
         </div>
     </div>
     
+    <!-- Generic Dialog Modal -->
+    <div class="property-modal" id="genericModal" style="z-index:3500;">
+        <div class="property-modal-content" id="genericModalContent" style="max-width:420px;">
+            <h3 id="genericModalTitle" style="margin-bottom:14px;color:#333;font-size:1.3em;"></h3>
+            <div id="genericModalBody" style="color:#555;line-height:1.6;margin-bottom:22px;white-space:pre-line;font-size:1em;"></div>
+            <div id="genericModalButtons" style="display:flex;gap:10px;"></div>
+        </div>
+    </div>
+
     <!-- Message Toast -->
     <div class="message-toast" id="messageToast"></div>
 
@@ -1389,6 +1407,37 @@
     </div>
 
     <script>
+        // ===== GENERIC MODAL UTILITY =====
+        function showModal(title, body, buttons) {
+            document.getElementById('genericModalTitle').textContent = title;
+            document.getElementById('genericModalBody').textContent = body;
+            const btns = document.getElementById('genericModalButtons');
+            btns.innerHTML = '';
+            (buttons || []).forEach(btn => {
+                const b = document.createElement('button');
+                b.className = 'property-modal-btn ' + (btn.style || 'property-modal-btn-pass');
+                b.textContent = btn.label;
+                b.style.flex = '1';
+                b.onclick = () => {
+                    document.getElementById('genericModal').classList.remove('active');
+                    if (btn.action) btn.action();
+                };
+                btns.appendChild(b);
+            });
+            const content = document.getElementById('genericModalContent');
+            content.style.animation = 'none';
+            void content.offsetWidth;
+            content.style.animation = '';
+            document.getElementById('genericModal').classList.add('active');
+        }
+
+        function shakeModal() {
+            const el = document.getElementById('genericModalContent');
+            el.classList.remove('modal-shake');
+            void el.offsetWidth;
+            el.classList.add('modal-shake');
+        }
+
         // ===== BOARD DATA =====
         const SPACES = [
             { id: 0, name: "GO", type: "corner" },
@@ -2444,12 +2493,13 @@ function startAuction(propertyId) {
             const bidAmount = parseInt(bidInput.value);
             
             if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
-                alert(`Bid must be higher than $${gameState.auction.currentBid}`);
+                showModal('❌ Invalid Bid', `Bid must be higher than $${gameState.auction.currentBid}`, [{label:'OK',style:'property-modal-btn-pass',action:null}]);
+                shakeModal();
                 return;
             }
             
             if (bidAmount > currentPlayer.cash) {
-                alert(`You only have $${currentPlayer.cash}!`);
+                showModal('💸 Not Enough Cash', `You only have $${currentPlayer.cash}!`, [{label:'OK',style:'property-modal-btn-pass',action:null}]);
                 return;
             }
             
@@ -2635,11 +2685,12 @@ function startAuction(propertyId) {
                     // Check for winner
                     const activePlayers = gameState.players.filter(p => !p.isBankrupt);
                     if (activePlayers.length === 1) {
+                        const _w1 = activePlayers[0];
                         setTimeout(() => {
-                            alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
-                            if (confirm('Play again?')) {
-                                window.location.reload();
-                            }
+                            showModal('🏆 Game Over!', `${_w1.name} wins the game!\n\nFinal cash: $${_w1.cash}\nProperties: ${_w1.properties.length}`, [
+                                {label:'🎮 Play Again', style:'property-modal-btn-buy', action:()=>window.location.reload()},
+                                {label:'🏠 Main Menu', style:'property-modal-btn-pass', action:()=>window.location.href='index.html'}
+                            ]);
                         }, 1000);
                     }
                 } else {
@@ -2675,11 +2726,12 @@ function startAuction(propertyId) {
             // Check for winner
             const activePlayers = gameState.players.filter(p => !p.isBankrupt);
             if (activePlayers.length === 1) {
+                const _w2 = activePlayers[0];
                 setTimeout(() => {
-                    alert(`🎉 ${activePlayers[0].name} wins the game! 🎉\n\nFinal cash: $${activePlayers[0].cash}\nProperties: ${activePlayers[0].properties.length}`);
-                    if (confirm('Play again?')) {
-                        window.location.reload();
-                    }
+                    showModal('🏆 Game Over!', `${_w2.name} wins the game!\n\nFinal cash: $${_w2.cash}\nProperties: ${_w2.properties.length}`, [
+                        {label:'🎮 Play Again', style:'property-modal-btn-buy', action:()=>window.location.reload()},
+                        {label:'🏠 Main Menu', style:'property-modal-btn-pass', action:()=>window.location.href='index.html'}
+                    ]);
                 }, 1000);
             }
             
