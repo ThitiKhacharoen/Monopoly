@@ -22,6 +22,207 @@
             background: #1a1a1a;
         }
         
+        /* ===== SETUP OVERLAY ===== */
+        .setup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .setup-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .setup-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .setup-container h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .player-count-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .count-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .count-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .count-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .player-input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .player-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+        
+        .player-icon-1 { background: #ff6b6b; }
+        .player-icon-2 { background: #4ecdc4; }
+        .player-icon-3 { background: #45b7d1; }
+        .player-icon-4 { background: #f9ca24; }
+        .player-icon-5 { background: #6c5ce7; }
+        .player-icon-6 { background: #a29bfe; }
+        .player-icon-7 { background: #fd79a8; }
+        .player-icon-8 { background: #fdcb6e; }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .player-tokens {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        
+        .token-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .token-btn:hover {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+        
+        .token-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+        }
+        
+        .token-btn.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .token-btn.disabled:hover {
+            transform: none;
+        }
+        
+        .start-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 10px;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
         /* ===== GAME INTERFACE ===== */
         .game-wrapper {
             display: flex;
@@ -876,57 +1077,44 @@
 
         /* Space info modal */
         .modal-overlay {
-            display: none;
-            position: fixed;
+            display: none; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2500;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(3px);
-            padding: 20px;
+            background: rgba(0,0,0,0.7); z-index: 2500;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(3px); padding: 20px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: white;
-            border-radius: 14px;
-            padding: 28px;
-            max-width: 420px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
+            background: white; border-radius: 14px; padding: 28px;
+            max-width: 400px; width: 100%; max-height: 85vh;
+            overflow-y: auto; position: relative;
             box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            position: relative;
-            animation: modalSlideIn 0.25s ease-out;
+            animation: modalIn 0.2s ease-out;
         }
-        @keyframes modalSlideIn {
-            from { opacity:0; transform: translateY(-16px) scale(0.96); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
+        @keyframes modalIn {
+            from { opacity:0; transform:translateY(-12px) scale(0.97); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
         }
         .modal-close {
-            position: absolute; top: 14px; right: 14px;
-            background: #f0f0f0; border: none; width: 30px; height: 30px;
-            border-radius: 50%; cursor: pointer; font-size: 18px;
+            position: absolute; top: 12px; right: 12px;
+            background: #f0f0f0; border: none; width: 28px; height: 28px;
+            border-radius: 50%; cursor: pointer; font-size: 16px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
         }
-        .modal-close:hover { background: #ddd; transform: scale(1.1); }
-        .info-color-bar {
-            height: 10px; border-radius: 6px; margin-bottom: 14px;
-        }
-        .info-title { color: #333; font-size: 1.3em; font-weight: 700; margin-bottom: 4px; }
-        .info-price { color: #667eea; font-size: 1.8em; font-weight: 800; margin-bottom: 14px; }
-        .rent-table { margin-top: 10px; border-top: 1px solid #eee; }
-        .rent-row {
+        .modal-close:hover { background: #ddd; }
+        .info-color-bar { height: 10px; border-radius: 5px; margin-bottom: 12px; }
+        .info-title { font-size: 1.25em; font-weight: 700; color: #333; margin-bottom: 4px; }
+        .info-price { font-size: 1.7em; font-weight: 800; color: #667eea; margin-bottom: 12px; }
+        .info-rent-table { border-top: 1px solid #eee; margin-top: 8px; }
+        .info-rent-row {
             display: flex; justify-content: space-between;
-            padding: 7px 0; border-bottom: 1px solid #f0f0f0;
-            font-size: 0.95em; color: #444;
+            padding: 6px 0; border-bottom: 1px solid #f4f4f4; font-size: 0.92em;
         }
-        .rent-row span:last-child { font-weight: 600; color: #333; }
-        .info-footer { margin-top: 12px; color: #999; font-size: 0.85em; }
-        .info-owner-badge {
-            display: inline-block; padding: 4px 10px; border-radius: 10px;
-            font-size: 0.85em; font-weight: 600; margin-bottom: 12px;
+        .info-rent-row span:last-child { font-weight: 600; }
+        .info-footer { margin-top: 10px; color: #aaa; font-size: 0.82em; }
+        .info-badge {
+            display: inline-block; padding: 3px 9px; border-radius: 8px;
+            font-size: 0.82em; font-weight: 600; margin-bottom: 10px;
         }
 
         /* Auction specific styles */
@@ -956,6 +1144,40 @@
     </style>
 </head>
 <body>
+    <!-- Setup Overlay -->
+    <div class="setup-overlay" id="setupOverlay">
+        <div class="setup-container">
+            <h1>🎲 Player Setup</h1>
+            <p class="subtitle">Configure your game</p>
+            
+            <div class="form-group">
+                <label>Number of Players</label>
+                <div class="player-count-selector">
+                    <button class="count-btn" onclick="setPlayerCount(2)">2</button>
+                    <button class="count-btn active" onclick="setPlayerCount(3)">3</button>
+                    <button class="count-btn" onclick="setPlayerCount(4)">4</button>
+                    <button class="count-btn" onclick="setPlayerCount(5)">5</button>
+                    <button class="count-btn" onclick="setPlayerCount(6)">6</button>
+                    <button class="count-btn" onclick="setPlayerCount(7)">7</button>
+                    <button class="count-btn" onclick="setPlayerCount(8)">8</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Player Names & Tokens</label>
+                <div class="players-list" id="playersList">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+            
+            <button class="start-button" onclick="startGame()">
+                🎮 Start Game
+            </button>
+            
+            <a href="index.html" class="back-link">← Back to Main Menu</a>
+        </div>
+    </div>
+
     <!-- Game Interface -->
     <div class="game-wrapper">
         <div class="board-container">
@@ -1224,7 +1446,7 @@
             chanceCards: [],
             communityChestCards: [],
             doublesCount: 0, // Track consecutive doubles
-            rolledDoubles: false, // Whether current turn had doubles
+            rolledDoubles: false,
             auction: {
                 active: false,
                 propertyId: null,
@@ -1301,6 +1523,73 @@
             ]);
         }
         
+        let setupState = {
+            playerCount: 3,
+            selectedTokens: ['🚗', '🚢', '🎩']
+        };
+
+        // ===== SETUP FUNCTIONS =====
+        function setPlayerCount(count) {
+            setupState.playerCount = count;
+            document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderPlayerInputs();
+        }
+        
+        function renderPlayerInputs() {
+            const container = document.getElementById('playersList');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < setupState.playerCount; i++) {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player-input-group';
+                
+                const icon = document.createElement('div');
+                icon.className = `player-icon player-icon-${i + 1}`;
+                icon.textContent = setupState.selectedTokens[i] || TOKENS[i];
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Player ${i + 1} Name`;
+                input.value = `Player ${i + 1}`;
+                input.id = `player-${i}`;
+                input.maxLength = 20;
+                
+                playerDiv.appendChild(icon);
+                playerDiv.appendChild(input);
+                container.appendChild(playerDiv);
+                
+                // Token selector
+                const tokenSelector = document.createElement('div');
+                tokenSelector.className = 'player-tokens';
+                
+                TOKENS.forEach(token => {
+                    const btn = document.createElement('button');
+                    btn.className = 'token-btn';
+                    btn.textContent = token;
+                    btn.type = 'button';
+                    
+                    if (setupState.selectedTokens[i] === token) {
+                        btn.classList.add('selected');
+                    }
+                    if (setupState.selectedTokens.includes(token) && setupState.selectedTokens[i] !== token) {
+                        btn.classList.add('disabled');
+                        btn.disabled = true;
+                    }
+                    
+                    btn.onclick = () => selectToken(i, token);
+                    tokenSelector.appendChild(btn);
+                });
+                
+                container.appendChild(tokenSelector);
+            }
+        }
+        
+        function selectToken(playerIndex, token) {
+            setupState.selectedTokens[playerIndex] = token;
+            renderPlayerInputs();
+        }
+        
         function startGame() {
             const mode = localStorage.getItem('monopoly-game-mode');
             const localData = localStorage.getItem('monopoly-players');
@@ -1331,15 +1620,12 @@
             gameState.players = players;
             gameState.currentPlayerIndex = 0;
             initializeCardDecks();
+            document.getElementById('setupOverlay').classList.add('hidden');
 
             const aiConfig = players.map(p => p.aiDifficulty || null);
             const hasAI = aiConfig.some(d => d !== null);
-
             if (hasAI) {
-                AIPlayer.init(aiConfig).then(() => {
-                    initializeBoard();
-                    updateUI();
-                });
+                AIPlayer.init(aiConfig).then(() => { initializeBoard(); updateUI(); });
             } else {
                 initializeBoard();
                 updateUI();
@@ -1400,13 +1686,10 @@
                     }
                 }
                 
-                // Click to show property details
                 spaceEl.addEventListener('click', (e) => {
-                    // Don't fire if clicking a player piece
                     if (e.target.classList.contains('player-piece')) return;
                     showSpaceDetails(space);
                 });
-
                 board.appendChild(spaceEl);
             });
             
@@ -1610,7 +1893,6 @@
             // Resolve landing space
             setTimeout(() => {
                 resolveSpace(newPosition);
-                checkDoublesReroll(currentPlayer);
             }, 500);
         }
         
@@ -1676,7 +1958,7 @@
         }
 
         function setEndTurn() {
-            setEndTurn();
+            gameState.phase = 'END_TURN';
             checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
         }
 
@@ -1885,7 +2167,7 @@
             showMessage(`${currentPlayer.name} is in Jail!`, 'error');
             gameState.phase = 'END_TURN';
             gameState.doublesCount = 0;
-            gameState.rolledDoubles = false; // jail cancels doubles reroll
+            gameState.rolledDoubles = false; // jail cancels doubles
             updateUI();
         }
         
@@ -2070,8 +2352,8 @@
             updateUI();
             checkDoublesReroll(currentPlayer);
         }
-
-        function passProperty() {
+        
+       function passProperty() {
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             
@@ -2226,7 +2508,6 @@ function startAuction(propertyId) {
                     gameState.pendingProperty = null;
                     checkBankruptcy();
                     updateUI();
-                    checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
                 }, 2000);
             } else {
                 addAuctionLog('No bids - property remains unowned');
@@ -2238,7 +2519,6 @@ function startAuction(propertyId) {
                     setEndTurn();
                     gameState.pendingProperty = null;
                     updateUI();
-                    checkDoublesReroll(gameState.players[gameState.currentPlayerIndex]);
                 }, 2000);
             }
         }
@@ -2896,113 +3176,92 @@ function startAuction(propertyId) {
             updateUI();
         }
         
-        function closeManageModal() {
-            document.getElementById('manageModal').classList.remove('active');
-        }
-
-        // ===== SPACE INFO MODAL =====
         function closeSpaceInfo() {
             document.getElementById('spaceInfoModal').classList.remove('active');
         }
 
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeSpaceInfo();
-        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSpaceInfo(); });
 
         function showSpaceDetails(space) {
-            const modal = document.getElementById('spaceInfoModal');
-            const content = document.getElementById('spaceInfoContent');
-
             const COLOR_HEX = {
-                'brown': '#8B4513', 'light-blue': '#87CEEB', 'pink': '#FF1493',
-                'orange': '#FFA500', 'red': '#FF0000', 'yellow': '#FFFF00',
-                'green': '#00FF00', 'dark-blue': '#0000FF',
-                'railroad': '#222', 'utility': '#aaa',
+                'brown':'#8B4513','light-blue':'#87CEEB','pink':'#FF1493',
+                'orange':'#FFA500','red':'#FF0000','yellow':'#FFFF00',
+                'green':'#00FF00','dark-blue':'#0000FF','railroad':'#222','utility':'#999'
             };
-
-            // Ownership info
             const own = gameState.ownedProperties[space.id];
             let ownerHtml = '';
             if (own) {
                 const owner = gameState.players.find(p => p.id === own.ownerId);
-                const ownerName = owner ? `${owner.token} ${owner.name}` : 'Unknown';
-                const mortgagedTag = own.isMortgaged ? ' <span style="color:#f44336">(Mortgaged)</span>' : '';
-                ownerHtml = `<div class="info-owner-badge" style="background:#f0f0ff;color:#667eea">
-                    Owned by ${ownerName}${mortgagedTag}</div><br>`;
+                const mort = own.isMortgaged ? ' <span style="color:#f44336">(Mortgaged)</span>' : '';
+                ownerHtml = `<div class="info-badge" style="background:#f0f0ff;color:#667eea">
+                    Owned by ${owner ? owner.token + ' ' + owner.name : '?'}${mort}</div><br>`;
             } else if (space.price) {
-                ownerHtml = `<div class="info-owner-badge" style="background:#f0fff0;color:#2e7d32">Unowned</div><br>`;
+                ownerHtml = `<div class="info-badge" style="background:#f0fff0;color:#2e7d32">Unowned</div><br>`;
             }
-
-            // Building info
-            let buildingHtml = '';
+            let buildHtml = '';
             if (own && space.type === 'property') {
-                if (own.hasHotel) buildingHtml = '<p style="color:#e65100;font-weight:600">🏨 Hotel</p>';
-                else if (own.houses > 0) buildingHtml = `<p style="color:#2e7d32;font-weight:600">${'🏠'.repeat(own.houses)} ${own.houses} House${own.houses>1?'s':''}</p>`;
+                if (own.hasHotel) buildHtml = '<p style="color:#e65100;font-weight:600;margin-bottom:8px">🏨 Hotel</p>';
+                else if (own.houses > 0) buildHtml = `<p style="color:#2e7d32;font-weight:600;margin-bottom:8px">${'🏠'.repeat(own.houses)} ${own.houses} House${own.houses>1?'s':''}</p>`;
             }
-
+            const c = document.getElementById('spaceInfoContent');
             if (space.type === 'property') {
-                const colorHex = COLOR_HEX[space.color] || '#667eea';
-                content.innerHTML = `
-                    <div class="info-color-bar" style="background:${colorHex}"></div>
+                c.innerHTML = `
+                    <div class="info-color-bar" style="background:${COLOR_HEX[space.color]||'#667eea'}"></div>
                     <div class="info-title">${space.name}</div>
                     <div class="info-price">$${space.price}</div>
-                    ${ownerHtml}${buildingHtml}
-                    <div class="rent-table">
-                        <div class="rent-row"><span>Base Rent</span><span>$${space.rent[0]}</span></div>
-                        <div class="rent-row"><span>With Monopoly</span><span>$${space.rent[0]*2}</span></div>
-                        <div class="rent-row"><span>1 House</span><span>$${space.rent[1]}</span></div>
-                        <div class="rent-row"><span>2 Houses</span><span>$${space.rent[2]}</span></div>
-                        <div class="rent-row"><span>3 Houses</span><span>$${space.rent[3]}</span></div>
-                        <div class="rent-row"><span>4 Houses</span><span>$${space.rent[4]}</span></div>
-                        <div class="rent-row"><span>Hotel</span><span>$${space.rent[5]}</span></div>
+                    ${ownerHtml}${buildHtml}
+                    <div class="info-rent-table">
+                        <div class="info-rent-row"><span>Base Rent</span><span>$${space.rent[0]}</span></div>
+                        <div class="info-rent-row"><span>With Monopoly</span><span>$${space.rent[0]*2}</span></div>
+                        <div class="info-rent-row"><span>1 House</span><span>$${space.rent[1]}</span></div>
+                        <div class="info-rent-row"><span>2 Houses</span><span>$${space.rent[2]}</span></div>
+                        <div class="info-rent-row"><span>3 Houses</span><span>$${space.rent[3]}</span></div>
+                        <div class="info-rent-row"><span>4 Houses</span><span>$${space.rent[4]}</span></div>
+                        <div class="info-rent-row"><span>Hotel</span><span>$${space.rent[5]}</span></div>
                     </div>
-                    <div class="info-footer">
-                        House cost: $${space.houseCost} &nbsp;·&nbsp;
-                        Mortgage: $${space.price/2} &nbsp;·&nbsp;
-                        Unmortgage: $${Math.floor(space.price/2*1.1)}
-                    </div>`;
+                    <div class="info-footer">House: $${space.houseCost} &nbsp;·&nbsp; Mortgage: $${space.price/2} &nbsp;·&nbsp; Unmortgage: $${Math.floor(space.price/2*1.1)}</div>`;
             } else if (space.type === 'railroad') {
-                content.innerHTML = `
+                c.innerHTML = `
                     <div class="info-color-bar" style="background:#222"></div>
                     <div class="info-title">${space.name}</div>
                     <div class="info-price">$${space.price}</div>
                     ${ownerHtml}
-                    <div class="rent-table">
-                        <div class="rent-row"><span>1 Railroad</span><span>$${space.rent[0]}</span></div>
-                        <div class="rent-row"><span>2 Railroads</span><span>$${space.rent[1]}</span></div>
-                        <div class="rent-row"><span>3 Railroads</span><span>$${space.rent[2]}</span></div>
-                        <div class="rent-row"><span>4 Railroads</span><span>$${space.rent[3]}</span></div>
+                    <div class="info-rent-table">
+                        <div class="info-rent-row"><span>1 Railroad</span><span>$${space.rent[0]}</span></div>
+                        <div class="info-rent-row"><span>2 Railroads</span><span>$${space.rent[1]}</span></div>
+                        <div class="info-rent-row"><span>3 Railroads</span><span>$${space.rent[2]}</span></div>
+                        <div class="info-rent-row"><span>4 Railroads</span><span>$${space.rent[3]}</span></div>
                     </div>
                     <div class="info-footer">Mortgage: $${space.price/2} &nbsp;·&nbsp; Unmortgage: $${Math.floor(space.price/2*1.1)}</div>`;
             } else if (space.type === 'utility') {
-                content.innerHTML = `
+                c.innerHTML = `
                     <div class="info-color-bar" style="background:#999"></div>
                     <div class="info-title">${space.name}</div>
                     <div class="info-price">$${space.price}</div>
                     ${ownerHtml}
-                    <div class="rent-table">
-                        <div class="rent-row"><span>1 Utility owned</span><span>4× dice</span></div>
-                        <div class="rent-row"><span>2 Utilities owned</span><span>10× dice</span></div>
+                    <div class="info-rent-table">
+                        <div class="info-rent-row"><span>1 Utility</span><span>4× dice</span></div>
+                        <div class="info-rent-row"><span>2 Utilities</span><span>10× dice</span></div>
                     </div>
                     <div class="info-footer">Mortgage: $${space.price/2} &nbsp;·&nbsp; Unmortgage: $${Math.floor(space.price/2*1.1)}</div>`;
             } else if (space.type === 'tax') {
-                content.innerHTML = `
-                    <div class="info-title">${space.name}</div>
+                c.innerHTML = `<div class="info-title">${space.name}</div>
                     <div class="info-price" style="color:#f44336">−$${space.amount}</div>
-                    <p style="color:#666">Pay $${space.amount} to the bank when landing here.</p>`;
+                    <p style="color:#666">Pay $${space.amount} to the bank.</p>`;
             } else if (space.type === 'chance') {
-                content.innerHTML = `
-                    <div class="info-title">🃏 Chance</div>
-                    <p style="color:#666;margin-top:8px">Draw a Chance card. Effects include moving spaces, collecting or paying money, and Get Out of Jail Free.</p>`;
+                c.innerHTML = `<div class="info-title">🃏 Chance</div>
+                    <p style="color:#666;margin-top:8px">Draw a Chance card — movement, money, or Get Out of Jail Free.</p>`;
             } else if (space.type === 'chest') {
-                content.innerHTML = `
-                    <div class="info-title">📦 Community Chest</div>
-                    <p style="color:#666;margin-top:8px">Draw a Community Chest card. Effects include bank payments, repairs, and Get Out of Jail Free.</p>`;
+                c.innerHTML = `<div class="info-title">📦 Community Chest</div>
+                    <p style="color:#666;margin-top:8px">Draw a Community Chest card — bank payments, repairs, or Get Out of Jail Free.</p>`;
             } else {
-                content.innerHTML = `<div class="info-title">${space.name}</div>`;
+                c.innerHTML = `<div class="info-title">${space.name}</div>`;
             }
+            document.getElementById('spaceInfoModal').classList.add('active');
+        }
 
-            modal.classList.add('active');
+        function closeManageModal() {
+            document.getElementById('manageModal').classList.remove('active');
         }
         
         // ===== ONLINE MULTIPLAYER SYSTEM =====
@@ -3122,13 +3381,13 @@ function startAuction(propertyId) {
                     };
                     
                     showPropertyOwnership(data.propertyId, buyer);
-                    setEndTurn();
+                    gameState.phase = 'END_TURN';
                     gameState.pendingProperty = null;
                     updateUI();
                     break;
                     
                 case 'PROPERTY_PASSED':
-                    setEndTurn();
+                    gameState.phase = 'END_TURN';
                     gameState.pendingProperty = null;
                     updateUI();
                     break;
@@ -3138,7 +3397,7 @@ function startAuction(propertyId) {
                     const owner = gameState.players.find(p => p.id === data.ownerId);
                     payer.cash -= data.amount;
                     owner.cash += data.amount;
-                    setEndTurn();
+                    gameState.phase = 'END_TURN';
                     updateUI();
                     break;
                     
