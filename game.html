@@ -1659,7 +1659,7 @@
                 initializeBoard();
                 updateUI();
             }
-            Audio.startMusic();
+            Audio.startMusic(); // queued — fires after first user gesture
         }
         
         // ===== GAME FUNCTIONS =====
@@ -1857,6 +1857,7 @@
         }
         
         function rollDice() {
+            Audio.unlock();
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
             // Check if in jail
@@ -2764,6 +2765,7 @@ function startAuction(propertyId) {
         }
         
         function endTurn() {
+            Audio.unlock();
             const oldIndex = gameState.currentPlayerIndex;
             
             // Move to next player
@@ -3529,6 +3531,8 @@ function startAuction(propertyId) {
             };
 
             const cache = {};
+            let unlocked = false;       // browser autoplay unlock flag
+            let musicQueued = false;    // start music once unlocked
             let musicMuted  = localStorage.getItem('monopoly-music-muted')  === 'true';
             let sfxMuted    = localStorage.getItem('monopoly-sfx-muted')    === 'true';
             let musicVolume = parseFloat(localStorage.getItem('monopoly-music-vol') ?? '0.35');
@@ -3537,16 +3541,31 @@ function startAuction(propertyId) {
             function get(key) {
                 if (!cache[key]) {
                     cache[key] = new window.Audio(FILES[key]);
-                    if (key === 'music') {
-                        cache[key].loop = true;
-                    }
+                    if (key === 'music') cache[key].loop = true;
                 }
                 return cache[key];
+            }
+
+            // Called on first user gesture — unlocks autoplay and starts queued music
+            function unlock() {
+                if (unlocked) return;
+                unlocked = true;
+                if (musicQueued) { musicQueued = false; _startMusic(); }
+            }
+
+            function _startMusic() {
+                if (musicMuted) return;
+                try {
+                    const a = get('music');
+                    a.volume = musicVolume;
+                    a.play().catch(() => {});
+                } catch(e) {}
             }
 
             function play(key) {
                 if (key === 'music') { startMusic(); return; }
                 if (sfxMuted) return;
+                unlock(); // each SFX call also acts as an unlock attempt
                 try {
                     const a = get(key);
                     a.volume = sfxVolume;
@@ -3556,15 +3575,12 @@ function startAuction(propertyId) {
             }
 
             function startMusic() {
-                if (musicMuted) return;
-                try {
-                    const a = get('music');
-                    a.volume = musicVolume;
-                    a.play().catch(() => {});
-                } catch(e) {}
+                if (unlocked) { _startMusic(); }
+                else { musicQueued = true; } // will fire on first interaction
             }
 
             function stopMusic() {
+                musicQueued = false;
                 try {
                     if (cache['music']) { cache['music'].pause(); cache['music'].currentTime = 0; }
                 } catch(e) {}
@@ -3600,7 +3616,8 @@ function startAuction(propertyId) {
                 return { musicMuted, sfxMuted, musicVolume, sfxVolume };
             }
 
-            return { play, startMusic, stopMusic, setMusicVolume, setSfxVolume, setMusicMuted, setSfxMuted, getSettings };
+            // Expose unlock so UI buttons can call it
+            return { play, startMusic, stopMusic, unlock, setMusicVolume, setSfxVolume, setMusicMuted, setSfxMuted, getSettings };
         })();
 
 // Initialize
