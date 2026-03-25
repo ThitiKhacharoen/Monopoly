@@ -149,15 +149,24 @@ const AIPlayer = (() => {
         };
     }
 
-    const MCTS_ROUNDS   = 5;   // rounds to simulate ahead
     const MCTS_ROLLOUTS = 15;  // rollouts per action
 
-    function isHard(playerIndex) {
-        return aiPlayers[playerIndex] === 'hard';
+    const MCTS_ROUNDS_BY_DIFF = {
+        easy:   7,
+        medium: 10,
+        hard:   15,
+    };
+
+    function useMCTS(playerIndex) {
+        return MCTS_ROUNDS_BY_DIFF[aiPlayers[playerIndex]] > 0;
+    }
+
+    function mctsRounds(playerIndex) {
+        return MCTS_ROUNDS_BY_DIFF[aiPlayers[playerIndex]] || 3;
     }
 
     function mctsBuyDecision(playerIndex, propId) {
-        if (!isHard(playerIndex)) {
+        if (!useMCTS(playerIndex)) {
             const d = getDecision(playerIndex);
             return d && d.buyProperty > 0.5;
         }
@@ -179,13 +188,13 @@ const AIPlayer = (() => {
                 label: 'pass',
                 applyFn: (s, pid) => {} // do nothing
             }
-        ], { rounds: MCTS_ROUNDS, rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
+        ], { rounds: mctsRounds(playerIndex), rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
 
         return best === 'buy';
     }
 
     function mctsBidAmount(playerIndex) {
-        if (!isHard(playerIndex)) {
+        if (!useMCTS(playerIndex)) {
             const d = getDecision(playerIndex);
             return Math.floor((gameState.players[playerIndex].cash) * Math.max(0.1, d?.bidRatio || 0.1));
         }
@@ -221,7 +230,7 @@ const AIPlayer = (() => {
         ];
 
         const best = MonopolySim.mctsDecide(simState, playerIndex, actions,
-            { rounds: MCTS_ROUNDS, rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
+            { rounds: mctsRounds(playerIndex), rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
 
         if (best === 'pass') return 0;
         return parseInt(best.replace('bid_', ''));
