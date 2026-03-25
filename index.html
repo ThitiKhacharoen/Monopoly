@@ -10,118 +10,51 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
         }
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 560px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-height: 92vh;
-            overflow-y: auto;
-        }
+        .card { background: white; border-radius: 20px; padding: 40px; max-width: 560px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 92vh; overflow-y: auto; }
         h1 { color: #667eea; font-size: 2.8em; font-weight: 800; text-align: center; margin-bottom: 6px; }
         .subtitle { text-align: center; color: #888; margin-bottom: 32px; }
         .screen { display: none; }
         .screen.active { display: block; }
-        .btn {
-            display: block; width: 100%; padding: 16px;
-            border: none; border-radius: 10px; font-size: 1.1em;
-            font-weight: 600; cursor: pointer; margin-bottom: 12px;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; box-shadow: 0 4px 14px rgba(102,126,234,0.4);
-        }
+        .btn { display: block; width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 14px rgba(102,126,234,0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
         .btn-secondary { background: #f0f0f0; color: #444; }
         .btn-secondary:hover { background: #e4e4e4; }
         .btn-danger { background: #fee; color: #c00; }
         .btn-danger:hover { background: #fdd; }
         label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; margin-top: 14px; }
-        input[type=text], input[type=number], select {
-            width: 100%; padding: 11px 13px; border: 2px solid #e0e0e0;
-            border-radius: 8px; font-size: 1em; margin-bottom: 4px;
-            transition: border-color 0.2s;
-        }
+        input[type=text], input[type=number], select { width: 100%; padding: 11px 13px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; margin-bottom: 4px; transition: border-color 0.2s; }
         input:focus, select:focus { outline: none; border-color: #667eea; }
         input:disabled { background: #f8f8f8; color: #999; }
         .error { background: #fff0f0; color: #c00; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9em; display: none; }
         .error.show { display: block; }
         .status { background: #e8f4ff; color: #1565c0; padding: 10px 14px; border-radius: 8px; margin: 12px 0; font-weight: 600; text-align: center; }
-
-        /* Player count buttons */
         .count-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-        .count-btn {
-            padding: 13px; border: 2px solid #e0e0e0; background: white;
-            border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600;
-            transition: all 0.2s;
-        }
+        .count-btn { padding: 13px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.2s; }
         .count-btn:hover { border-color: #667eea; }
         .count-btn.active { border-color: #667eea; background: #667eea; color: white; }
-
-        /* Player slot */
-        .player-slot {
-            background: #f8f9fa; border-radius: 10px; padding: 14px;
-            margin-bottom: 10px; border: 2px solid #e8e8e8;
-        }
+        .player-slot { background: #f8f9fa; border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 2px solid #e8e8e8; }
         .player-slot.ai { border-color: #667eea; background: #f3f0ff; }
         .slot-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .slot-num {
-            width: 30px; height: 30px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-weight: 700;
-            color: white; font-size: 0.9em; flex-shrink: 0;
-        }
-        .diff-select {
-            width: 100%; padding: 8px 10px; border: 2px solid #ddd;
-            border-radius: 7px; font-size: 0.95em; margin-bottom: 8px;
-            background: white; cursor: pointer;
-        }
+        .slot-num { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.9em; flex-shrink: 0; }
+        .diff-select { width: 100%; padding: 8px 10px; border: 2px solid #ddd; border-radius: 7px; font-size: 0.95em; margin-bottom: 8px; background: white; cursor: pointer; }
         .diff-select:focus { outline: none; border-color: #667eea; }
-
-        /* Token grid */
         .tokens { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
-        .tok {
-            width: 42px; height: 42px; border: 2px solid #ddd; background: white;
-            border-radius: 8px; cursor: pointer; font-size: 1.3em;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s;
-        }
+        .tok { width: 42px; height: 42px; border: 2px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-size: 1.3em; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
         .tok:hover:not(:disabled) { border-color: #667eea; transform: scale(1.1); }
         .tok.selected { border-color: #667eea; background: #f0eeff; }
         .tok:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        /* Lobby */
-        .room-code {
-            font-size: 2.6em; font-weight: 800; color: #667eea;
-            letter-spacing: 0.12em; font-family: monospace;
-            text-align: center; padding: 20px;
-            background: #f8f9fa; border-radius: 10px; margin: 12px 0;
-        }
-        .lobby-player {
-            display: flex; align-items: center; gap: 12px;
-            background: white; padding: 10px 14px; border-radius: 8px;
-            margin-bottom: 8px; border: 2px solid #eee;
-        }
+        .room-code { font-size: 2.6em; font-weight: 800; color: #667eea; letter-spacing: 0.12em; font-family: monospace; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px; margin: 12px 0; }
+        .lobby-player { display: flex; align-items: center; gap: 12px; background: white; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border: 2px solid #eee; }
         .lobby-token { font-size: 1.5em; }
-        .host-badge {
-            background: #ffd93d; color: #333; padding: 3px 9px;
-            border-radius: 10px; font-size: 0.75em; font-weight: 700; margin-left: auto;
-        }
-
+        .host-badge { background: #ffd93d; color: #333; padding: 3px 9px; border-radius: 10px; font-size: 0.75em; font-weight: 700; margin-left: auto; }
         .divider { border: none; border-top: 1px solid #eee; margin: 20px 0; }
     </style>
 </head>
 <body>
 <div class="card">
-
     <!-- MAIN MENU -->
     <div class="screen active" id="s-main">
         <div style="text-align:center;font-size:3em;margin-bottom:8px">🎲</div>
@@ -129,8 +62,8 @@
         <p class="subtitle">Tournament Rules Edition</p>
         <button class="btn btn-primary" onclick="show('s-play')">🎮 Play</button>
         <button class="btn btn-secondary" onclick="location.href='monopoly-board.html'">📋 View Board</button>
+        <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ Settings</button>
     </div>
-
     <!-- PLAY MENU -->
     <div class="screen" id="s-play">
         <h1 style="font-size:2em">Play</h1>
@@ -140,21 +73,26 @@
         <hr class="divider">
         <button class="btn btn-secondary" onclick="show('s-main')">← Back</button>
     </div>
-
     <!-- LOCAL SETUP -->
     <div class="screen" id="s-local">
         <h1 style="font-size:1.8em">🎮 Game Setup</h1>
         <p class="subtitle" style="margin-bottom:20px">Mix humans and AI</p>
-
         <label>Number of Players</label>
         <div class="count-grid" id="countGrid"></div>
-
         <div id="playerSlots"></div>
-
-        <button class="btn btn-primary" style="margin-top:8px" onclick="startLocal()">🎮 Start Game</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f9fa;border-radius:10px;padding:14px 16px;margin-top:12px;border:2px solid #e8e8e8;">
+            <div>
+                <div style="font-weight:600;color:#333;">Turn Order</div>
+                <div style="font-size:0.82em;color:#aaa;margin-top:2px;">Who goes first</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button id="orderFixed" onclick="setTurnOrder('fixed')" style="padding:7px 14px;border:2px solid #667eea;background:#667eea;color:white;border-radius:8px;font-size:0.88em;font-weight:600;cursor:pointer;">In Order</button>
+                <button id="orderRandom" onclick="setTurnOrder('random')" style="padding:7px 14px;border:2px solid #e0e0e0;background:white;color:#555;border-radius:8px;font-size:0.88em;font-weight:600;cursor:pointer;">Random</button>
+            </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="startLocal()">🎮 Start Game</button>
         <button class="btn btn-secondary" onclick="show('s-play')">← Back</button>
     </div>
-
     <!-- ONLINE MENU -->
     <div class="screen" id="s-online-menu">
         <h1 style="font-size:1.8em">🌐 Online</h1>
@@ -164,7 +102,6 @@
         <hr class="divider">
         <button class="btn btn-secondary" onclick="show('s-play')">← Back</button>
     </div>
-
     <!-- CREATE ROOM -->
     <div class="screen" id="s-create">
         <h1 style="font-size:1.8em">Create Room</h1>
@@ -173,16 +110,13 @@
         <input type="text" id="host-name" placeholder="Enter your name" maxlength="20">
         <label>Max Players</label>
         <select id="max-players">
-            <option value="2">2 Players</option>
-            <option value="3">3 Players</option>
-            <option value="4" selected>4 Players</option>
-            <option value="5">5 Players</option>
+            <option value="2">2 Players</option><option value="3">3 Players</option>
+            <option value="4" selected>4 Players</option><option value="5">5 Players</option>
             <option value="6">6 Players</option>
         </select>
         <button class="btn btn-primary" style="margin-top:16px" onclick="createRoom()">Create Room</button>
         <button class="btn btn-secondary" onclick="show('s-online-menu')">← Back</button>
     </div>
-
     <!-- JOIN ROOM -->
     <div class="screen" id="s-join">
         <h1 style="font-size:1.8em">Join Room</h1>
@@ -194,16 +128,12 @@
         <button class="btn btn-primary" style="margin-top:16px" onclick="joinRoom()">Find Room</button>
         <button class="btn btn-secondary" onclick="show('s-online-menu')">← Back</button>
     </div>
-
     <!-- LOBBY -->
     <div class="screen" id="s-lobby">
         <h1 style="font-size:1.8em">🎮 Lobby</h1>
         <div class="room-code" id="lobby-code">------</div>
         <p style="text-align:center;color:#888;margin-bottom:16px;font-size:0.9em">Share this code with friends</p>
-
         <div id="lobby-players"></div>
-
-        <!-- Token picker -->
         <div id="token-picker" style="display:none">
             <hr class="divider">
             <label>Choose Your Token</label>
@@ -211,354 +141,281 @@
             <div class="tokens" id="lobby-tokens"></div>
             <button class="btn btn-primary" style="margin-top:12px" onclick="confirmToken()">✅ Confirm Token</button>
         </div>
-
         <div class="status" id="lobby-status">Waiting for players...</div>
         <button class="btn btn-primary" id="start-online-btn" style="display:none" onclick="startOnline()">🚀 Start Game</button>
         <button class="btn btn-danger" onclick="leaveRoom()">Leave Room</button>
     </div>
-
 </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;padding:36px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;animation:settingsIn 0.25s ease-out;">
+            <style>
+                @keyframes settingsIn{from{opacity:0;transform:translateY(-14px) scale(0.97)}to{opacity:1;transform:none}}
+                .sm-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+                .sm-label{font-weight:600;color:#333;font-size:0.97em;}
+                .sm-sublabel{font-size:0.8em;color:#aaa;margin-top:2px;}
+                .sm-section{font-size:0.72em;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:18px 0 10px;}
+                .sm-toggle{position:relative;width:48px;height:26px;flex-shrink:0;cursor:pointer;display:inline-block;}
+                .sm-toggle input{opacity:0;position:absolute;width:0;height:0;}
+                .sm-track{position:absolute;inset:0;background:#ddd;border-radius:26px;transition:background 0.2s;}
+                .sm-thumb{position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+                .sm-toggle input:checked~.sm-track{background:#667eea;}
+                .sm-toggle input:checked~.sm-track .sm-thumb{transform:translateX(22px);}
+                .sm-vol{display:flex;align-items:center;gap:8px;width:185px;}
+                .sm-vol input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:#ddd;outline:none;cursor:pointer;}
+                .sm-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#667eea;cursor:pointer;}
+                .sm-vol input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#667eea;cursor:pointer;border:none;}
+                .sm-pct{font-size:0.82em;color:#888;width:32px;text-align:right;flex-shrink:0;}
+                .sm-testbtn{padding:5px 12px;background:#f0f0f0;border:none;border-radius:20px;font-size:0.82em;font-weight:600;cursor:pointer;color:#555;transition:background 0.15s;}
+                .sm-testbtn:hover{background:#e0e0e0;} .sm-testbtn:active{background:#667eea;color:white;}
+            </style>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                <span style="font-size:1.5em;">⚙️</span>
+                <h2 style="color:#667eea;font-size:1.6em;font-weight:800;margin:0;">Settings</h2>
+                <button onclick="closeSettingsModal()" style="margin-left:auto;background:#f0f0f0;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">×</button>
+            </div>
+            <div class="sm-section">🎵 Music</div>
+            <div class="sm-row">
+                <div><div class="sm-label">Background Music</div><div class="sm-sublabel">Loops during gameplay</div></div>
+                <label class="sm-toggle"><input type="checkbox" id="sm-musicOn" onchange="smApplyMusic()"><div class="sm-track"><div class="sm-thumb"></div></div></label>
+            </div>
+            <div class="sm-row">
+                <div class="sm-label">Volume</div>
+                <div class="sm-vol"><span>🔈</span><input type="range" id="sm-musicVol" min="0" max="100" oninput="smApplyMusic()"><span class="sm-pct" id="sm-musicPct">--</span></div>
+            </div>
+            <div class="sm-row" style="border-bottom:none;">
+                <div class="sm-label">Preview</div>
+                <button class="sm-testbtn" id="sm-previewBtn" onclick="smPreviewMusic()">▶ Play</button>
+            </div>
+            <div class="sm-section">🔊 Sound Effects</div>
+            <div class="sm-row">
+                <div><div class="sm-label">Sound Effects</div><div class="sm-sublabel">Buy, rent, bid, jail, win</div></div>
+                <label class="sm-toggle"><input type="checkbox" id="sm-sfxOn" onchange="smApplySfx()"><div class="sm-track"><div class="sm-thumb"></div></div></label>
+            </div>
+            <div class="sm-row">
+                <div class="sm-label">Volume</div>
+                <div class="sm-vol"><span>🔈</span><input type="range" id="sm-sfxVol" min="0" max="100" oninput="smApplySfx()"><span class="sm-pct" id="sm-sfxPct">--</span></div>
+            </div>
+            <div class="sm-row" style="border-bottom:none;">
+                <div class="sm-label">Test</div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                    <button class="sm-testbtn" onclick="smTest('buy')">🏠 Buy</button>
+                    <button class="sm-testbtn" onclick="smTest('rent')">💸 Rent</button>
+                    <button class="sm-testbtn" onclick="smTest('bid')">🔨 Bid</button>
+                    <button class="sm-testbtn" onclick="smTest('jail')">🔒 Jail</button>
+                    <button class="sm-testbtn" onclick="smTest('win')">🏆 Win</button>
+                </div>
+            </div>
+            <button onclick="closeSettingsModal()" style="display:block;width:100%;padding:13px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;margin-top:22px;">Done</button>
+        </div>
+    </div>
 
 <script>
 const SUPABASE_URL = 'https://enwyccsukcsaffeukxka.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVud3ljY3N1a2NzYWZmZXVreGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MTk1NzQsImV4cCI6MjA4Nzk5NTU3NH0.-jlPDCEisGnq2vImx6P5JGT-8BEEzJ9SH1ArQLwQp14';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const TOKENS = ['🚗','🚢','🎩','🐕','🐱','👟','🎸','⚓'];
 const ICON_CLASSES = ['player-icon-1','player-icon-2','player-icon-3','player-icon-4','player-icon-5','player-icon-6','player-icon-7','player-icon-8'];
 const SLOT_COLORS = ['#ff6b6b','#4ecdc4','#45b7d1','#f9ca24','#6c5ce7','#a29bfe','#fd79a8','#fdcb6e'];
 
-// ── Local state ──────────────────────────────────────────────────────────────
-const local = {
-    count: 3,
-    tokens: [null, null, null],
-    diffs: ['human','human','human'],
-    names: ['','',''],
-};
+const local = { count:3, tokens:[null,null,null], diffs:['human','human','human'], names:['','',''], turnOrder:'fixed' };
+const online = { roomId:null, roomCode:null, playerId:null, isHost:false, token:null, tokenConfirmed:false, pendingRoomId:null, pendingRoomCode:null, pendingName:null, sub:null };
 
-// ── Online state ─────────────────────────────────────────────────────────────
-const online = {
-    roomId: null, roomCode: null, playerId: null,
-    isHost: false, token: null, tokenConfirmed: false,
-    pendingRoomId: null, pendingRoomCode: null, pendingName: null,
-    sub: null,
-};
-
-// ── Screen helper ─────────────────────────────────────────────────────────────
-function show(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+function setTurnOrder(order) {
+    local.turnOrder = order;
+    document.getElementById('orderFixed').style.background  = order === 'fixed'  ? '#667eea' : 'white';
+    document.getElementById('orderFixed').style.color       = order === 'fixed'  ? 'white'   : '#555';
+    document.getElementById('orderFixed').style.borderColor = order === 'fixed'  ? '#667eea' : '#e0e0e0';
+    document.getElementById('orderRandom').style.background  = order === 'random' ? '#667eea' : 'white';
+    document.getElementById('orderRandom').style.color       = order === 'random' ? 'white'   : '#555';
+    document.getElementById('orderRandom').style.borderColor = order === 'random' ? '#667eea' : '#e0e0e0';
 }
+function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function showErr(id,msg) { const el=document.getElementById(id); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),5000); }
 
-function showErr(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 5000);
-}
-
-// ── Local setup ───────────────────────────────────────────────────────────────
-function showLocal() {
-    show('s-local');
-    renderCountGrid();
-    renderSlots();
-}
-
+function showLocal() { show('s-local'); renderCountGrid(); renderSlots(); }
 function renderCountGrid() {
-    const g = document.getElementById('countGrid');
-    g.innerHTML = '';
-    for (let n = 2; n <= 8; n++) {
-        const b = document.createElement('button');
-        b.className = 'count-btn' + (n === local.count ? ' active' : '');
-        b.textContent = n;
-        b.onclick = () => { local.count = n; renderCountGrid(); renderSlots(); };
-        g.appendChild(b);
-    }
+    const g=document.getElementById('countGrid'); g.innerHTML='';
+    for(let n=2;n<=8;n++){const b=document.createElement('button');b.className='count-btn'+(n===local.count?' active':'');b.textContent=n;b.onclick=()=>{local.count=n;renderCountGrid();renderSlots();};g.appendChild(b);}
 }
-
 function renderSlots() {
-    // Save any typed names first
-    for (let i = 0; i < local.count; i++) {
-        const el = document.getElementById(`ln${i}`);
-        if (el && !el.disabled) local.names[i] = el.value;
-    }
-    // Ensure arrays are long enough
-    while (local.tokens.length < local.count) local.tokens.push(null);
-    while (local.diffs.length < local.count) local.diffs.push('human');
-    while (local.names.length < local.count) local.names.push('');
-
-    const c = document.getElementById('playerSlots');
-    c.innerHTML = '';
-    for (let i = 0; i < local.count; i++) {
-        const isAI = local.diffs[i] !== 'human';
-        const slot = document.createElement('div');
-        slot.className = 'player-slot' + (isAI ? ' ai' : '');
-
-        const hdr = document.createElement('div');
-        hdr.className = 'slot-header';
-        const num = document.createElement('div');
-        num.className = 'slot-num';
-        num.style.background = SLOT_COLORS[i];
-        num.textContent = i + 1;
+    for(let i=0;i<local.count;i++){const el=document.getElementById(`ln${i}`);if(el&&!el.disabled)local.names[i]=el.value;}
+    while(local.tokens.length<local.count)local.tokens.push(null);
+    while(local.diffs.length<local.count)local.diffs.push('human');
+    while(local.names.length<local.count)local.names.push('');
+    const c=document.getElementById('playerSlots'); c.innerHTML='';
+    for(let i=0;i<local.count;i++){
+        const isAI=local.diffs[i]!=='human';
+        const slot=document.createElement('div'); slot.className='player-slot'+(isAI?' ai':'');
+        const hdr=document.createElement('div'); hdr.className='slot-header';
+        const num=document.createElement('div'); num.className='slot-num'; num.style.background=SLOT_COLORS[i]; num.textContent=i+1;
         hdr.appendChild(num);
-        hdr.appendChild(Object.assign(document.createElement('span'), { textContent: `Player ${i+1}`, style: 'font-weight:600;color:#333' }));
+        hdr.appendChild(Object.assign(document.createElement('span'),{textContent:`Player ${i+1}`,style:'font-weight:600;color:#333'}));
         slot.appendChild(hdr);
-
-        // Difficulty
-        const sel = document.createElement('select');
-        sel.className = 'diff-select';
-        [['human','👤 Human'],['easy','🤖 Easy'],['medium','🤖 Medium'],['hard','🤖 Hard']].forEach(([v,l]) => {
-            const o = document.createElement('option');
-            o.value = v; o.textContent = l;
-            if (local.diffs[i] === v) o.selected = true;
-            sel.appendChild(o);
+        const sel=document.createElement('select'); sel.className='diff-select';
+        [['human','👤 Human'],['easy','🤖 Easy'],['medium','🤖 Medium'],['hard','🤖 Hard']].forEach(([v,l])=>{
+            const o=document.createElement('option'); o.value=v; o.textContent=l; if(local.diffs[i]===v)o.selected=true; sel.appendChild(o);
         });
-        sel.onchange = e => { local.diffs[i] = e.target.value; renderSlots(); };
-        slot.appendChild(sel);
-
-        // Name
-        const inp = document.createElement('input');
-        inp.type = 'text'; inp.id = `ln${i}`; inp.maxLength = 20;
-        inp.style.marginBottom = '8px';
-        if (isAI) { inp.value = `AI (${local.diffs[i]})`; inp.disabled = true; }
-        else { inp.value = local.names[i] || ''; inp.placeholder = `Player ${i+1} Name`; }
+        sel.onchange=e=>{local.diffs[i]=e.target.value;renderSlots();}; slot.appendChild(sel);
+        const inp=document.createElement('input'); inp.type='text'; inp.id=`ln${i}`; inp.maxLength=20; inp.style.marginBottom='8px';
+        if(isAI){inp.value=`AI (${local.diffs[i]})`;inp.disabled=true;}else{inp.value=local.names[i]||'';inp.placeholder=`Player ${i+1} Name`;}
         slot.appendChild(inp);
-
-        // Tokens
-        const row = document.createElement('div');
-        row.className = 'tokens';
-        // Only tokens selected by OTHER active players are blocked
-        const otherTokens = local.tokens.slice(0, local.count).filter((_, j) => j !== i);
-        TOKENS.forEach(tok => {
-            const b = document.createElement('button');
-            const isSelected = local.tokens[i] === tok;
-            const isBlocked = otherTokens.includes(tok);
-            b.className = 'tok' + (isSelected ? ' selected' : '');
-            b.textContent = tok;
-            b.disabled = isBlocked;
-            b.onclick = () => {
-                // Click selected token to deselect it
-                local.tokens[i] = (local.tokens[i] === tok) ? null : tok;
-                renderSlots();
-            };
-            row.appendChild(b);
+        const row=document.createElement('div'); row.className='tokens';
+        const otherTokens=local.tokens.slice(0,local.count).filter((_,j)=>j!==i);
+        TOKENS.forEach(tok=>{
+            const b=document.createElement('button'); const isSel=local.tokens[i]===tok; const isBlocked=otherTokens.includes(tok);
+            b.className='tok'+(isSel?' selected':''); b.textContent=tok; b.disabled=isBlocked;
+            b.onclick=()=>{local.tokens[i]=(local.tokens[i]===tok)?null:tok;renderSlots();}; row.appendChild(b);
         });
-        slot.appendChild(row);
-        c.appendChild(slot);
+        slot.appendChild(row); c.appendChild(slot);
     }
 }
-
 function startLocal() {
-    // Save final names
-    for (let i = 0; i < local.count; i++) {
-        const el = document.getElementById(`ln${i}`);
-        if (el && !el.disabled) local.names[i] = el.value.trim();
-    }
-    // Assign tokens — randomise any that are null/unselected
-    const usedTokens = local.tokens.slice(0, local.count).filter(Boolean);
-    for (let i = 0; i < local.count; i++) {
-        if (!local.tokens[i]) {
-            const avail = TOKENS.filter(t => !usedTokens.includes(t));
-            const pick = avail.length ? avail[Math.floor(Math.random() * avail.length)] : TOKENS[i];
-            local.tokens[i] = pick;
-            usedTokens.push(pick);
-        }
-    }
-    const players = [];
-    for (let i = 0; i < local.count; i++) {
-        const isAI = local.diffs[i] !== 'human';
-        players.push({
-            id: `p${i+1}`,
-            name: isAI ? `AI (${local.diffs[i]})` : (local.names[i] || `Player ${i+1}`),
-            token: local.tokens[i],
-            iconClass: ICON_CLASSES[i],
-            aiDifficulty: isAI ? local.diffs[i] : null,
-        });
-    }
-    localStorage.setItem('monopoly-game-mode', 'local');
-    localStorage.setItem('monopoly-players', JSON.stringify(players));
-    location.href = 'game.html';
+    for(let i=0;i<local.count;i++){const el=document.getElementById(`ln${i}`);if(el&&!el.disabled)local.names[i]=el.value.trim();}
+    const usedTokens=local.tokens.slice(0,local.count).filter(Boolean);
+    for(let i=0;i<local.count;i++){if(!local.tokens[i]){const avail=TOKENS.filter(t=>!usedTokens.includes(t));const pick=avail.length?avail[Math.floor(Math.random()*avail.length)]:TOKENS[i];local.tokens[i]=pick;usedTokens.push(pick);}}
+    let players=[];
+    for(let i=0;i<local.count;i++){const isAI=local.diffs[i]!=='human';players.push({id:`p${i+1}`,name:isAI?`AI (${local.diffs[i]})`:(local.names[i]||`Player ${i+1}`),token:local.tokens[i],iconClass:ICON_CLASSES[i],aiDifficulty:isAI?local.diffs[i]:null});}
+    if(local.turnOrder==='random'){for(let i=players.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[players[i],players[j]]=[players[j],players[i]];}}
+    localStorage.setItem('monopoly-game-mode','local');localStorage.setItem('monopoly-players',JSON.stringify(players));location.href='game.html';
 }
 
-// ── Online ────────────────────────────────────────────────────────────────────
 async function createRoom() {
-    const name = document.getElementById('host-name').value.trim();
-    const max = parseInt(document.getElementById('max-players').value);
-    if (!name) { showErr('err-create', 'Enter your name'); return; }
+    const name=document.getElementById('host-name').value.trim(), max=parseInt(document.getElementById('max-players').value);
+    if(!name){showErr('err-create','Enter your name');return;}
     try {
-        const { data: code } = await sb.rpc('generate_room_code');
-        const { data: room } = await sb.from('rooms')
-            .insert({ room_code: code, max_players: max, status: 'waiting' })
-            .select().single();
-        const { data: player } = await sb.from('room_players')
-            .insert({ room_id: room.id, player_name: name, token: '❓', icon_class: ICON_CLASSES[0], is_host: true, player_order: 0 })
-            .select().single();
-        localStorage.setItem('myPlayerId', player.id);
-        online.roomId = room.id; online.roomCode = code;
-        online.playerId = player.id; online.isHost = true;
-        online.token = null; online.tokenConfirmed = false;
-        subscribeRoom();
-        showLobby();
-    } catch(e) { showErr('err-create', 'Failed to create room'); }
+        const{data:code}=await sb.rpc('generate_room_code');
+        const{data:room}=await sb.from('rooms').insert({room_code:code,max_players:max,status:'waiting'}).select().single();
+        const{data:player}=await sb.from('room_players').insert({room_id:room.id,player_name:name,token:'❓',icon_class:ICON_CLASSES[0],is_host:true,player_order:0}).select().single();
+        localStorage.setItem('myPlayerId',player.id);
+        online.roomId=room.id;online.roomCode=code;online.playerId=player.id;online.isHost=true;online.token=null;online.tokenConfirmed=false;
+        subscribeRoom();showLobby();
+    }catch(e){showErr('err-create','Failed to create room');}
 }
-
 async function joinRoom() {
-    const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const name = document.getElementById('join-name').value.trim();
-    if (!code || code.length !== 6) { showErr('err-join', 'Enter a valid 6-digit code'); return; }
-    if (!name) { showErr('err-join', 'Enter your name'); return; }
+    const code=document.getElementById('join-code').value.trim().toUpperCase(), name=document.getElementById('join-name').value.trim();
+    if(!code||code.length!==6){showErr('err-join','Enter a valid 6-digit code');return;}
+    if(!name){showErr('err-join','Enter your name');return;}
     try {
-        const { data: room } = await sb.from('rooms').select('*').eq('room_code', code).eq('status','waiting').single();
-        if (!room) throw new Error('Room not found');
-        const { data: existing } = await sb.from('room_players').select('*').eq('room_id', room.id);
-        if (existing.length >= room.max_players) throw new Error('Room is full');
-        online.pendingRoomId = room.id; online.pendingRoomCode = code;
-        online.pendingName = name; online.isHost = false;
-        online.token = null; online.tokenConfirmed = false;
-        showLobby();
-        renderLobbyPlayers(existing, room.max_players);
-    } catch(e) { showErr('err-join', e.message || 'Failed to find room'); }
+        const{data:room}=await sb.from('rooms').select('*').eq('room_code',code).eq('status','waiting').single();
+        if(!room)throw new Error('Room not found');
+        const{data:existing}=await sb.from('room_players').select('*').eq('room_id',room.id);
+        if(existing.length>=room.max_players)throw new Error('Room is full');
+        online.pendingRoomId=room.id;online.pendingRoomCode=code;online.pendingName=name;online.isHost=false;online.token=null;online.tokenConfirmed=false;
+        showLobby();renderLobbyPlayers(existing,room.max_players);
+    }catch(e){showErr('err-join',e.message||'Failed to find room');}
 }
-
 function showLobby() {
-    document.getElementById('lobby-code').textContent = online.roomCode || online.pendingRoomCode || '------';
-    show('s-lobby');
-    loadLobbyPlayers();
-    if (!online.tokenConfirmed) showTokenPicker();
+    document.getElementById('lobby-code').textContent=online.roomCode||online.pendingRoomCode||'------';
+    show('s-lobby');loadLobbyPlayers();if(!online.tokenConfirmed)showTokenPicker();
 }
-
 async function showTokenPicker() {
-    const roomId = online.roomId || online.pendingRoomId;
-    const { data: ps } = await sb.from('room_players').select('token').eq('room_id', roomId);
-    const used = (ps||[]).map(p=>p.token).filter(t=>t!=='❓');
-    renderTokenPicker(used);
-    document.getElementById('token-picker').style.display = 'block';
+    const roomId=online.roomId||online.pendingRoomId;
+    const{data:ps}=await sb.from('room_players').select('token').eq('room_id',roomId);
+    const used=(ps||[]).map(p=>p.token).filter(t=>t!=='❓');
+    renderTokenPicker(used);document.getElementById('token-picker').style.display='block';
 }
-
 function renderTokenPicker(used) {
-    const c = document.getElementById('lobby-tokens');
-    c.innerHTML = '';
-    TOKENS.forEach(tok => {
-        const b = document.createElement('button');
-        b.className = 'tok' + (online.token === tok ? ' selected' : '');
-        b.textContent = tok;
-        b.disabled = used.includes(tok);
-        b.onclick = () => {
-            online.token = online.token === tok ? null : tok;
-            renderTokenPicker(used);
-        };
-        c.appendChild(b);
-    });
+    const c=document.getElementById('lobby-tokens');c.innerHTML='';
+    TOKENS.forEach(tok=>{const b=document.createElement('button');b.className='tok'+(online.token===tok?' selected':'');b.textContent=tok;b.disabled=used.includes(tok);b.onclick=()=>{online.token=online.token===tok?null:tok;renderTokenPicker(used);};c.appendChild(b);});
 }
-
 async function confirmToken() {
-    const roomId = online.roomId || online.pendingRoomId;
-    const { data: ps } = await sb.from('room_players').select('token,id,player_order').eq('room_id', roomId).order('player_order');
-    const used = ps.filter(p=>p.id!==online.playerId).map(p=>p.token).filter(t=>t!=='❓');
-
-    if (!online.token) {
-        const avail = TOKENS.filter(t=>!used.includes(t));
-        if (!avail.length) { showErr('err-token','No tokens available'); return; }
-        online.token = avail[Math.floor(Math.random()*avail.length)];
-    }
-    if (used.includes(online.token)) { showErr('err-token','Token taken — pick another'); renderTokenPicker(used); return; }
-
+    const roomId=online.roomId||online.pendingRoomId;
+    const{data:ps}=await sb.from('room_players').select('token,id,player_order').eq('room_id',roomId).order('player_order');
+    const used=ps.filter(p=>p.id!==online.playerId).map(p=>p.token).filter(t=>t!=='❓');
+    if(!online.token){const avail=TOKENS.filter(t=>!used.includes(t));if(!avail.length){showErr('err-token','No tokens available');return;}online.token=avail[Math.floor(Math.random()*avail.length)];}
+    if(used.includes(online.token)){showErr('err-token','Token taken — pick another');renderTokenPicker(used);return;}
     try {
-        if (online.isHost) {
-            await sb.from('room_players').update({ token: online.token }).eq('id', online.playerId);
-        } else {
-            const order = ps.length;
-            const { data: p } = await sb.from('room_players')
-                .insert({ room_id: roomId, player_name: online.pendingName, token: online.token,
-                          icon_class: ICON_CLASSES[order], is_host: false, player_order: order })
-                .select().single();
-            localStorage.setItem('myPlayerId', p.id);
-            online.roomId = online.pendingRoomId;
-            online.roomCode = online.pendingRoomCode;
-            online.playerId = p.id;
-            subscribeRoom();
+        if(online.isHost){await sb.from('room_players').update({token:online.token}).eq('id',online.playerId);}
+        else {
+            const order=ps.length;
+            const{data:p}=await sb.from('room_players').insert({room_id:roomId,player_name:online.pendingName,token:online.token,icon_class:ICON_CLASSES[order],is_host:false,player_order:order}).select().single();
+            localStorage.setItem('myPlayerId',p.id);online.roomId=online.pendingRoomId;online.roomCode=online.pendingRoomCode;online.playerId=p.id;subscribeRoom();
         }
-        online.tokenConfirmed = true;
-        document.getElementById('token-picker').style.display = 'none';
-        loadLobbyPlayers();
-    } catch(e) { showErr('err-token', 'Failed to confirm — try again'); }
+        online.tokenConfirmed=true;document.getElementById('token-picker').style.display='none';loadLobbyPlayers();
+    }catch(e){showErr('err-token','Failed to confirm — try again');}
 }
-
 async function loadLobbyPlayers() {
-    const roomId = online.roomId || online.pendingRoomId;
-    if (!roomId) return;
-    const { data: ps } = await sb.from('room_players').select('*').eq('room_id', roomId).order('player_order');
-    const { data: room } = await sb.from('rooms').select('max_players').eq('id', roomId).single();
-    renderLobbyPlayers(ps, room?.max_players || 4);
+    const roomId=online.roomId||online.pendingRoomId;if(!roomId)return;
+    const{data:ps}=await sb.from('room_players').select('*').eq('room_id',roomId).order('player_order');
+    const{data:room}=await sb.from('rooms').select('max_players').eq('id',roomId).single();
+    renderLobbyPlayers(ps,room?.max_players||4);
 }
-
-function renderLobbyPlayers(players, max) {
-    const c = document.getElementById('lobby-players');
-    c.innerHTML = '';
-    players.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'lobby-player';
-        div.innerHTML = `<span class="lobby-token">${p.token}</span>
-            <span style="font-weight:600;flex:1">${p.player_name}</span>
-            ${p.is_host ? '<span class="host-badge">HOST</span>' : ''}`;
-        c.appendChild(div);
-    });
-    document.getElementById('lobby-players').previousElementSibling;
-    const countEl = document.querySelector('#s-lobby .room-code');
-    document.getElementById('lobby-status').textContent =
-        online.isHost ? (players.length >= 2 ? 'Ready to start!' : 'Waiting for more players...') : 'Waiting for host to start...';
-    document.getElementById('start-online-btn').style.display = online.isHost ? 'block' : 'none';
+function renderLobbyPlayers(players,max) {
+    const c=document.getElementById('lobby-players');c.innerHTML='';
+    players.forEach(p=>{const div=document.createElement('div');div.className='lobby-player';div.innerHTML=`<span class="lobby-token">${p.token}</span><span style="font-weight:600;flex:1">${p.player_name}</span>${p.is_host?'<span class="host-badge">HOST</span>':''}`;c.appendChild(div);});
+    document.getElementById('lobby-status').textContent=online.isHost?(players.length>=2?'Ready to start!':'Waiting for more players...'):'Waiting for host to start...';
+    document.getElementById('start-online-btn').style.display=online.isHost?'block':'none';
 }
-
 function subscribeRoom() {
-    online.sub = sb.channel(`room:${online.roomId}`)
-        .on('postgres_changes', { event:'*', schema:'public', table:'room_players', filter:`room_id=eq.${online.roomId}` },
-            () => loadLobbyPlayers())
-        .on('postgres_changes', { event:'UPDATE', schema:'public', table:'rooms', filter:`id=eq.${online.roomId}` },
-            async payload => {
-                if (payload.new.status === 'playing') {
-                    if (!online.isHost) {
-                        const { data: ps } = await sb.from('room_players').select('*').eq('room_id', online.roomId).order('player_order');
-                        localStorage.setItem('monopoly-game-mode', 'online');
-                        localStorage.setItem('monopoly-online-game', JSON.stringify({
-                            roomId: online.roomId, roomCode: online.roomCode,
-                            players: ps.map(p => ({ id: p.id, name: p.player_name, token: p.token, iconClass: p.icon_class, order: p.player_order, aiDifficulty: null }))
-                        }));
-                    }
-                    location.href = 'game.html';
-                }
-            })
-        .subscribe();
+    online.sub=sb.channel(`room:${online.roomId}`)
+        .on('postgres_changes',{event:'*',schema:'public',table:'room_players',filter:`room_id=eq.${online.roomId}`},()=>loadLobbyPlayers())
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:`id=eq.${online.roomId}`},async payload=>{
+            if(payload.new.status==='playing'){
+                if(!online.isHost){const{data:ps}=await sb.from('room_players').select('*').eq('room_id',online.roomId).order('player_order');localStorage.setItem('monopoly-game-mode','online');localStorage.setItem('monopoly-online-game',JSON.stringify({roomId:online.roomId,roomCode:online.roomCode,players:ps.map(p=>({id:p.id,name:p.player_name,token:p.token,iconClass:p.icon_class,order:p.player_order,aiDifficulty:null}))}));}
+                location.href='game.html';
+            }
+        }).subscribe();
 }
-
 async function startOnline() {
-    if (!online.isHost) return;
-    const { data: ps } = await sb.from('room_players').select('*').eq('room_id', online.roomId).order('player_order');
-    if (ps.length < 1) { alert('No players!'); return; }
-    // Assign tokens to anyone still on ❓
-    const used = ps.filter(p=>p.token!=='❓').map(p=>p.token);
-    for (const p of ps.filter(p=>p.token==='❓')) {
-        const avail = TOKENS.filter(t=>!used.includes(t));
-        const tok = avail.length ? avail[0] : TOKENS[0];
-        used.push(tok);
-        await sb.from('room_players').update({ token: tok }).eq('id', p.id);
-        p.token = tok;
-    }
-    localStorage.setItem('monopoly-game-mode', 'online');
-    localStorage.setItem('monopoly-online-game', JSON.stringify({
-        roomId: online.roomId, roomCode: online.roomCode,
-        players: ps.map(p => ({ id: p.id, name: p.player_name, token: p.token, iconClass: p.icon_class, order: p.player_order, aiDifficulty: null }))
-    }));
-    await sb.from('rooms').update({ status: 'playing', started_at: new Date().toISOString() }).eq('id', online.roomId);
-    location.href = 'game.html';
+    if(!online.isHost)return;
+    const{data:ps}=await sb.from('room_players').select('*').eq('room_id',online.roomId).order('player_order');
+    if(ps.length<1){return;}
+    const used=ps.filter(p=>p.token!=='❓').map(p=>p.token);
+    for(const p of ps.filter(p=>p.token==='❓')){const avail=TOKENS.filter(t=>!used.includes(t));const tok=avail.length?avail[0]:TOKENS[0];used.push(tok);await sb.from('room_players').update({token:tok}).eq('id',p.id);p.token=tok;}
+    localStorage.setItem('monopoly-game-mode','online');
+    localStorage.setItem('monopoly-online-game',JSON.stringify({roomId:online.roomId,roomCode:online.roomCode,players:ps.map(p=>({id:p.id,name:p.player_name,token:p.token,iconClass:p.icon_class,order:p.player_order,aiDifficulty:null}))}));
+    await sb.from('rooms').update({status:'playing',started_at:new Date().toISOString()}).eq('id',online.roomId);
+    location.href='game.html';
 }
-
 async function leaveRoom() {
-    if (online.sub) online.sub.unsubscribe();
-    if (online.playerId) await sb.from('room_players').delete().eq('id', online.playerId);
-    if (online.isHost && online.roomId) await sb.from('rooms').delete().eq('id', online.roomId);
-    Object.assign(online, { roomId:null, roomCode:null, playerId:null, isHost:false, token:null, tokenConfirmed:false, pendingRoomId:null, pendingRoomCode:null, pendingName:null, sub:null });
+    if(online.sub)online.sub.unsubscribe();
+    if(online.playerId)await sb.from('room_players').delete().eq('id',online.playerId);
+    if(online.isHost&&online.roomId)await sb.from('rooms').delete().eq('id',online.roomId);
+    Object.assign(online,{roomId:null,roomCode:null,playerId:null,isHost:false,token:null,tokenConfirmed:false,pendingRoomId:null,pendingRoomCode:null,pendingName:null,sub:null});
     show('s-online-menu');
 }
+
+// ===== SETTINGS MODAL =====
+const _sm = {
+    cache:{}, previewing:false,
+    FILES:{music:'sounds/music-bg.ogg',buy:'sounds/sfx-buy.wav',rent:'sounds/sfx-rent.wav',bid:'sounds/sfx-bid.wav',jail:'sounds/sfx-jail.wav',win:'sounds/sfx-win.wav'},
+    get(key){ if(!this.cache[key]){this.cache[key]=new window.Audio(this.FILES[key]);if(key==='music')this.cache[key].loop=true;} return this.cache[key]; }
+};
+function openSettingsModal() {
+    const mMuted=localStorage.getItem('monopoly-music-muted')==='true';
+    const sMuted=localStorage.getItem('monopoly-sfx-muted')==='true';
+    const mVol=Math.round(parseFloat(localStorage.getItem('monopoly-music-vol')??'0.35')*100);
+    const sVol=Math.round(parseFloat(localStorage.getItem('monopoly-sfx-vol')??'0.70')*100);
+    document.getElementById('sm-musicOn').checked=!mMuted;
+    document.getElementById('sm-sfxOn').checked=!sMuted;
+    document.getElementById('sm-musicVol').value=mVol; document.getElementById('sm-musicPct').textContent=mVol+'%';
+    document.getElementById('sm-sfxVol').value=sVol;   document.getElementById('sm-sfxPct').textContent=sVol+'%';
+    document.getElementById('sm-previewBtn').textContent='▶ Play'; _sm.previewing=false;
+    document.getElementById('settingsModal').style.display='flex';
+}
+function closeSettingsModal() {
+    if(_sm.previewing){_sm.get('music').pause();_sm.get('music').currentTime=0;_sm.previewing=false;}
+    document.getElementById('settingsModal').style.display='none';
+}
+function smApplyMusic() {
+    const on=document.getElementById('sm-musicOn').checked, vol=document.getElementById('sm-musicVol').value/100;
+    document.getElementById('sm-musicPct').textContent=document.getElementById('sm-musicVol').value+'%';
+    localStorage.setItem('monopoly-music-muted',!on); localStorage.setItem('monopoly-music-vol',vol);
+}
+function smApplySfx() {
+    const on=document.getElementById('sm-sfxOn').checked, vol=document.getElementById('sm-sfxVol').value/100;
+    document.getElementById('sm-sfxPct').textContent=document.getElementById('sm-sfxVol').value+'%';
+    localStorage.setItem('monopoly-sfx-muted',!on); localStorage.setItem('monopoly-sfx-vol',vol);
+}
+function smPreviewMusic() {
+    const btn=document.getElementById('sm-previewBtn'), a=_sm.get('music');
+    if(!_sm.previewing){a.volume=parseFloat(localStorage.getItem('monopoly-music-vol')??'0.35');a.currentTime=0;a.play().catch(()=>{});_sm.previewing=true;btn.textContent='⏹ Stop';}
+    else{a.pause();a.currentTime=0;_sm.previewing=false;btn.textContent='▶ Play';}
+}
+function smTest(key){const a=_sm.get(key);a.volume=parseFloat(localStorage.getItem('monopoly-sfx-vol')??'0.70');a.currentTime=0;a.play().catch(()=>{});}
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='settingsModal')closeSettingsModal();});
 </script>
 </body>
 </html>
