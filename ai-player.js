@@ -101,6 +101,132 @@ const AIPlayer = (() => {
         return inputs;
     }
 
+    // ─── NEAT value function for MCTS ─────────────────────────────────────────
+
+    function neatEvaluator(playerIndex) {
+        return function(simState, pid) {
+            // Build inputs from sim state for the NEAT network
+            const player = simState.players[pid];
+            const allPlayers = [player, ...simState.players.filter(p=>p.id!==pid)];
+            const inputs = [];
+
+            for (let i=0;i<4;i++) {
+                const p = allPlayers[i];
+                if (p) {
+                    inputs.push(p.pos/40);
+                    inputs.push(Math.min(1,p.cash/2000));
+                    inputs.push(Math.min(1,p.gojf/2));
+                } else { inputs.push(0,0,0); }
+            }
+            const PROP_IDS=[1,3,5,6,8,9,11,12,13,14,15,16,18,19,21,23,24,25,26,27,28,29,31,32,34,35,37,39];
+            const BUILD_IDS=[1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39];
+            for (const propId of PROP_IDS) {
+                const own = simState.owned[propId];
+                if (!own) { inputs.push(0,0); }
+                else {
+                    inputs.push(own.owner===pid ? 1 : Math.max(-1,-(own.owner+1)/3));
+                    inputs.push(own.mortgaged?1:0);
+                }
+            }
+            for (const propId of BUILD_IDS) {
+                const own = simState.owned[propId];
+                inputs.push((own&&own.owner===pid)?(own.hotel?1:(own.houses||0)/5):0);
+            }
+            for (const propId of PROP_IDS) {
+                const own = simState.owned[propId];
+                const price = (SPACES[propId]&&SPACES[propId].price)||0;
+                inputs.push((!own && simState.players[pid].cash>=price)?1:0);
+            }
+            const clamped = inputs.map(x=>Math.max(-1,Math.min(1,x)));
+
+            const difficulty = aiPlayers[playerIndex];
+            const model = models[difficulty];
+            if (!model) return MonopolySim.evaluate(simState, pid, null);
+            const outputs = NEATRunner.activate(model, clamped);
+            // Use net worth ratio as base, weighted by buy output confidence
+            const nw = MonopolySim.evaluate(simState, pid, null);
+            return nw * 0.7 + (outputs[0] > 0.5 ? 0.3 : 0.0);
+        };
+    }
+
+    const MCTS_ROUNDS   = 5;   // rounds to simulate ahead
+    const MCTS_ROLLOUTS = 15;  // rollouts per action
+
+    function isHard(playerIndex) {
+        return aiPlayers[playerIndex] === 'hard';
+    }
+
+    function mctsBuyDecision(playerIndex, propId) {
+        if (!isHard(playerIndex)) {
+            const d = getDecision(playerIndex);
+            return d && d.buyProperty > 0.5;
+        }
+        const simState = MonopolySim.fromGameState(gameState, playerIndex);
+        const sp = SPACES[propId];
+        const player = gameState.players[playerIndex];
+        if (!sp || player.cash < sp.price) return false;
+
+        const best = MonopolySim.mctsDecide(simState, playerIndex, [
+            {
+                label: 'buy',
+                applyFn: (s, pid) => {
+                    s.players[pid].cash -= sp.price;
+                    s.players[pid].props.push(propId);
+                    s.owned[propId] = {owner:pid, houses:0, hotel:false, mortgaged:false};
+                }
+            },
+            {
+                label: 'pass',
+                applyFn: (s, pid) => {} // do nothing
+            }
+        ], { rounds: MCTS_ROUNDS, rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
+
+        return best === 'buy';
+    }
+
+    function mctsBidAmount(playerIndex) {
+        if (!isHard(playerIndex)) {
+            const d = getDecision(playerIndex);
+            return Math.floor((gameState.players[playerIndex].cash) * Math.max(0.1, d?.bidRatio || 0.1));
+        }
+        const player = gameState.players[playerIndex];
+        const propId = gameState.auction?.propertyId;
+        const sp = propId != null ? SPACES[propId] : null;
+        if (!sp) return 0;
+
+        const minBid = (gameState.auction.currentBid || 0) + 1;
+        // Test a range of bid amounts
+        const candidates = [
+            minBid,
+            Math.floor(sp.price * 0.7),
+            sp.price,
+            Math.floor(sp.price * 1.2),
+        ].filter(b => b >= minBid && b <= player.cash);
+
+        if (!candidates.length) return 0;
+        // Remove duplicates
+        const unique = [...new Set(candidates)];
+
+        const simState = MonopolySim.fromGameState(gameState, playerIndex);
+        const actions = [
+            { label: 'pass', applyFn: (s,pid) => {} },
+            ...unique.map(bid => ({
+                label: `bid_${bid}`,
+                applyFn: (s, pid) => {
+                    s.players[pid].cash -= bid;
+                    s.players[pid].props.push(propId);
+                    s.owned[propId] = {owner:pid, houses:0, hotel:false, mortgaged:false};
+                }
+            }))
+        ];
+
+        const best = MonopolySim.mctsDecide(simState, playerIndex, actions,
+            { rounds: MCTS_ROUNDS, rollouts: MCTS_ROLLOUTS, neatEval: neatEvaluator(playerIndex) });
+
+        if (best === 'pass') return 0;
+        return parseInt(best.replace('bid_', ''));
+    }
+
     // ─── Decision (8 outputs) ─────────────────────────────────────────────────
 
     function getDecision(playerIndex) {
@@ -110,14 +236,14 @@ const AIPlayer = (() => {
         const inputs = buildInputs(playerIndex);
         const outputs = NEATRunner.activate(model, inputs);
         return {
-            buyProperty:          outputs[0],  // >0.5 = buy
-            bidRatio:             outputs[1],  // fraction of cash to bid
-            buildHouse:           outputs[2],  // >0.5 = build
-            sellHouse:            outputs[3],  // >0.5 = sell
-            mortgage:             outputs[4],  // >0.5 = mortgage
-            unmortgage:           outputs[5],  // >0.5 = unmortgage
-            tradeAggression:      outputs[6],  // 0-1
-            jailDecision:         outputs[7],  // >0.5 = pay fine
+            buyProperty:          outputs[0],
+            bidRatio:             outputs[1],
+            buildHouse:           outputs[2],
+            sellHouse:            outputs[3],
+            mortgage:             outputs[4],
+            unmortgage:           outputs[5],
+            tradeAggression:      outputs[6],
+            jailDecision:         outputs[7],
         };
     }
 
@@ -148,21 +274,14 @@ const AIPlayer = (() => {
     // ─── Auction ──────────────────────────────────────────────────────────────
 
     function handleAuctionTurn(playerIndex) {
-        const decision = getDecision(playerIndex);
         const player = gameState.players[playerIndex];
-
-        if (!decision) {
-            passAuction();
-            aiActing = false;
-            return;
-        }
-
-        const maxBid = Math.floor(player.cash * Math.max(0.1, decision.bidRatio));
         const minBid = (gameState.auction.currentBid || 0) + 1;
 
-        if (maxBid >= minBid && maxBid <= player.cash) {
+        const bidAmount = mctsBidAmount(playerIndex);
+
+        if (bidAmount >= minBid && bidAmount <= player.cash) {
             const input = document.getElementById('auctionBidInput');
-            if (input) input.value = maxBid;
+            if (input) input.value = bidAmount;
             setTimeout(() => {
                 placeBid();
                 aiActing = false;
@@ -211,9 +330,9 @@ const AIPlayer = (() => {
                 const space = SPACES[gameState.pendingProperty];
                 if (!space) { aiActing = false; return; }
 
-                const decision = getDecision(idx);
                 const player = gameState.players[idx];
-                const shouldBuy = decision && decision.buyProperty > 0.5 && player.cash >= (space.price || 0);
+                const shouldBuy = player.cash >= (space.price || 0) &&
+                    mctsBuyDecision(idx, gameState.pendingProperty);
                 console.log(`[AI] Player ${idx} ${shouldBuy ? 'BUYING' : 'PASSING'} ${space.name}`);
                 if (shouldBuy) {
                     buyProperty();
