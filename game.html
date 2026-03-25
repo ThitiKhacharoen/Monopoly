@@ -2426,14 +2426,23 @@ function startAuction(propertyId) {
             const activePlayers = gameState.auction.participatingPlayers.filter(
                 id => !gameState.auction.passedPlayers.includes(id)
             );
-            
+
+            // Everyone passed with no bids — property stays unowned
             if (activePlayers.length === 0) {
-                endAuction(false); // No one bid
+                endAuction(false);
                 return;
             }
-            
-            if (activePlayers.length === 1 && gameState.auction.currentBid > 0) {
-                endAuction(true); // Winner!
+
+            // Only 1 player remains — they win immediately.
+            // If no bid has been placed yet, they get it for $1 (standard rule).
+            if (activePlayers.length === 1) {
+                if (gameState.auction.currentBid === 0) {
+                    gameState.auction.currentBid = 1;
+                    gameState.auction.currentBidder = activePlayers[0];
+                    const lastPlayer = gameState.players.find(p => p.id === activePlayers[0]);
+                    gameState.auction.currentBidderName = lastPlayer ? lastPlayer.name : 'Unknown';
+                }
+                endAuction(true);
                 return;
             }
             
@@ -2492,6 +2501,7 @@ function startAuction(propertyId) {
             
             gameState.auction.passedPlayers.push(currentPlayer.id);
             addAuctionLog(`${currentPlayer.name} passes`);
+            gameState.auction.currentAuctionIndex++;
             
             updateAuctionUI();
         }
