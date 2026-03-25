@@ -676,6 +676,36 @@
             font-weight: bold;
             color: #333;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        @keyframes diceRoll {
+            0%   { transform: rotate(0deg)   scale(1);    }
+            15%  { transform: rotate(-20deg) scale(1.15); }
+            30%  { transform: rotate(15deg)  scale(0.95); }
+            45%  { transform: rotate(-10deg) scale(1.1);  }
+            60%  { transform: rotate(8deg)   scale(1.05); }
+            75%  { transform: rotate(-5deg)  scale(1);    }
+            90%  { transform: rotate(3deg)   scale(1.02); }
+            100% { transform: rotate(0deg)   scale(1);    }
+        }
+
+        .die.rolling {
+            animation: diceRoll 0.6s ease-in-out;
+            background: #667eea;
+            color: white;
+        }
+
+        @keyframes pieceBounce {
+            0%   { transform: translateY(0)   scale(1); }
+            40%  { transform: translateY(-8px) scale(1.2); }
+            70%  { transform: translateY(-3px) scale(0.95); }
+            100% { transform: translateY(0)   scale(1); }
+        }
+
+        .player-piece.moving {
+            animation: pieceBounce 0.18s ease-out;
+            z-index: 20;
         }
         
         .action-btn {
@@ -1149,14 +1179,8 @@
         }
 
 
-        @keyframes modalShake {
-            0%, 100% { transform: translateX(0); }
-            20%       { transform: translateX(-8px); }
-            40%       { transform: translateX(8px); }
-            60%       { transform: translateX(-5px); }
-            80%       { transform: translateX(5px); }
-        }
-        .modal-shake { animation: modalShake 0.4s ease-out; }
+        @keyframes modalShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+        .modal-shake{animation:modalShake 0.4s ease-out;}
     </style>
 </head>
 <body>
@@ -1262,10 +1286,6 @@
                 <button class="action-btn action-btn-secondary" id="endTurnBtn" onclick="endTurn()" disabled>
                     ⏭️ End Turn
                 </button>
-
-                <button class="action-btn action-btn-secondary" onclick="window.open('settings.html','_blank')" style="opacity:0.75;font-size:0.95em;">
-                    ⚙️ Settings
-                </button>
             </div>
         </div>
     </div>
@@ -1294,15 +1314,6 @@
         </div>
     </div>
     
-    <!-- Generic Dialog Modal -->
-    <div class="property-modal" id="genericModal" style="z-index:3500;">
-        <div class="property-modal-content" id="genericModalContent" style="max-width:420px;">
-            <h3 id="genericModalTitle" style="margin-bottom:14px;color:#333;font-size:1.3em;"></h3>
-            <div id="genericModalBody" style="color:#555;line-height:1.6;margin-bottom:22px;white-space:pre-line;font-size:1em;"></div>
-            <div id="genericModalButtons" style="display:flex;gap:10px;"></div>
-        </div>
-    </div>
-
     <!-- Message Toast -->
     <div class="message-toast" id="messageToast"></div>
 
@@ -1511,53 +1522,48 @@
             return arr;
         }
         
-        // Initialize card decks
-        function initializeCardDecks() {
-            // Chance cards
-            gameState.chanceCards = shuffleArray([
-                { type: 'move', text: 'Advance to Go (Collect $200)', action: () => movePlayerToSpace(0) },
-                { type: 'move', text: 'Advance to Illinois Ave', action: () => movePlayerToSpace(24) },
-                { type: 'move', text: 'Advance to St. Charles Place', action: () => movePlayerToSpace(11) },
-                { type: 'move', text: 'Advance to nearest Railroad, pay owner 2× rent', action: () => advanceToNearestRailroad() },
-                { type: 'move', text: 'Advance to nearest Railroad, pay owner 2× rent', action: () => advanceToNearestRailroad() },
-                { type: 'move', text: 'Advance to nearest Utility, pay owner 10× dice', action: () => advanceToNearestUtility() },
-                { type: 'move', text: 'Go Back 3 Spaces', action: () => movePlayerBack(3) },
-                { type: 'move', text: 'Go to Jail', action: () => goToJail() },
-                { type: 'money', text: 'Bank pays you dividend of $50', action: () => collectMoney(50) },
-                { type: 'money', text: 'Your building loan matures - Collect $150', action: () => collectMoney(150) },
-                { type: 'money', text: 'Pay poor tax of $15', action: () => payMoney(15) },
-                { type: 'money', text: 'Make repairs: $25/house, $100/hotel', action: () => payRepairs(25, 100) },
-                { type: 'money', text: 'You have been elected Chairman - Pay each player $50', action: () => payEachPlayer(50) },
-                { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree() },
-            ]);
-            
-            // Community Chest cards
-            gameState.communityChestCards = shuffleArray([
-                { type: 'move', text: 'Advance to Go (Collect $200)', action: () => movePlayerToSpace(0) },
-                { type: 'move', text: 'Go to Jail', action: () => goToJail() },
-                { type: 'money', text: 'Bank error in your favor - Collect $200', action: () => collectMoney(200) },
-                { type: 'money', text: "Doctor's fees - Pay $50", action: () => payMoney(50) },
-                { type: 'money', text: 'From sale of stock you get $50', action: () => collectMoney(50) },
-                { type: 'money', text: 'Holiday Fund matures - Receive $100', action: () => collectMoney(100) },
-                { type: 'money', text: 'Income tax refund - Collect $20', action: () => collectMoney(20) },
-                { type: 'money', text: 'Life insurance matures - Collect $100', action: () => collectMoney(100) },
-                { type: 'money', text: 'Pay hospital fees of $100', action: () => payMoney(100) },
-                { type: 'money', text: 'Pay school fees of $150', action: () => payMoney(150) },
-                { type: 'money', text: 'Receive $25 consultancy fee', action: () => collectMoney(25) },
-                { type: 'money', text: 'Street repairs: $40/house, $115/hotel', action: () => payRepairs(40, 115) },
-                { type: 'money', text: "You've won second prize in a beauty contest - Collect $10", action: () => collectMoney(10) },
-                { type: 'money', text: "It's your birthday - Collect $10 from each player", action: () => collectFromEachPlayer(10) },
-                { type: 'money', text: 'Grand Opera Night - Collect $50 from each player', action: () => collectFromEachPlayer(50) },
-                { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree() },
-            ]);
-        }
-        
-        let setupState = {
-            playerCount: 3,
-            selectedTokens: ['🚗', '🚢', '🎩']
-        };
+        // ===== MASTER CARD DECKS (fixed definitions, action functions intact) =====
+        const MASTER_CHANCE = [
+            { type: 'move', text: 'Advance to Go (Collect $200)', action: () => movePlayerToSpace(0) },
+            { type: 'move', text: 'Advance to Illinois Ave', action: () => movePlayerToSpace(24) },
+            { type: 'move', text: 'Advance to St. Charles Place', action: () => movePlayerToSpace(11) },
+            { type: 'move', text: 'Advance to nearest Railroad, pay owner 2x rent (1)', action: () => advanceToNearestRailroad() },
+            { type: 'move', text: 'Advance to nearest Railroad, pay owner 2x rent (2)', action: () => advanceToNearestRailroad() },
+            { type: 'move', text: 'Advance to nearest Utility, pay owner 10x dice', action: () => advanceToNearestUtility() },
+            { type: 'move', text: 'Go Back 3 Spaces', action: () => movePlayerBack(3) },
+            { type: 'move', text: 'Go to Jail', action: () => goToJail() },
+            { type: 'money', text: 'Bank pays you dividend of $50', action: () => collectMoney(50) },
+            { type: 'money', text: 'Your building loan matures - Collect $150', action: () => collectMoney(150) },
+            { type: 'money', text: 'Pay poor tax of $15', action: () => payMoney(15) },
+            { type: 'money', text: 'Make repairs: $25/house, $100/hotel', action: () => payRepairs(25, 100) },
+            { type: 'money', text: 'You have been elected Chairman - Pay each player $50', action: () => payEachPlayer(50) },
+            { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree('chance') },
+        ];
 
-        // ===== SETUP FUNCTIONS =====
+        const MASTER_CHEST = [
+            { type: 'move', text: 'Advance to Go (Collect $200) [CC]', action: () => movePlayerToSpace(0) },
+            { type: 'move', text: 'Go to Jail [CC]', action: () => goToJail() },
+            { type: 'money', text: 'Bank error in your favor - Collect $200', action: () => collectMoney(200) },
+            { type: 'money', text: "Doctor\'s fees - Pay $50", action: () => payMoney(50) },
+            { type: 'money', text: 'From sale of stock you get $50', action: () => collectMoney(50) },
+            { type: 'money', text: 'Holiday Fund matures - Receive $100', action: () => collectMoney(100) },
+            { type: 'money', text: 'Income tax refund - Collect $20', action: () => collectMoney(20) },
+            { type: 'money', text: 'Life insurance matures - Collect $100', action: () => collectMoney(100) },
+            { type: 'money', text: 'Pay hospital fees of $100', action: () => payMoney(100) },
+            { type: 'money', text: 'Pay school fees of $150', action: () => payMoney(150) },
+            { type: 'money', text: 'Receive $25 consultancy fee', action: () => collectMoney(25) },
+            { type: 'money', text: 'Street repairs: $40/house, $115/hotel', action: () => payRepairs(40, 115) },
+            { type: 'money', text: "You\'ve won second prize in a beauty contest - Collect $10", action: () => collectMoney(10) },
+            { type: 'money', text: "It\'s your birthday - Collect $10 from each player", action: () => collectFromEachPlayer(10) },
+            { type: 'money', text: 'Grand Opera Night - Collect $50 from each player', action: () => collectFromEachPlayer(50) },
+            { type: 'jail', text: 'Get Out of Jail Free [CC]', action: () => getOutOfJailFree('community') },
+        ];
+
+        // Initialize card decks
+                function initializeCardDecks() {
+            gameState.chanceCards = shuffleArray([...MASTER_CHANCE]);
+            gameState.communityChestCards = shuffleArray([...MASTER_CHEST]);
+        }
         function setPlayerCount(count) {
             setupState.playerCount = count;
             document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('active'));
@@ -1659,7 +1665,7 @@
                 initializeBoard();
                 updateUI();
             }
-            Audio.startMusic(); // queued — fires after first user gesture
+            Audio.startMusic();
         }
         
         // ===== GAME FUNCTIONS =====
@@ -1830,9 +1836,8 @@
             currentPlayer.jailTurns = 0;
             
             showMessage(`${currentPlayer.name} paid $50 and is out of jail!`, 'success');
-            
-            // Now roll dice normally
             updateUI();
+            broadcastStateSync();
         }
         
         function useGetOutOfJailFree() {
@@ -1845,7 +1850,7 @@
             currentPlayer.jailTurns = 0;
             
             showMessage(`${currentPlayer.name} used Get Out of Jail Free card!`, 'success');
-            
+            broadcastStateSync();
             const card = { type: 'jail', text: 'Get Out of Jail Free', action: () => getOutOfJailFree(deckType) };
             if (deckType === 'community') {
                 gameState.communityChestCards.push(card);
@@ -1856,6 +1861,35 @@
             updateUI();
         }
         
+        const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+        function animateDice(finalD1, finalD2) {
+            return new Promise(resolve => {
+                const d1 = document.getElementById('die1');
+                const d2 = document.getElementById('die2');
+                d1.classList.add('rolling');
+                d2.classList.add('rolling');
+
+                const duration = 600;
+                const flickInterval = 80;
+                let elapsed = 0;
+
+                const flicker = setInterval(() => {
+                    d1.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+                    d2.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+                    elapsed += flickInterval;
+                    if (elapsed >= duration) {
+                        clearInterval(flicker);
+                        d1.classList.remove('rolling');
+                        d2.classList.remove('rolling');
+                        d1.textContent = finalD1;
+                        d2.textContent = finalD2;
+                        resolve();
+                    }
+                }, flickInterval);
+            });
+        }
+
         function rollDice() {
             Audio.unlock();
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -1872,59 +1906,55 @@
             const isDoubles = die1 === die2;
             
             gameState.diceRoll = [die1, die2];
-            
-            // Update dice display
-            document.getElementById('die1').textContent = die1;
-            document.getElementById('die2').textContent = die2;
-            
-            // Check for three doubles
-            if (isDoubles) {
-                gameState.doublesCount++;
-                gameState.rolledDoubles = true;
-                if (gameState.doublesCount === 3) {
-                    showMessage(`${currentPlayer.name} rolled 3 doubles! Go to Jail!`, 'error');
-                    goToJail();
+
+            // Disable roll button during animation
+            document.getElementById('rollDiceBtn').disabled = true;
+
+            // Animate dice then move
+            animateDice(die1, die2).then(() => {
+                // Check for three doubles
+                if (isDoubles) {
+                    gameState.doublesCount++;
+                    gameState.rolledDoubles = true;
+                    if (gameState.doublesCount === 3) {
+                        showMessage(`${currentPlayer.name} rolled 3 doubles! Go to Jail!`, 'error');
+                        goToJail();
+                        gameState.doublesCount = 0;
+                        gameState.rolledDoubles = false;
+                        updateUI(); // re-enables buttons via updateButtonStates
+                        return;
+                    }
+                } else {
                     gameState.doublesCount = 0;
                     gameState.rolledDoubles = false;
-                    return;
                 }
-            } else {
-                gameState.doublesCount = 0;
-                gameState.rolledDoubles = false;
-            }
-            
-            // Move player
-            const oldPosition = currentPlayer.position;
-            const newPosition = (currentPlayer.position + total) % 40;
-            const passedGo = newPosition < oldPosition;
-            
-            currentPlayer.position = newPosition;
-            
-            // Broadcast dice roll if online
-            if (onlineState.enabled && isMyTurn()) {
-                broadcastEvent('DICE_ROLLED', {
-                    playerId: currentPlayer.id,
-                    die1: die1,
-                    die2: die2,
-                    newPosition: newPosition,
-                    passedGo: passedGo,
-                    doublesCount: gameState.doublesCount
+
+                const oldPosition = currentPlayer.position;
+                const newPosition = (currentPlayer.position + total) % 40;
+                const passedGo = newPosition < oldPosition;
+
+                currentPlayer.position = newPosition;
+
+                // Broadcast dice roll if online
+                if (onlineState.enabled && isMyTurn()) {
+                    broadcastEvent('DICE_ROLLED', {
+                        playerId: currentPlayer.id,
+                        die1: die1, die2: die2,
+                        newPosition: newPosition,
+                        passedGo: passedGo,
+                        doublesCount: gameState.doublesCount
+                    });
+                }
+
+                // Animate piece movement then resolve space
+                animateMovePiece(currentPlayer.id, oldPosition, newPosition).then(() => {
+                    if (passedGo) {
+                        currentPlayer.cash += 200;
+                        showMessage(`${currentPlayer.name} passed GO! Collect $200`, 'success');
+                    }
+                    resolveSpace(newPosition);
                 });
-            }
-            
-            // Move piece visually
-            movePiece(currentPlayer.id, newPosition);
-            
-            // Check if player passed GO
-            if (passedGo) {
-                currentPlayer.cash += 200;
-                showMessage(`${currentPlayer.name} passed GO! Collect $200`, 'success');
-            }
-            
-            // Resolve landing space
-            setTimeout(() => {
-                resolveSpace(newPosition);
-            }, 500);
+            });
         }
         
         function handleJailRoll() {
@@ -1934,48 +1964,36 @@
             const die2 = Math.floor(Math.random() * 6) + 1;
             const isDoubles = die1 === die2;
             
-            document.getElementById('die1').textContent = die1;
-            document.getElementById('die2').textContent = die2;
-            
-            currentPlayer.jailTurns++;
-            
-            if (isDoubles) {
-                // Rolled doubles - get out free!
-                showMessage(`${currentPlayer.name} rolled doubles! Out of jail!`, 'success');
-                currentPlayer.inJail = false;
-                currentPlayer.jailTurns = 0;
-                
-                // Move normally
-                const total = die1 + die2;
-                const newPosition = (10 + total) % 40;
-                currentPlayer.position = newPosition;
-                movePiece(currentPlayer.id, newPosition);
-                
-                setTimeout(() => {
-                    resolveSpace(newPosition);
-                }, 500);
-            } else if (currentPlayer.jailTurns >= 3) {
-                // Failed 3 times - must pay $50
-                showMessage(`${currentPlayer.name} failed to roll doubles 3 times. Pay $50!`, 'error');
-                currentPlayer.cash -= 50;
-                currentPlayer.inJail = false;
-                currentPlayer.jailTurns = 0;
-                
-                // Move normally
-                const total = die1 + die2;
-                const newPosition = (10 + total) % 40;
-                currentPlayer.position = newPosition;
-                movePiece(currentPlayer.id, newPosition);
-                
-                setTimeout(() => {
-                    resolveSpace(newPosition);
-                }, 500);
-            } else {
-                // Still in jail
-                showMessage(`${currentPlayer.name} didn't roll doubles. Still in jail! (Turn ${currentPlayer.jailTurns}/3)`, 'info');
-                setEndTurn();
-                updateUI();
-            }
+            document.getElementById('rollDiceBtn').disabled = true;
+
+            animateDice(die1, die2).then(() => {
+                currentPlayer.jailTurns++;
+
+                if (isDoubles) {
+                    showMessage(`${currentPlayer.name} rolled doubles! Out of jail!`, 'success');
+                    currentPlayer.inJail = false;
+                    currentPlayer.jailTurns = 0;
+                    const total = die1 + die2;
+                    const oldPosition = 10;
+                    const newPosition = (10 + total) % 40;
+                    currentPlayer.position = newPosition;
+                    animateMovePiece(currentPlayer.id, oldPosition, newPosition).then(() => resolveSpace(newPosition));
+                } else if (currentPlayer.jailTurns >= 3) {
+                    showMessage(`${currentPlayer.name} failed to roll doubles 3 times. Pay $50!`, 'error');
+                    currentPlayer.cash -= 50;
+                    currentPlayer.inJail = false;
+                    currentPlayer.jailTurns = 0;
+                    const total = die1 + die2;
+                    const oldPosition = 10;
+                    const newPosition = (10 + total) % 40;
+                    currentPlayer.position = newPosition;
+                    animateMovePiece(currentPlayer.id, oldPosition, newPosition).then(() => resolveSpace(newPosition));
+                } else {
+                    showMessage(`${currentPlayer.name} didn't roll doubles. Still in jail! (Turn ${currentPlayer.jailTurns}/3)`, 'info');
+                    setEndTurn();
+                    updateUI();
+                }
+            });
         }
         
         function checkDoublesReroll(player) {
@@ -2068,123 +2086,83 @@
         function movePlayerToSpace(spaceId) {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const oldPosition = currentPlayer.position;
-            
             currentPlayer.position = spaceId;
-            movePiece(currentPlayer.id, spaceId);
-            
-            // Check if passed GO
-            if (spaceId < oldPosition && spaceId !== 10) {
-                currentPlayer.cash += 200;
-                showMessage(`Passed GO! Collect $200`, 'success');
-            }
-            
-            setTimeout(() => {
+            animateMovePiece(currentPlayer.id, oldPosition, spaceId).then(() => {
+                if (spaceId < oldPosition && spaceId !== 10) {
+                    currentPlayer.cash += 200;
+                    showMessage(`Passed GO! Collect $200`, 'success');
+                }
                 resolveSpace(spaceId);
-            }, 500);
+            });
         }
         
         function advanceToNearestRailroad() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const railroads = [5, 15, 25, 35];
-            
-            // Find next railroad
+            const oldPosition = currentPlayer.position;
             let nearest = railroads.find(r => r > currentPlayer.position);
-            if (!nearest) nearest = railroads[0]; // Wrap around to Reading Railroad
-            
+            if (!nearest) nearest = railroads[0];
             const passedGo = nearest < currentPlayer.position;
             currentPlayer.position = nearest;
-            movePiece(currentPlayer.id, nearest);
-            
-            if (passedGo) {
-                currentPlayer.cash += 200;
-                showMessage(`Passed GO! Collect $200`, 'success');
-            }
-            
-            // Pay double rent if owned
-            setTimeout(() => {
+            animateMovePiece(currentPlayer.id, oldPosition, nearest).then(() => {
+                if (passedGo) { currentPlayer.cash += 200; showMessage(`Passed GO! Collect $200`, 'success'); }
                 const ownership = gameState.ownedProperties[nearest];
                 if (ownership && ownership.ownerId !== currentPlayer.id) {
                     const space = SPACES[nearest];
                     const owner = gameState.players.find(p => p.id === ownership.ownerId);
-                    
-                    // Count railroads owned
                     const railroadsOwned = Object.keys(gameState.ownedProperties).filter(key => {
                         const prop = gameState.ownedProperties[key];
                         const s = SPACES[parseInt(key)];
                         return s.type === 'railroad' && prop.ownerId === ownership.ownerId;
                     }).length;
-                    
                     const normalRent = space.rent[railroadsOwned - 1];
                     const doubleRent = normalRent * 2;
-                    
                     currentPlayer.cash -= doubleRent;
                     owner.cash += doubleRent;
-                    
                     showMessage(`Paid $${doubleRent} (2× railroad rent) to ${owner.name}`, 'error');
-                    setEndTurn();
-                    checkBankruptcy();
-                    updateUI();
+                    setEndTurn(); checkBankruptcy(); updateUI();
                 } else if (!ownership) {
                     resolveSpace(nearest);
                 } else {
-                    setEndTurn();
-                    updateUI();
+                    setEndTurn(); updateUI();
                 }
-            }, 500);
+            });
         }
         
         function advanceToNearestUtility() {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const utilities = [12, 28];
-            
-            // Find next utility
+            const oldPosition = currentPlayer.position;
             let nearest = utilities.find(u => u > currentPlayer.position);
             if (!nearest) nearest = utilities[0];
-            
             const passedGo = nearest < currentPlayer.position;
             currentPlayer.position = nearest;
-            movePiece(currentPlayer.id, nearest);
-            
-            if (passedGo) {
-                currentPlayer.cash += 200;
-                showMessage(`Passed GO! Collect $200`, 'success');
-            }
-            
-            // Pay 10× dice if owned
-            setTimeout(() => {
+            animateMovePiece(currentPlayer.id, oldPosition, nearest).then(() => {
+                if (passedGo) { currentPlayer.cash += 200; showMessage(`Passed GO! Collect $200`, 'success'); }
                 const ownership = gameState.ownedProperties[nearest];
                 if (ownership && ownership.ownerId !== currentPlayer.id) {
                     const owner = gameState.players.find(p => p.id === ownership.ownerId);
                     const diceTotal = gameState.diceRoll[0] + gameState.diceRoll[1];
                     const rent = diceTotal * 10;
-                    
                     currentPlayer.cash -= rent;
                     owner.cash += rent;
-                    
                     showMessage(`Paid $${rent} (10× dice) to ${owner.name}`, 'error');
-                    setEndTurn();
-                    checkBankruptcy();
-                    updateUI();
+                    setEndTurn(); checkBankruptcy(); updateUI();
                 } else if (!ownership) {
                     resolveSpace(nearest);
                 } else {
-                    setEndTurn();
-                    updateUI();
+                    setEndTurn(); updateUI();
                 }
-            }, 500);
+            });
         }
         
         function movePlayerBack(spaces) {
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const oldPosition = currentPlayer.position;
             let newPosition = currentPlayer.position - spaces;
             if (newPosition < 0) newPosition += 40;
-            
             currentPlayer.position = newPosition;
-            movePiece(currentPlayer.id, newPosition);
-            
-            setTimeout(() => {
-                resolveSpace(newPosition);
-            }, 500);
+            animateMovePiece(currentPlayer.id, oldPosition, newPosition, true).then(() => resolveSpace(newPosition));
         }
         
         function goToJail() {
@@ -2201,6 +2179,7 @@
             gameState.doublesCount = 0;
             gameState.rolledDoubles = false; // jail cancels doubles
             updateUI();
+            broadcastStateSync();
         }
         
         function collectMoney(amount) {
@@ -2209,6 +2188,7 @@
             showMessage(`${currentPlayer.name} collected $${amount}`, 'success');
             setEndTurn();
             updateUI();
+            broadcastStateSync();
         }
         
         function payMoney(amount) {
@@ -2218,6 +2198,7 @@
             setEndTurn();
             checkBankruptcy();
             updateUI();
+            broadcastStateSync();
         }
         
         function payRepairs(perHouse, perHotel) {
@@ -2238,6 +2219,7 @@
             setEndTurn();
             checkBankruptcy();
             updateUI();
+            broadcastStateSync();
         }
         
         function payEachPlayer(amount) {
@@ -2255,6 +2237,7 @@
             setEndTurn();
             checkBankruptcy();
             updateUI();
+            broadcastStateSync();
         }
         
         function collectFromEachPlayer(amount) {
@@ -2271,6 +2254,7 @@
             showMessage(`${currentPlayer.name} collected $${amount} from each player ($${totalCollected} total)`, 'success');
             setEndTurn();
             updateUI();
+            broadcastStateSync();
         }
         
         function getOutOfJailFree(deckType) {
@@ -2280,6 +2264,7 @@
             showMessage(`${currentPlayer.name} got a Get Out of Jail Free card!`, 'success');
             setEndTurn();
             updateUI();
+            broadcastStateSync();
         }
         
         function showPropertyModal(space) {
@@ -2367,7 +2352,6 @@
             
             showMessage(`${currentPlayer.name} bought ${space.name} for $${space.price}!`, 'success');
             Audio.play('buy');
-            
             setEndTurn();
             const propId = gameState.pendingProperty;
             gameState.pendingProperty = null;
@@ -2394,6 +2378,7 @@
             showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name} - Starting auction!`, 'info');
             
             // Start auction
+            broadcastStateSync();
             startAuction(gameState.pendingProperty);
         }
 function startAuction(propertyId) {
@@ -2477,13 +2462,13 @@ function startAuction(propertyId) {
             const bidAmount = parseInt(bidInput.value);
             
             if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
-                showModal('❌ Invalid Bid', `Bid must be higher than $${gameState.auction.currentBid}`, [{label:'OK',style:'property-modal-btn-pass',action:null}]);
+                showModal('❌ Invalid Bid',`Bid must be higher than $${gameState.auction.currentBid}`,[{label:'OK',style:'property-modal-btn-pass',action:null}]);
                 shakeModal();
                 return;
             }
             
             if (bidAmount > currentPlayer.cash) {
-                showModal('💸 Not Enough Cash', `You only have $${currentPlayer.cash}!`, [{label:'OK',style:'property-modal-btn-pass',action:null}]);
+                showModal('💸 Not Enough Cash',`You only have $${currentPlayer.cash}!`,[{label:'OK',style:'property-modal-btn-pass',action:null}]);
                 return;
             }
             
@@ -2535,7 +2520,6 @@ function startAuction(propertyId) {
                 
                 addAuctionLog(`${winner.name} wins for $${amount}!`);
                 showMessage(`${winner.name} won ${space.name} auction for $${amount}!`, 'success');
-                
                 setTimeout(() => {
                     modal.classList.remove('active');
                     gameState.auction.active = false;
@@ -2543,6 +2527,7 @@ function startAuction(propertyId) {
                     gameState.pendingProperty = null;
                     checkBankruptcy();
                     updateUI();
+                    broadcastStateSync();
                 }, 2000);
             } else {
                 addAuctionLog('No bids - property remains unowned');
@@ -2554,6 +2539,7 @@ function startAuction(propertyId) {
                     setEndTurn();
                     gameState.pendingProperty = null;
                     updateUI();
+                    broadcastStateSync();
                 }, 2000);
             }
         }
@@ -2628,6 +2614,7 @@ function startAuction(propertyId) {
                 Audio.play('rent');
                 setEndTurn();
                 updateUI();
+                broadcastStateSync();
             }
         }
         
@@ -2670,14 +2657,11 @@ function startAuction(propertyId) {
                     // Check for winner
                     const activePlayers = gameState.players.filter(p => !p.isBankrupt);
                     if (activePlayers.length === 1) {
-                        const _w1 = activePlayers[0];
-                        Audio.stopMusic(); Audio.play('win');
-                        setTimeout(() => {
-                            showModal('🏆 Game Over!', `${_w1.name} wins the game!\n\nFinal cash: $${_w1.cash}\nProperties: ${_w1.properties.length}`, [
-                                {label:'🎮 Play Again', style:'property-modal-btn-buy', action:()=>window.location.reload()},
-                                {label:'🏠 Main Menu', style:'property-modal-btn-pass', action:()=>window.location.href='index.html'}
-                            ]);
-                        }, 1000);
+                        const _w1=activePlayers[0]; Audio.stopMusic(); Audio.play('win');
+                        setTimeout(()=>{showModal('🏆 Game Over!',`${_w1.name} wins!\n\nFinal cash: $${_w1.cash}\nProperties: ${_w1.properties.length}`,[
+                            {label:'🎮 Play Again',style:'property-modal-btn-buy',action:()=>window.location.reload()},
+                            {label:'🏠 Main Menu',style:'property-modal-btn-pass',action:()=>window.location.href='index.html'}
+                        ]);},1000);
                     }
                 } else {
                     // Can potentially raise money
@@ -2712,18 +2696,16 @@ function startAuction(propertyId) {
             // Check for winner
             const activePlayers = gameState.players.filter(p => !p.isBankrupt);
             if (activePlayers.length === 1) {
-                const _w2 = activePlayers[0];
-                Audio.stopMusic(); Audio.play('win');
-                setTimeout(() => {
-                    showModal('🏆 Game Over!', `${_w2.name} wins the game!\n\nFinal cash: $${_w2.cash}\nProperties: ${_w2.properties.length}`, [
-                        {label:'🎮 Play Again', style:'property-modal-btn-buy', action:()=>window.location.reload()},
-                        {label:'🏠 Main Menu', style:'property-modal-btn-pass', action:()=>window.location.href='index.html'}
-                    ]);
-                }, 1000);
+                const _w2=activePlayers[0]; Audio.stopMusic(); Audio.play('win');
+                setTimeout(()=>{showModal('🏆 Game Over!',`${_w2.name} wins!\n\nFinal cash: $${_w2.cash}\nProperties: ${_w2.properties.length}`,[
+                    {label:'🎮 Play Again',style:'property-modal-btn-buy',action:()=>window.location.reload()},
+                    {label:'🏠 Main Menu',style:'property-modal-btn-pass',action:()=>window.location.href='index.html'}
+                ]);},1000);
             }
             
             setEndTurn();
             updateUI();
+            broadcastStateSync();
         }
         
         function calculateTotalAssets(player) {
@@ -2748,20 +2730,57 @@ function startAuction(propertyId) {
             return total;
         }
         
+        // Instantly place piece (used by remote sync and initial setup)
         function movePiece(playerId, position) {
             const piece = document.getElementById(`piece-${playerId}`);
             const targetSpace = document.querySelector(`.space-${position}`);
-            
-            // Remove from current space
-            if (piece.parentElement) {
-                piece.parentElement.removeChild(piece);
-            }
-            
-            // Add to new space
+            if (!piece || !targetSpace) return;
+            if (piece.parentElement) piece.parentElement.removeChild(piece);
             const playerIndex = gameState.players.findIndex(p => p.id === playerId);
             piece.style.left = `${(playerIndex % 2) * 15}px`;
             piece.style.bottom = `${Math.floor(playerIndex / 2) * 15}px`;
             targetSpace.appendChild(piece);
+        }
+
+        // Animated step-by-step movement, returns a Promise that resolves when done
+        function animateMovePiece(playerId, fromPosition, toPosition, backwards = false) {
+            return new Promise(resolve => {
+                const piece = document.getElementById(`piece-${playerId}`);
+                const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+                if (!piece) { resolve(); return; }
+
+                const steps = [];
+                let pos = fromPosition;
+                while (pos !== toPosition) {
+                    pos = backwards ? (pos - 1 + 40) % 40 : (pos + 1) % 40;
+                    steps.push(pos);
+                }
+                if (steps.length === 0) { resolve(); return; }
+
+                // If moving more than 15 spaces, speed up a bit
+                const delay = steps.length > 15 ? 80 : 120;
+
+                let i = 0;
+                function step() {
+                    const targetSpace = document.querySelector(`.space-${steps[i]}`);
+                    if (!targetSpace) { i++; if (i < steps.length) step(); else resolve(); return; }
+
+                    if (piece.parentElement) piece.parentElement.removeChild(piece);
+                    piece.style.left = `${(playerIndex % 2) * 15}px`;
+                    piece.style.bottom = `${Math.floor(playerIndex / 2) * 15}px`;
+                    targetSpace.appendChild(piece);
+
+                    // Bounce animation on each step
+                    piece.classList.remove('moving');
+                    void piece.offsetWidth;
+                    piece.classList.add('moving');
+
+                    i++;
+                    if (i < steps.length) setTimeout(step, delay);
+                    else setTimeout(() => { piece.classList.remove('moving'); resolve(); }, delay);
+                }
+                step();
+            });
         }
         
         function endTurn() {
@@ -3014,6 +3033,7 @@ function startAuction(propertyId) {
 
             showMessage(`Trade completed between ${p1.name} and ${p2.name}!`, 'success');
             updateUI();
+            broadcastStateSync();
         }
         
         function closeTradeModal() {
@@ -3145,8 +3165,9 @@ function startAuction(propertyId) {
             ownership.houses++;
             
             showMessage(`Built house on ${space.name}`, 'success');
-            openManageModal(); // Refresh
+            openManageModal();
             updateUI();
+            broadcastStateSync();
         }
         
         function buildHotel(propId) {
@@ -3164,8 +3185,9 @@ function startAuction(propertyId) {
             ownership.hasHotel = true;
             
             showMessage(`Built hotel on ${space.name}!`, 'success');
-            openManageModal(); // Refresh
+            openManageModal();
             updateUI();
+            broadcastStateSync();
         }
         
         function sellHouse(propId) {
@@ -3178,8 +3200,9 @@ function startAuction(propertyId) {
             ownership.houses--;
             
             showMessage(`Sold house from ${space.name} for $${proceeds}`, 'info');
-            openManageModal(); // Refresh
+            openManageModal();
             updateUI();
+            broadcastStateSync();
         }
         
         function mortgageProperty(propId) {
@@ -3192,8 +3215,9 @@ function startAuction(propertyId) {
             ownership.isMortgaged = true;
             
             showMessage(`Mortgaged ${space.name} for $${mortgageValue}`, 'info');
-            openManageModal(); // Refresh
+            openManageModal();
             updateUI();
+            broadcastStateSync();
         }
         
         function unmortgageProperty(propId) {
@@ -3212,8 +3236,9 @@ function startAuction(propertyId) {
             ownership.isMortgaged = false;
             
             showMessage(`Unmortgaged ${space.name}`, 'success');
-            openManageModal(); // Refresh
+            openManageModal();
             updateUI();
+            broadcastStateSync();
         }
         
         function closeSpaceInfo() {
@@ -3393,20 +3418,38 @@ function startAuction(propertyId) {
         
         function applyRemoteEvent(eventType, data) {
             switch (eventType) {
-                case 'DICE_ROLLED':
-                    gameState.diceRoll = [data.die1, data.die2];
-                    document.getElementById('die1').textContent = data.die1;
-                    document.getElementById('die2').textContent = data.die2;
-                    gameState.doublesCount = data.doublesCount;
-                    
-                    const player = gameState.players.find(p => p.id === data.playerId);
-                    player.position = data.newPosition;
-                    movePiece(data.playerId, data.newPosition);
-                    
-                    if (data.passedGo) {
-                        player.cash += 200;
+                case 'STATE_SYNC':
+                    deserializeGameState(data);
+                    // Re-render board ownership
+                    document.querySelectorAll('.property-owner').forEach(el => el.remove());
+                    Object.entries(gameState.ownedProperties).forEach(([propId, ownership]) => {
+                        const player = gameState.players.find(p => p.id === ownership.ownerId);
+                        if (player) showPropertyOwnership(parseInt(propId), player);
+                    });
+                    // Restore auction modal visibility
+                    if (gameState.auction && gameState.auction.active) {
+                        document.getElementById('auctionModal').classList.add('active');
+                        updateAuctionUI();
+                    } else {
+                        document.getElementById('auctionModal').classList.remove('active');
                     }
                     updateUI();
+                    break;
+
+                case 'DICE_ROLLED':
+                    gameState.diceRoll = [data.die1, data.die2];
+                    gameState.doublesCount = data.doublesCount;
+                    animateDice(data.die1, data.die2).then(() => {
+                        const rPlayer = gameState.players.find(p => p.id === data.playerId);
+                        if (rPlayer) {
+                            const oldPos = rPlayer.position;
+                            rPlayer.position = data.newPosition;
+                            animateMovePiece(data.playerId, oldPos, data.newPosition).then(() => {
+                                if (data.passedGo) rPlayer.cash += 200;
+                                updateUI();
+                            });
+                        }
+                    });
                     break;
                     
                 case 'PROPERTY_BOUGHT':
@@ -3488,137 +3531,131 @@ function startAuction(propertyId) {
             return currentPlayer.id === onlineState.myPlayerId;
         }
         
+
         // ===== GENERIC MODAL UTILITY =====
-        function showModal(title, body, buttons) {
-            document.getElementById('genericModalTitle').textContent = title;
-            document.getElementById('genericModalBody').textContent = body;
-            const btns = document.getElementById('genericModalButtons');
-            btns.innerHTML = '';
-            (buttons || []).forEach(btn => {
-                const b = document.createElement('button');
-                b.className = 'property-modal-btn ' + (btn.style || 'property-modal-btn-pass');
-                b.textContent = btn.label;
-                b.style.flex = '1';
-                b.onclick = () => {
-                    document.getElementById('genericModal').classList.remove('active');
-                    if (btn.action) btn.action();
-                };
+        function showModal(title,body,buttons){
+            document.getElementById('genericModalTitle').textContent=title;
+            document.getElementById('genericModalBody').textContent=body;
+            const btns=document.getElementById('genericModalButtons');btns.innerHTML='';
+            (buttons||[]).forEach(btn=>{
+                const b=document.createElement('button');
+                b.className='property-modal-btn '+(btn.style||'property-modal-btn-pass');
+                b.textContent=btn.label;b.style.flex='1';
+                b.onclick=()=>{document.getElementById('genericModal').classList.remove('active');if(btn.action)btn.action();};
                 btns.appendChild(b);
             });
-            const content = document.getElementById('genericModalContent');
-            content.style.animation = 'none';
-            void content.offsetWidth;
-            content.style.animation = '';
+            const c=document.getElementById('genericModalContent');c.style.animation='none';void c.offsetWidth;c.style.animation='';
             document.getElementById('genericModal').classList.add('active');
         }
-
-        function shakeModal() {
-            const el = document.getElementById('genericModalContent');
-            el.classList.remove('modal-shake');
-            void el.offsetWidth;
-            el.classList.add('modal-shake');
-        }
+        function shakeModal(){const el=document.getElementById('genericModalContent');el.classList.remove('modal-shake');void el.offsetWidth;el.classList.add('modal-shake');}
 
         // ===== AUDIO SYSTEM =====
         const Audio = (() => {
-            const FILES = {
-                music: 'sounds/music-bg.ogg',
-                buy:   'sounds/sfx-buy.wav',
-                rent:  'sounds/sfx-rent.wav',
-                bid:   'sounds/sfx-bid.wav',
-                jail:  'sounds/sfx-jail.wav',
-                win:   'sounds/sfx-win.wav',
-            };
-
-            const cache = {};
-            let unlocked = false;       // browser autoplay unlock flag
-            let musicQueued = false;    // start music once unlocked
-            let musicMuted  = localStorage.getItem('monopoly-music-muted')  === 'true';
-            let sfxMuted    = localStorage.getItem('monopoly-sfx-muted')    === 'true';
-            let musicVolume = parseFloat(localStorage.getItem('monopoly-music-vol') ?? '0.35');
-            let sfxVolume   = parseFloat(localStorage.getItem('monopoly-sfx-vol')   ?? '0.70');
-
-            function get(key) {
-                if (!cache[key]) {
-                    cache[key] = new window.Audio(FILES[key]);
-                    if (key === 'music') cache[key].loop = true;
-                }
-                return cache[key];
-            }
-
-            // Called on first user gesture — unlocks autoplay and starts queued music
-            function unlock() {
-                if (unlocked) return;
-                unlocked = true;
-                if (musicQueued) { musicQueued = false; _startMusic(); }
-            }
-
-            function _startMusic() {
-                if (musicMuted) return;
-                try {
-                    const a = get('music');
-                    a.volume = musicVolume;
-                    a.play().catch(() => {});
-                } catch(e) {}
-            }
-
-            function play(key) {
-                if (key === 'music') { startMusic(); return; }
-                if (sfxMuted) return;
-                unlock(); // each SFX call also acts as an unlock attempt
-                try {
-                    const a = get(key);
-                    a.volume = sfxVolume;
-                    a.currentTime = 0;
-                    a.play().catch(() => {});
-                } catch(e) {}
-            }
-
-            function startMusic() {
-                if (unlocked) { _startMusic(); }
-                else { musicQueued = true; } // will fire on first interaction
-            }
-
-            function stopMusic() {
-                musicQueued = false;
-                try {
-                    if (cache['music']) { cache['music'].pause(); cache['music'].currentTime = 0; }
-                } catch(e) {}
-            }
-
-            function pauseMusic() {
-                try { if (cache['music']) cache['music'].pause(); } catch(e) {}
-            }
-
-            function setMusicVolume(v) {
-                musicVolume = v;
-                localStorage.setItem('monopoly-music-vol', v);
-                if (cache['music']) cache['music'].volume = v;
-            }
-
-            function setSfxVolume(v) {
-                sfxVolume = v;
-                localStorage.setItem('monopoly-sfx-vol', v);
-            }
-
-            function setMusicMuted(m) {
-                musicMuted = m;
-                localStorage.setItem('monopoly-music-muted', m);
-                m ? pauseMusic() : startMusic();
-            }
-
-            function setSfxMuted(m) {
-                sfxMuted = m;
-                localStorage.setItem('monopoly-sfx-muted', m);
-            }
-
-            function getSettings() {
-                return { musicMuted, sfxMuted, musicVolume, sfxVolume };
-            }
-
-            // Expose unlock so UI buttons can call it
-            return { play, startMusic, stopMusic, unlock, setMusicVolume, setSfxVolume, setMusicMuted, setSfxMuted, getSettings };
+            const FILES = {music:'sounds/music-bg.ogg',buy:'sounds/sfx-buy.wav',rent:'sounds/sfx-rent.wav',bid:'sounds/sfx-bid.wav',jail:'sounds/sfx-jail.wav',win:'sounds/sfx-win.wav'};
+            const cache={}; let unlocked=false, musicQueued=false;
+            let musicMuted  = localStorage.getItem('monopoly-music-muted')==='true';
+            let sfxMuted    = localStorage.getItem('monopoly-sfx-muted')==='true';
+            let musicVolume = parseFloat(localStorage.getItem('monopoly-music-vol')??'0.35');
+            let sfxVolume   = parseFloat(localStorage.getItem('monopoly-sfx-vol')??'0.70');
+            function get(k){if(!cache[k]){cache[k]=new window.Audio(FILES[k]);if(k==='music')cache[k].loop=true;}return cache[k];}
+            function unlock(){if(unlocked)return;unlocked=true;if(musicQueued){musicQueued=false;_play();}}
+            function _play(){if(musicMuted)return;try{const a=get('music');a.volume=musicVolume;a.play().catch(()=>{});}catch(e){}}
+            function play(k){if(k==='music'){startMusic();return;}if(sfxMuted)return;unlock();try{const a=get(k);a.volume=sfxVolume;a.currentTime=0;a.play().catch(()=>{});}catch(e){}}
+            function startMusic(){if(unlocked)_play();else musicQueued=true;}
+            function stopMusic(){musicQueued=false;try{if(cache.music){cache.music.pause();cache.music.currentTime=0;}}catch(e){}}
+            function pauseMusic(){try{if(cache.music)cache.music.pause();}catch(e){}}
+            function setMusicVolume(v){musicVolume=v;localStorage.setItem('monopoly-music-vol',v);if(cache.music)cache.music.volume=v;}
+            function setSfxVolume(v){sfxVolume=v;localStorage.setItem('monopoly-sfx-vol',v);}
+            function setMusicMuted(m){musicMuted=m;localStorage.setItem('monopoly-music-muted',m);m?pauseMusic():startMusic();}
+            function setSfxMuted(m){sfxMuted=m;localStorage.setItem('monopoly-sfx-muted',m);}
+            return{play,startMusic,stopMusic,unlock,setMusicVolume,setSfxVolume,setMusicMuted,setSfxMuted};
         })();
+
+        // ===== SETTINGS MODAL =====
+        const _sm = {
+            cache:{}, previewing:false,
+            FILES:{music:'sounds/music-bg.ogg',buy:'sounds/sfx-buy.wav',rent:'sounds/sfx-rent.wav',bid:'sounds/sfx-bid.wav',jail:'sounds/sfx-jail.wav',win:'sounds/sfx-win.wav'},
+            get(key){ if(!this.cache[key]){this.cache[key]=new window.Audio(this.FILES[key]);if(key==='music')this.cache[key].loop=true;} return this.cache[key]; }
+        };
+        function openSettingsModal() {
+            const mMuted = localStorage.getItem('monopoly-music-muted')==='true';
+            const sMuted = localStorage.getItem('monopoly-sfx-muted')==='true';
+            const mVol = Math.round(parseFloat(localStorage.getItem('monopoly-music-vol')??'0.35')*100);
+            const sVol = Math.round(parseFloat(localStorage.getItem('monopoly-sfx-vol')??'0.70')*100);
+            document.getElementById('sm-musicOn').checked = !mMuted;
+            document.getElementById('sm-sfxOn').checked   = !sMuted;
+            document.getElementById('sm-musicVol').value  = mVol;  document.getElementById('sm-musicPct').textContent = mVol+'%';
+            document.getElementById('sm-sfxVol').value    = sVol;  document.getElementById('sm-sfxPct').textContent   = sVol+'%';
+            document.getElementById('sm-previewBtn').textContent = '▶ Play'; _sm.previewing = false;
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        function closeSettingsModal() {
+            if (_sm.previewing) { _sm.get('music').pause(); _sm.get('music').currentTime=0; _sm.previewing=false; }
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        function smApplyMusic() {
+            const on=document.getElementById('sm-musicOn').checked, vol=document.getElementById('sm-musicVol').value/100;
+            document.getElementById('sm-musicPct').textContent = document.getElementById('sm-musicVol').value+'%';
+            localStorage.setItem('monopoly-music-muted',!on); localStorage.setItem('monopoly-music-vol',vol);
+            if(typeof Audio!=='undefined'&&Audio.setMusicMuted){Audio.setMusicMuted(!on);Audio.setMusicVolume(vol);}
+        }
+        function smApplySfx() {
+            const on=document.getElementById('sm-sfxOn').checked, vol=document.getElementById('sm-sfxVol').value/100;
+            document.getElementById('sm-sfxPct').textContent = document.getElementById('sm-sfxVol').value+'%';
+            localStorage.setItem('monopoly-sfx-muted',!on); localStorage.setItem('monopoly-sfx-vol',vol);
+            if(typeof Audio!=='undefined'&&Audio.setSfxMuted){Audio.setSfxMuted(!on);Audio.setSfxVolume(vol);}
+        }
+        function smPreviewMusic() {
+            const btn=document.getElementById('sm-previewBtn'), a=_sm.get('music');
+            if(!_sm.previewing){a.volume=parseFloat(localStorage.getItem('monopoly-music-vol')??'0.35');a.currentTime=0;a.play().catch(()=>{});_sm.previewing=true;btn.textContent='⏹ Stop';}
+            else{a.pause();a.currentTime=0;_sm.previewing=false;btn.textContent='▶ Play';}
+        }
+        function smTest(key){const a=_sm.get(key);a.volume=parseFloat(localStorage.getItem('monopoly-sfx-vol')??'0.70');a.currentTime=0;a.play().catch(()=>{});}
+        document.addEventListener('click',e=>{if(e.target&&e.target.id==='settingsModal')closeSettingsModal();});
+
+
+        function serializeGameState() {
+            // Strip non-serializable card action functions — store deck as indices
+            return {
+                players: gameState.players,
+                currentPlayerIndex: gameState.currentPlayerIndex,
+                diceRoll: gameState.diceRoll,
+                phase: gameState.phase,
+                pendingProperty: gameState.pendingProperty,
+                ownedProperties: gameState.ownedProperties,
+                doublesCount: gameState.doublesCount,
+                rolledDoubles: gameState.rolledDoubles,
+                auction: gameState.auction,
+                // Cards: store indices of remaining cards (by text match in master deck)
+                chanceCardIndices: gameState.chanceCards.map(c => MASTER_CHANCE.findIndex(m => m.text === c.text)),
+                chestCardIndices: gameState.communityChestCards.map(c => MASTER_CHEST.findIndex(m => m.text === c.text)),
+            };
+        }
+
+        function deserializeGameState(data) {
+            gameState.players = data.players;
+            gameState.currentPlayerIndex = data.currentPlayerIndex;
+            gameState.diceRoll = data.diceRoll;
+            gameState.phase = data.phase;
+            gameState.pendingProperty = data.pendingProperty;
+            gameState.ownedProperties = data.ownedProperties;
+            gameState.doublesCount = data.doublesCount;
+            gameState.rolledDoubles = data.rolledDoubles;
+            gameState.auction = data.auction;
+            // Restore card arrays with action functions from master deck
+            gameState.chanceCards = data.chanceCardIndices
+                .filter(i => i >= 0)
+                .map(i => MASTER_CHANCE[i]);
+            gameState.communityChestCards = data.chestCardIndices
+                .filter(i => i >= 0)
+                .map(i => MASTER_CHEST[i]);
+        }
+
+        function broadcastStateSync() {
+            if (!onlineState.enabled || !isMyTurn()) return;
+            if (onlineState.isProcessingRemoteEvent) return;
+            broadcastEvent('STATE_SYNC', serializeGameState());
+        }
 
 // Initialize
         const mode = localStorage.getItem('monopoly-game-mode');
@@ -3626,5 +3663,79 @@ function startAuction(propertyId) {
         startGame();
     </script>
 
+    <!-- Generic Dialog Modal -->
+    <div class="property-modal" id="genericModal" style="z-index:3500;">
+        <div class="property-modal-content" id="genericModalContent" style="max-width:420px;">
+            <h3 id="genericModalTitle" style="margin-bottom:14px;color:#333;font-size:1.3em;"></h3>
+            <div id="genericModalBody" style="color:#555;line-height:1.6;margin-bottom:22px;white-space:pre-line;font-size:1em;"></div>
+            <div id="genericModalButtons" style="display:flex;gap:10px;"></div>
+        </div>
+    </div>
+    <!-- Settings Modal -->
+    <div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;padding:36px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;animation:settingsIn 0.25s ease-out;">
+            <style>
+                @keyframes settingsIn{from{opacity:0;transform:translateY(-14px) scale(0.97)}to{opacity:1;transform:none}}
+                .sm-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+                .sm-label{font-weight:600;color:#333;font-size:0.97em;}
+                .sm-sublabel{font-size:0.8em;color:#aaa;margin-top:2px;}
+                .sm-section{font-size:0.72em;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:18px 0 10px;}
+                .sm-toggle{position:relative;width:48px;height:26px;flex-shrink:0;cursor:pointer;display:inline-block;}
+                .sm-toggle input{opacity:0;position:absolute;width:0;height:0;}
+                .sm-track{position:absolute;inset:0;background:#ddd;border-radius:26px;transition:background 0.2s;}
+                .sm-thumb{position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+                .sm-toggle input:checked~.sm-track{background:#667eea;}
+                .sm-toggle input:checked~.sm-track .sm-thumb{transform:translateX(22px);}
+                .sm-vol{display:flex;align-items:center;gap:8px;width:185px;}
+                .sm-vol input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:#ddd;outline:none;cursor:pointer;}
+                .sm-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#667eea;cursor:pointer;}
+                .sm-vol input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#667eea;cursor:pointer;border:none;}
+                .sm-pct{font-size:0.82em;color:#888;width:32px;text-align:right;flex-shrink:0;}
+                .sm-testbtn{padding:5px 12px;background:#f0f0f0;border:none;border-radius:20px;font-size:0.82em;font-weight:600;cursor:pointer;color:#555;transition:background 0.15s;}
+                .sm-testbtn:hover{background:#e0e0e0;} .sm-testbtn:active{background:#667eea;color:white;}
+            </style>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                <span style="font-size:1.5em;">⚙️</span>
+                <h2 style="color:#667eea;font-size:1.6em;font-weight:800;margin:0;">Settings</h2>
+                <button onclick="closeSettingsModal()" style="margin-left:auto;background:#f0f0f0;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">×</button>
+            </div>
+
+            <div class="sm-section">🎵 Music</div>
+            <div class="sm-row">
+                <div><div class="sm-label">Background Music</div><div class="sm-sublabel">Loops during gameplay</div></div>
+                <label class="sm-toggle"><input type="checkbox" id="sm-musicOn" onchange="smApplyMusic()"><div class="sm-track"><div class="sm-thumb"></div></div></label>
+            </div>
+            <div class="sm-row">
+                <div class="sm-label">Volume</div>
+                <div class="sm-vol"><span>🔈</span><input type="range" id="sm-musicVol" min="0" max="100" oninput="smApplyMusic()"><span class="sm-pct" id="sm-musicPct">--</span></div>
+            </div>
+            <div class="sm-row" style="border-bottom:none;">
+                <div class="sm-label">Preview</div>
+                <button class="sm-testbtn" id="sm-previewBtn" onclick="smPreviewMusic()">▶ Play</button>
+            </div>
+
+            <div class="sm-section">🔊 Sound Effects</div>
+            <div class="sm-row">
+                <div><div class="sm-label">Sound Effects</div><div class="sm-sublabel">Buy, rent, bid, jail, win</div></div>
+                <label class="sm-toggle"><input type="checkbox" id="sm-sfxOn" onchange="smApplySfx()"><div class="sm-track"><div class="sm-thumb"></div></div></label>
+            </div>
+            <div class="sm-row">
+                <div class="sm-label">Volume</div>
+                <div class="sm-vol"><span>🔈</span><input type="range" id="sm-sfxVol" min="0" max="100" oninput="smApplySfx()"><span class="sm-pct" id="sm-sfxPct">--</span></div>
+            </div>
+            <div class="sm-row" style="border-bottom:none;">
+                <div class="sm-label">Test</div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                    <button class="sm-testbtn" onclick="smTest('buy')">🏠 Buy</button>
+                    <button class="sm-testbtn" onclick="smTest('rent')">💸 Rent</button>
+                    <button class="sm-testbtn" onclick="smTest('bid')">🔨 Bid</button>
+                    <button class="sm-testbtn" onclick="smTest('jail')">🔒 Jail</button>
+                    <button class="sm-testbtn" onclick="smTest('win')">🏆 Win</button>
+                </div>
+            </div>
+
+            <button onclick="closeSettingsModal()" style="display:block;width:100%;padding:13px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;margin-top:22px;">Done</button>
+        </div>
+    </div>
 </body>
 </html>
