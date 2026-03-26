@@ -133,8 +133,8 @@
         }
         
         .player-icon-1 { background: #ff6b6b; }
-        .player-icon-2 { background: #4ecdc4; }
-        .player-icon-3 { background: #45b7d1; }
+        .player-icon-2 { background: #a855f7; }
+        .player-icon-3 { background: #f97316; }
         .player-icon-4 { background: #f9ca24; }
         .player-icon-5 { background: #6c5ce7; }
         .player-icon-6 { background: #a29bfe; }
@@ -863,6 +863,17 @@
         }
         
         /* Property ownership indicator */
+        .board-buildings {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(6px, 1.2vw, 10px);
+            line-height: 1;
+            z-index: 6;
+            pointer-events: none;
+        }
+
         .property-owner {
             position: absolute;
             bottom: 2px;
@@ -1287,6 +1298,10 @@
                 <button class="action-btn action-btn-secondary" id="endTurnBtn" onclick="endTurn()" disabled>
                     ⏭️ End Turn
                 </button>
+
+                <button class="action-btn action-btn-secondary" onclick="openSettingsModal()" style="margin-top:6px;background:#333;color:#999;font-size:0.9em">
+                    ⚙️ Settings
+                </button>
             </div>
         </div>
     </div>
@@ -1317,6 +1332,40 @@
     
     <!-- Message Toast -->
     <div class="message-toast" id="messageToast"></div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeSettingsModal()">
+        <div class="modal-content" style="max-width:380px">
+            <button class="modal-close" onclick="closeSettingsModal()">×</button>
+            <h3 style="color:#667eea;margin-bottom:20px">⚙️ Settings</h3>
+
+            <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:600">
+                🎵 Music
+                <input type="range" id="settingsMusicVol" min="0" max="1" step="0.05"
+                    style="width:120px" oninput="Audio.setMusicVolume(parseFloat(this.value))">
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:600">
+                Mute Music
+                <input type="checkbox" id="settingsMusicMute" style="width:20px;height:20px"
+                    onchange="Audio.setMusicMuted(this.checked)">
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:600">
+                🔊 Sound Effects
+                <input type="range" id="settingsSfxVol" min="0" max="1" step="0.05"
+                    style="width:120px" oninput="Audio.setSfxVolume(parseFloat(this.value))">
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-weight:600">
+                Mute SFX
+                <input type="checkbox" id="settingsSfxMute" style="width:20px;height:20px"
+                    onchange="Audio.setSfxMuted(this.checked)">
+            </label>
+
+            <hr style="border-color:#eee;margin-bottom:16px">
+            <button class="action-btn action-btn-secondary" onclick="closeSettingsModal();if(confirm('Leave game and return to menu?'))window.location.href='index.html'">
+                🏠 Main Menu
+            </button>
+        </div>
+    </div>
 
     <!-- Space Info Modal -->
     <div class="modal-overlay" id="spaceInfoModal" onclick="if(event.target===this)closeSpaceInfo()">
@@ -1811,6 +1860,13 @@
                 useJailCardBtn.style.display = 'none';
             }
             
+            // Disable everything during auction
+            if (gameState.auction && gameState.auction.active) {
+                rollBtn.disabled = true;
+                endBtn.disabled = true;
+                return;
+            }
+
             if (gameState.phase === 'ROLL_DICE') {
                 rollBtn.disabled = false;
                 endBtn.disabled = true;
@@ -1818,7 +1874,7 @@
                 rollBtn.disabled = true;
                 endBtn.disabled = false;
             } else {
-                // PROPERTY_DECISION or PAY_RENT
+                // PROPERTY_DECISION, PAY_RENT, or other processing
                 rollBtn.disabled = true;
                 endBtn.disabled = true;
             }
@@ -1892,6 +1948,9 @@
         }
 
         function rollDice() {
+            if (gameState.phase !== 'ROLL_DICE') return;
+            if (gameState.auction && gameState.auction.active) return;
+            document.getElementById('rollDiceBtn').disabled = true;
             Audio.unlock();
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             
@@ -2375,12 +2434,15 @@
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             
-            const space = SPACES[gameState.pendingProperty];
+            const propId = gameState.pendingProperty;
+            const space = SPACES[propId];
             showMessage(`${gameState.players[gameState.currentPlayerIndex].name} passed on ${space.name} - Starting auction!`, 'info');
             
-            // Start auction
+            // Clear pending property BEFORE starting auction to prevent AI re-triggering
+            gameState.pendingProperty = null;
+            gameState.phase = 'AUCTION';
             broadcastStateSync();
-            startAuction(gameState.pendingProperty);
+            startAuction(propId);
         }
 function startAuction(propertyId) {
             const space = SPACES[propertyId];
@@ -2633,14 +2695,37 @@ function startAuction(propertyId) {
             const spaceEl = document.getElementById(`space-${propertyId}`);
             if (!spaceEl) return;
             
-            // Remove existing owner indicator
-            const existing = spaceEl.querySelector('.property-owner');
-            if (existing) existing.remove();
+            // Remove existing owner indicator and building display
+            spaceEl.querySelector('.property-owner')?.remove();
+            spaceEl.querySelector('.board-buildings')?.remove();
             
-            // Add new owner indicator
+            // Add owner dot
             const ownerDot = document.createElement('div');
             ownerDot.className = `property-owner ${player.iconClass}`;
             spaceEl.appendChild(ownerDot);
+
+            // Add building display
+            const own = gameState.ownedProperties[propertyId];
+            if (own) updateBoardBuildings(propertyId);
+        }
+
+        function updateBoardBuildings(propertyId) {
+            const spaceEl = document.getElementById(`space-${propertyId}`);
+            if (!spaceEl) return;
+            spaceEl.querySelector('.board-buildings')?.remove();
+            const own = gameState.ownedProperties[propertyId];
+            if (!own) return;
+            if (own.hasHotel) {
+                const el = document.createElement('div');
+                el.className = 'board-buildings';
+                el.textContent = '🏨';
+                spaceEl.appendChild(el);
+            } else if (own.houses > 0) {
+                const el = document.createElement('div');
+                el.className = 'board-buildings';
+                el.textContent = '🏠'.repeat(own.houses);
+                spaceEl.appendChild(el);
+            }
         }
         
         function showMessage(message, type = 'info') {
@@ -2769,7 +2854,7 @@ function startAuction(propertyId) {
                 if (steps.length === 0) { resolve(); return; }
 
                 // If moving more than 15 spaces, speed up a bit
-                const delay = steps.length > 15 ? 80 : 120;
+                const delay = steps.length > 15 ? 200 : 500;
 
                 let i = 0;
                 function step() {
@@ -3174,7 +3259,7 @@ function startAuction(propertyId) {
             
             currentPlayer.cash -= space.houseCost;
             ownership.houses++;
-            
+            updateBoardBuildings(propId);
             showMessage(`Built house on ${space.name}`, 'success');
             openManageModal();
             updateUI();
@@ -3194,7 +3279,7 @@ function startAuction(propertyId) {
             currentPlayer.cash -= space.houseCost;
             ownership.houses = 0;
             ownership.hasHotel = true;
-            
+            updateBoardBuildings(propId);
             showMessage(`Built hotel on ${space.name}!`, 'success');
             openManageModal();
             updateUI();
@@ -3252,11 +3337,30 @@ function startAuction(propertyId) {
             broadcastStateSync();
         }
         
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            // Sync current values
+            document.getElementById('settingsMusicVol').value = localStorage.getItem('monopoly-music-vol') ?? '0.35';
+            document.getElementById('settingsMusicMute').checked = localStorage.getItem('monopoly-music-muted') === 'true';
+            document.getElementById('settingsSfxVol').value = localStorage.getItem('monopoly-sfx-vol') ?? '0.70';
+            document.getElementById('settingsSfxMute').checked = localStorage.getItem('monopoly-sfx-muted') === 'true';
+            modal.classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
         function closeSpaceInfo() {
             document.getElementById('spaceInfoModal').classList.remove('active');
         }
 
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSpaceInfo(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeSpaceInfo();
+                closeSettingsModal();
+            }
+        });
 
         function showSpaceDetails(space) {
             const COLOR_HEX = {
