@@ -308,15 +308,16 @@ const AIPlayer = (() => {
     function takeTurn() {
         aiActing = true;
 
+        // Handle auction first — independent of whose turn it is
+        if (gameState.auction && gameState.auction.active) {
+            handleAuctionPhase();
+            return;
+        }
+
         const idx = gameState.currentPlayerIndex;
 
         if (!(idx in aiPlayers) || !gameState.players[idx] || gameState.players[idx].isBankrupt) {
             aiActing = false;
-            return;
-        }
-
-        if (gameState.auction && gameState.auction.active) {
-            handleAuctionPhase();
             return;
         }
 
