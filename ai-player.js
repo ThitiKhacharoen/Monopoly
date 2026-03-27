@@ -29,11 +29,6 @@ const AIPlayer = (() => {
         'yellow', 'green', 'dark-blue', 'railroad', 'utility',
     ];
 
-    const MCTS_ROLLOUTS = 15;
-    const MCTS_ROUNDS_BY_DIFF = { easy:7, medium:10, hard:15 };
-    function useMCTS(playerIndex) { return MCTS_ROUNDS_BY_DIFF[aiPlayers[playerIndex]] > 0; }
-    function mctsRounds(playerIndex) { return MCTS_ROUNDS_BY_DIFF[aiPlayers[playerIndex]] || 7; }
-
     const COLOR_GROUP_PROPS = {
         'brown':      [1, 3],
         'light-blue': [6, 8, 9],
