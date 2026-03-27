@@ -309,8 +309,9 @@ const AIPlayer = (() => {
     }
 
     // Handle AI response to incoming trade proposals (human proposes to AI)
+    let handlingTradeProposal = false;
     function handleIncomingTradeProposal() {
-        // Check if tradeConfirmModal is active and the recipient is an AI
+        if (handlingTradeProposal) return;
         const confirmModal = document.getElementById('tradeConfirmModal');
         if (!confirmModal || !confirmModal.classList.contains('active')) return;
         if (!tradeState.pendingP2) return;
@@ -318,6 +319,8 @@ const AIPlayer = (() => {
         const recipientId = tradeState.pendingP2.id;
         const recipientIndex = gameState.players.findIndex(p => p.id === recipientId);
         if (!(recipientIndex in aiPlayers)) return;
+
+        handlingTradeProposal = true;
 
         // AI evaluates the trade
         const simState = MonopolySim.fromGameState(gameState, recipientIndex);
@@ -354,6 +357,7 @@ const AIPlayer = (() => {
             } else {
                 rejectTrade();
             }
+            handlingTradeProposal = false;
         }, THINK_DELAY);
     }
 
