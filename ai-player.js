@@ -195,71 +195,6 @@ const AIPlayer = (() => {
         return parseInt(best.replace('bid_',''));
     }
 
-    // ─── MCTS helpers ────────────────────────────────────────────────────────────
-
-    function neatEvaluator(playerIndex) {
-        return function(simState, pid) {
-            const player = simState.players[pid];
-            const allPlayers = [player, ...simState.players.filter(p=>p.id!==pid)];
-            const inputs = [];
-            for (let i=0;i<4;i++) {
-                const p = allPlayers[i];
-                if (p) { inputs.push(p.pos/40, Math.min(1,p.cash/2000), Math.min(1,p.gojf/2)); }
-                else { inputs.push(0,0,0); }
-            }
-            const PROP_IDS=[1,3,5,6,8,9,11,12,13,14,15,16,18,19,21,23,24,25,26,27,28,29,31,32,34,35,37,39];
-            const BUILD_IDS=[1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39];
-            for (const id of PROP_IDS) {
-                const own = simState.owned[id];
-                if (!own) { inputs.push(0,0); }
-                else { inputs.push(own.owner===pid?1:Math.max(-1,-(own.owner+1)/3)); inputs.push(own.mortgaged?1:0); }
-            }
-            for (const id of BUILD_IDS) {
-                const own = simState.owned[id];
-                inputs.push((own&&own.owner===pid)?(own.hotel?1:(own.houses||0)/5):0);
-            }
-            for (const id of PROP_IDS) {
-                const own = simState.owned[id];
-                const price = (SPACES[id]&&SPACES[id].price)||0;
-                inputs.push((!own && simState.players[pid].cash>=price)?1:0);
-            }
-            const clamped = inputs.map(x=>Math.max(-1,Math.min(1,x)));
-            const model = models[aiPlayers[playerIndex]];
-            if (!model) return MonopolySim.evaluate(simState, pid, null);
-            const out = NEATRunner.activate(model, clamped);
-            return MonopolySim.evaluate(simState, pid, null) * 0.7 + (out[0]>0.5?0.3:0.0);
-        };
-    }
-
-    function mctsBuyDecision(playerIndex, propId) {
-        const sp = SPACES[propId];
-        const player = gameState.players[playerIndex];
-        if (!sp || player.cash < sp.price) return false;
-        const s = MonopolySim.fromGameState(gameState, playerIndex);
-        const best = MonopolySim.mctsDecide(s, playerIndex, [
-            { label:'buy',  applyFn:(s,pid)=>{ s.players[pid].cash-=sp.price; s.players[pid].props.push(propId); s.owned[propId]={owner:pid,houses:0,hotel:false,mortgaged:false}; } },
-            { label:'pass', applyFn:()=>{} }
-        ], { rounds:mctsRounds(playerIndex), rollouts:MCTS_ROLLOUTS, neatEval:neatEvaluator(playerIndex) });
-        return best === 'buy';
-    }
-
-    function mctsBidAmount(playerIndex) {
-        const player = gameState.players[playerIndex];
-        const propId = gameState.auction?.propertyId;
-        const sp = propId != null ? SPACES[propId] : null;
-        if (!sp) return 0;
-        const minBid = (gameState.auction.currentBid||0)+1;
-        const candidates = [...new Set([minBid,Math.floor(sp.price*.7),sp.price,Math.floor(sp.price*1.2)])].filter(b=>b>=minBid&&b<=player.cash);
-        if (!candidates.length) return 0;
-        const s = MonopolySim.fromGameState(gameState, playerIndex);
-        const actions = [
-            {label:'pass',applyFn:()=>{}},
-            ...candidates.map(bid=>({label:`bid_${bid}`,applyFn:(s,pid)=>{ s.players[pid].cash-=bid; s.players[pid].props.push(propId); s.owned[propId]={owner:pid,houses:0,hotel:false,mortgaged:false}; }}))
-        ];
-        const best = MonopolySim.mctsDecide(s, playerIndex, actions, {rounds:mctsRounds(playerIndex),rollouts:MCTS_ROLLOUTS,neatEval:neatEvaluator(playerIndex)});
-        return best==='pass' ? 0 : parseInt(best.replace('bid_',''));
-    }
-
     // ─── House building ───────────────────────────────────────────────────────
 
     function tryBuildHouses(playerIndex) {
@@ -324,7 +259,9 @@ const AIPlayer = (() => {
             setTimeout(() => {
                 console.log(`[AI] Player ${idx} (${aiPlayers[idx]}) rolling dice`);
                 rollDice();
-                aiActing = false;
+                // Do NOT release aiActing here — rollDice is async.
+                // The polling loop's lastPhase check will release it
+                // once the phase changes away from ROLL_DICE.
             }, THINK_DELAY);
 
         } else if (phase === 'PROPERTY_DECISION') {
