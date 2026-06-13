@@ -2446,8 +2446,9 @@
         }
 function startAuction(propertyId) {
             const space = SPACES[propertyId];
-            
-            // Initialize auction state
+
+            // participatingPlayers holds EXACTLY the players still live in the auction.
+            // Passing removes a player from this array (no separate passedPlayers filter).
             gameState.auction.active = true;
             gameState.auction.propertyId = propertyId;
             gameState.auction.currentBid = 0;
@@ -2457,13 +2458,12 @@ function startAuction(propertyId) {
                 .filter(p => !p.isBankrupt)
                 .map(p => p.id);
             gameState.auction.currentAuctionIndex = 0;
-            gameState.auction.passedPlayers = [];
+            gameState.auction.passedPlayers = []; // retained for serialize compat; unused by logic
             gameState.auction.log = [];
-            
-            // Show auction modal
+
             const modal = document.getElementById('auctionModal');
             const propertyInfo = document.getElementById('auctionPropertyInfo');
-            
+
             let colorBar = '';
             if (space.type === 'property') {
                 colorBar = `<div class="color-bar ${space.color}" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
@@ -2472,103 +2472,113 @@ function startAuction(propertyId) {
             } else if (space.type === 'utility') {
                 colorBar = `<div class="color-bar utility" style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; margin: -15px -15px 10px -15px;"></div>`;
             }
-            
+
             propertyInfo.innerHTML = colorBar + `
                 <h3>${space.name}</h3>
                 <p>List Price: $${space.price}</p>
             `;
-            
+
             addAuctionLog(`Auction started for ${space.name}`);
             updateAuctionUI();
             modal.classList.add('active');
         }
-        
+
+        // Returns the id of the player whose turn it is, normalizing the index
+        // into the (possibly shrunk) participatingPlayers array.
+        function currentAuctionPlayerId() {
+            const live = gameState.auction.participatingPlayers;
+            if (live.length === 0) return null;
+            gameState.auction.currentAuctionIndex =
+                ((gameState.auction.currentAuctionIndex % live.length) + live.length) % live.length;
+            return live[gameState.auction.currentAuctionIndex];
+        }
+
         function updateAuctionUI() {
             if (!gameState.auction.active) return;
-            
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
 
-            // Everyone passed with no bids — property stays unowned
-            if (activePlayers.length === 0) {
+            const live = gameState.auction.participatingPlayers;
+
+            // Everyone passed with no bids — property stays unowned.
+            if (live.length === 0) {
                 endAuction(false);
                 return;
             }
 
-            // Only 1 player remains — they win immediately.
-            // If no bid has been placed yet, they get it for $1 (standard rule).
-            if (activePlayers.length === 1) {
-                if (gameState.auction.currentBid === 0) {
+            // One player left: they win. If a bid stands, they pay it (everyone
+            // else passed after they bid). If no bid was ever placed, $1 (standard rule).
+            if (live.length === 1) {
+                if (gameState.auction.currentBidder === null) {
                     gameState.auction.currentBid = 1;
-                    gameState.auction.currentBidder = activePlayers[0];
-                    const lastPlayer = gameState.players.find(p => p.id === activePlayers[0]);
-                    gameState.auction.currentBidderName = lastPlayer ? lastPlayer.name : 'Unknown';
+                    gameState.auction.currentBidder = live[0];
+                    const lp = gameState.players.find(p => p.id === live[0]);
+                    gameState.auction.currentBidderName = lp ? lp.name : 'Unknown';
                 }
                 endAuction(true);
                 return;
             }
-            
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+
+            const currentPlayerId = currentAuctionPlayerId();
             const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
+
             document.getElementById('auctionCurrentBid').textContent = gameState.auction.currentBid;
             document.getElementById('auctionCurrentBidder').textContent = gameState.auction.currentBidderName;
             document.getElementById('auctionCurrentPlayer').textContent = currentPlayer.name;
-            
-            // Update bid input minimum
+
             const bidInput = document.getElementById('auctionBidInput');
             bidInput.min = gameState.auction.currentBid + 1;
             bidInput.value = '';
             bidInput.placeholder = `Min: $${gameState.auction.currentBid + 1}`;
         }
-        
+
         function placeBid() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
+            const currentPlayerId = currentAuctionPlayerId();
+            if (currentPlayerId === null) return;
             const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
+
             const bidInput = document.getElementById('auctionBidInput');
             const bidAmount = parseInt(bidInput.value);
-            
+
             if (!bidAmount || bidAmount <= gameState.auction.currentBid) {
                 showModal('❌ Invalid Bid',`Bid must be higher than $${gameState.auction.currentBid}`,[{label:'OK',style:'property-modal-btn-pass',action:null}]);
                 shakeModal();
                 return;
             }
-            
+
             if (bidAmount > currentPlayer.cash) {
                 showModal('💸 Not Enough Cash',`You only have $${currentPlayer.cash}!`,[{label:'OK',style:'property-modal-btn-pass',action:null}]);
                 return;
             }
-            
+
             gameState.auction.currentBid = bidAmount;
             gameState.auction.currentBidder = currentPlayer.id;
             gameState.auction.currentBidderName = currentPlayer.name;
-            
+
             addAuctionLog(`${currentPlayer.name} bids $${bidAmount}`);
             Audio.play('bid');
-            
+
+            // Bid placed: advance to the next live player.
             gameState.auction.currentAuctionIndex++;
             updateAuctionUI();
+            broadcastStateSync();
         }
-        
+
         function passAuction() {
-            const activePlayers = gameState.auction.participatingPlayers.filter(
-                id => !gameState.auction.passedPlayers.includes(id)
-            );
-            const currentPlayerId = activePlayers[gameState.auction.currentAuctionIndex % activePlayers.length];
-            const currentPlayer = gameState.players.find(p => p.id === currentPlayerId);
-            
-            gameState.auction.passedPlayers.push(currentPlayer.id);
+            const live = gameState.auction.participatingPlayers;
+            if (live.length === 0) return;
+            const normIdx = ((gameState.auction.currentAuctionIndex % live.length) + live.length) % live.length;
+            const currentPlayer = gameState.players.find(p => p.id === live[normIdx]);
+
             addAuctionLog(`${currentPlayer.name} passes`);
-            gameState.auction.currentAuctionIndex++;
-            
+
+            // Remove the passing player. The next live player now occupies normIdx
+            // (or we wrap to 0 if we removed the last slot). Do NOT increment.
+            live.splice(normIdx, 1);
+            gameState.auction.currentAuctionIndex = (normIdx >= live.length) ? 0 : normIdx;
+
             updateAuctionUI();
+            broadcastStateSync();
         }
-        
+
         function endAuction(hasWinner) {
             const modal = document.getElementById('auctionModal');
             const space = SPACES[gameState.auction.propertyId];
